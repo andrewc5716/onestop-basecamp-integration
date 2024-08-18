@@ -1,8 +1,8 @@
 {
-  "name": "sd-onestop-auto",
+  "name": "onestop-basecamp-integration",
   "version": "0.1.0",
-  "description": "Google Apps Script automations for SD Members OneStop",
-  "author": "kevin.hwang@acts2.network",
+  "description": "Google Apps Script integration for Onestop and Basecamp",
+  "author": "andrew.chan@acts2.network",
   "scripts": {
     "clean": "rm -rf build",
     "build": "webpack",
