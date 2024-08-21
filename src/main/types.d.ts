@@ -8,12 +8,12 @@ declare interface OpenEvent {
 type Spreadsheet = GoogleAppsScript.Spreadsheet.Spreadsheet;
 type Sheet = GoogleAppsScript.Spreadsheet.Sheet;
 
-interface Text {
+declare interface Text {
   readonly value: string,
   readonly hyperlink: string | null
 }
 
-interface Row {
+declare interface Row {
   readonly startTime: Date,
   readonly endTime: Date,
   readonly who: string,

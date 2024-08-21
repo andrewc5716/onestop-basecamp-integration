@@ -1,7 +1,22 @@
 type Range = GoogleAppsScript.Spreadsheet.Range;
 type TextStyle = GoogleAppsScript.Spreadsheet.TextStyle;
 type RichTextValue = GoogleAppsScript.Spreadsheet.RichTextValue;
-const dailyTabPattern = /^(MON|TUE|WED|THU|FRI|SAT|SUN) ([1-9]|1[0-2])\/([1-9]|[12][0-9]|3[01])$/;
+
+const dailyTabPattern: RegExp = /^(MON|TUE|WED|THU|FRI|SAT|SUN) ([1-9]|1[0-2])\/([1-9]|[12][0-9]|3[01])$/;
+const DATE_ROW_INDEX: number = 0;
+const DATE_COL_INDEX: number = 0;
+const START_TIME_COL_INDEX: number = 0;
+const END_TIME_COL_INDEX: number = 1;
+const WHO_COL_INDEX: number = 2;
+const NUM_ATTENDEES_COL_INDEX: number = 3;
+const WHAT_COL_INDEX: number = 4;
+const WHERE_COL_INDEX: number = 5;
+const IN_CHARGE_COL_INDEX: number = 6;
+const HELPERS_COL_INDEX: number = 7;
+const FOOD_LEAD_COL_INDEX: number = 8;
+const CHILDCARE_COL_INDEX: number = 9;
+const NOTES_COL_INDEX: number = 10;
+const MIN_IN_HOUR: number = 60;
 
 interface CellData {
     readonly value: any,
@@ -17,11 +32,7 @@ export function getAllSpreadsheetTabs(): Sheet[] {
 export function getActiveDailyTabs(spreadsheetTabs: Sheet[]): Sheet[] {
     const dailyActiveTabs: Sheet[] = [];
     for(const tab of spreadsheetTabs) {
-        const tabName = tab.getName();
-
-        if(!isTabHidden(tab) && isDailyTab(tabName)) {
-            dailyActiveTabs.push(tab);
-        }
+        addDailyActiveTabs(tab, dailyActiveTabs);
     }
 
     return dailyActiveTabs;
@@ -30,24 +41,29 @@ export function getActiveDailyTabs(spreadsheetTabs: Sheet[]): Sheet[] {
 export function getRowsToProcess(spreadsheetTab: Sheet): Row[] {
     const dataRange: Range = spreadsheetTab.getDataRange();
     const cellData = getCellData(dataRange);
+    const currentDate = getDate(cellData);
 
     const rows: Row[] = [];
     for(let i = 0; i < cellData.length; i++) {
         const rowData: CellData[] = cellData[i];
-        if (isValidEvent(rowData)) {
-            const currentRow: Row = constructRow(rowData);
-            rows.push(currentRow);
-        }
+        processRow(rowData, rows, currentDate);
     }
 
     return rows;
+}
+
+function addDailyActiveTabs(tab: Sheet, dailyActiveTabs: Sheet[]): void {
+    if(!isTabHidden(tab) && isDailyTab(tab)) {
+        dailyActiveTabs.push(tab);
+    }
 }
 
 function isTabHidden(tab: Sheet): boolean {
     return tab.isSheetHidden();
 }
 
-function isDailyTab(tabName: string): boolean {
+function isDailyTab(tab: Sheet): boolean {
+    const tabName: string = tab.getName();
     const matchResult: RegExpMatchArray | null = tabName.match(dailyTabPattern);
     // null indicates that the tab name did not match the regex pattern for the daily tab
     return matchResult !== null;
@@ -63,41 +79,88 @@ function getCellData(dataRange: Range): CellData[][] {
 
     for(let i = 0; i < numRows; i++) {
         cellData[i] = [];
-        for(let j = 0; j < numCols; j++) {
-            const textStyle: TextStyle = cellRichTextData[i][j].getTextStyle();
-            cellData[i][j] = {
-                value: cellValues[i][j],
-                linkUrl: cellRichTextData[i][j].getLinkUrl(),
-                strikethrough: textStyle.isStrikethrough() !== null ? textStyle.isStrikethrough() as boolean : false,
-            }
-        }
+        populateColumnData(i, cellData, numCols, cellRichTextData, cellValues);
     }
 
     return cellData;
 }
 
-function isValidEvent(rowData: CellData[]): boolean {
-    // Strikethrough check only happens on the first cell in the row
-    return rowData[0].value instanceof Date && rowData[1].value instanceof Date && !isStrikethrough(rowData);
+function populateColumnData(currentRow: number, cellData: CellData[][], numCols: number, cellRichTextData: RichTextValue[][], cellValues: any[][]) {
+    for(let j = 0; j < numCols; j++) {
+        const textStyle: TextStyle = cellRichTextData[currentRow][j].getTextStyle();
+        cellData[currentRow][j] = {
+            value: cellValues[currentRow][j],
+            linkUrl: cellRichTextData[currentRow][j].getLinkUrl(),
+            strikethrough: getCellStrikethrough(textStyle)
+        }
+    }
 }
 
-function isStrikethrough(rowData: CellData[]): boolean {
-    const strikethroughValues = rowData.map((cellData) => cellData.value !== "" && cellData.strikethrough);
-    return strikethroughValues.reduce((curr, next) => curr || next, false);
+function getCellStrikethrough(textStyle: TextStyle): boolean {
+    return textStyle.isStrikethrough() !== null ? textStyle.isStrikethrough() as boolean : false;
 }
 
-function constructRow(rowData: CellData[]): Row {
+function getDate(cellData: CellData[][]): Date {
+    const date: Date = cellData[DATE_ROW_INDEX][DATE_COL_INDEX].value;
+    const utcHoursOffset = getUTCHoursOffset(date);
+    date.setHours(date.getHours() + utcHoursOffset);
+
+    return date;
+}
+
+function processRow(rowData: CellData[], rows: Row[], currentDate: Date): void {
+    if (isValidRow(rowData)) {
+        const currentRow: Row = constructRow(rowData, currentDate);
+        rows.push(currentRow);
+    }
+}
+
+function isValidRow(rowData: CellData[]): boolean {
+    return rowData[START_TIME_COL_INDEX].value instanceof Date && rowData[END_TIME_COL_INDEX].value instanceof Date && !isRowStrikethrough(rowData);
+}
+
+function isRowStrikethrough(rowData: CellData[]): boolean {
+    // Need to skip the time columns because their strikethrough values are incorrectly returned by the TextStyle object
+    const nonEmptyCells: CellData[] = rowData.filter((cellData, index) => cellData.value !== "" && index > END_TIME_COL_INDEX);
+    const strikethroughValues = nonEmptyCells.map((cellData) => cellData.strikethrough);
+    return strikethroughValues.reduce((curr, next) => curr && next, true);
+}
+
+function constructRow(rowData: CellData[], currentDate: Date): Row {
+    const startTime: Date = rowData[START_TIME_COL_INDEX].value;
+    const endTime: Date = rowData[END_TIME_COL_INDEX].value;
+
     return {
-        startTime: rowData[0].value,
-        endTime: rowData[1].value,
-        who: rowData[2].value,
-        numAttendees: rowData[3].value,
-        what: {value: rowData[4].value, hyperlink: rowData[4].linkUrl},
-        where: {value: rowData[5].value, hyperlink: rowData[5].linkUrl},
-        inCharge: {value: rowData[6].value, hyperlink: rowData[6].linkUrl},
-        helpers: {value: rowData[7].value, hyperlink: rowData[7].linkUrl},
-        foodLead: {value: rowData[8].value, hyperlink: rowData[8].linkUrl},
-        childcare: {value: rowData[9].value, hyperlink: rowData[9].linkUrl},
-        notes: {value: rowData[10].value, hyperlink: rowData[10].linkUrl}
+        startTime: constructDate(currentDate, startTime),
+        endTime: constructDate(currentDate, endTime),
+        who: rowData[WHO_COL_INDEX].value,
+        numAttendees: rowData[NUM_ATTENDEES_COL_INDEX].value,
+        what: {value: rowData[WHAT_COL_INDEX].value, hyperlink: rowData[WHAT_COL_INDEX].linkUrl},
+        where: {value: rowData[WHERE_COL_INDEX].value, hyperlink: rowData[WHERE_COL_INDEX].linkUrl},
+        inCharge: {value: rowData[IN_CHARGE_COL_INDEX].value, hyperlink: rowData[IN_CHARGE_COL_INDEX].linkUrl},
+        helpers: {value: rowData[HELPERS_COL_INDEX].value, hyperlink: rowData[HELPERS_COL_INDEX].linkUrl},
+        foodLead: {value: rowData[FOOD_LEAD_COL_INDEX].value, hyperlink: rowData[FOOD_LEAD_COL_INDEX].linkUrl},
+        childcare: {value: rowData[CHILDCARE_COL_INDEX].value, hyperlink: rowData[CHILDCARE_COL_INDEX].linkUrl},
+        notes: {value: rowData[NOTES_COL_INDEX].value, hyperlink: rowData[NOTES_COL_INDEX].linkUrl}
     };
+}
+
+function constructDate(currentDate: Date, currentTime: Date): Date {
+    const timezoneOffset: number = getUTCHoursOffset(currentTime);
+    const combinedDate = new Date();
+    combinedDate.setHours(currentTime.getHours() + timezoneOffset);
+    combinedDate.setMinutes(currentTime.getMinutes());
+    combinedDate.setSeconds(currentTime.getSeconds());
+    combinedDate.setMilliseconds(currentTime.getMilliseconds());
+
+    // Date must be set after the hours are set in case adding the timezoneOffset causes the date to rollover and increment
+    combinedDate.setMonth(currentDate.getMonth());
+    combinedDate.setDate(currentDate.getDate());
+    combinedDate.setFullYear(currentDate.getFullYear());
+
+    return combinedDate;
+}
+
+function getUTCHoursOffset(date: Date): number {
+    return date.getTimezoneOffset() / MIN_IN_HOUR;
 }
