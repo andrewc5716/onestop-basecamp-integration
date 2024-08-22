@@ -20,8 +20,8 @@ Make your own copy of the OneStop here: https://drive.google.com/drive/folders/1
 Get the Script ID for your personal dev OneStop by following these steps:
 - Open your new sheet
 - Click Extensions > App Script
-- Select the first project that appears
-- Rename the project
+- Select "Create a new project"
+- Give it any name you want
 - Go to settings
 - The Script ID should be in the settings page
 - Copy the script id 
