@@ -23,80 +23,89 @@ const HTTP_PUT_METHOD = 'put'
 const HTTP_GET_METHOD = 'get'
 
 export function test() {
-  Logger.log(sendBasecampGetRequest("https://3.basecampapi.com/4474129/people.json"));
+    Logger.log(sendBasecampGetRequest("https://3.basecampapi.com/4474129/people.json"));
 }
 
 export function sendBasecampPostRequest(requestUrl: string, requestPayload: Record<string, any>): Record<string, any> {
-  const response: GoogleAppsScript.URL_Fetch.HTTPResponse = UrlFetchApp.fetch(requestUrl, {
-    method: HTTP_POST_METHOD,
-    headers: getHeaders(),
-    payload: JSON.stringify(requestPayload)
-  });
-  return JSON.parse(response.getContentText());
+    const response: GoogleAppsScript.URL_Fetch.HTTPResponse = UrlFetchApp.fetch(requestUrl, {
+        method: HTTP_POST_METHOD,
+        headers: getHeaders(),
+        payload: JSON.stringify(requestPayload)
+    });
+    return JSON.parse(response.getContentText());
 }
 
 export function sendBasecampPutRequest(requestUrl: string, requestPayload: Record<string, any>): Record<string, any> {
-  const response: GoogleAppsScript.URL_Fetch.HTTPResponse = UrlFetchApp.fetch(requestUrl, {
-    method: HTTP_PUT_METHOD,
-    headers: getHeaders(),
-    payload: JSON.stringify(requestPayload)
-  });
-  return JSON.parse(response.getContentText());
+    const response: GoogleAppsScript.URL_Fetch.HTTPResponse = UrlFetchApp.fetch(requestUrl, {
+        method: HTTP_PUT_METHOD,
+        headers: getHeaders(),
+        payload: JSON.stringify(requestPayload)
+    });
+    return JSON.parse(response.getContentText());
 }
 
 export function sendPaginatedBasecampGetRequest(requestUrl: string): Record<string, any> {
-  let response: GoogleAppsScript.URL_Fetch.HTTPResponse = sendBasecampGetRequest(requestUrl);
-  let cumulativeResponse: Record<string, any> = JSON.parse(response.getContentText());
+    let getResponse: GoogleAppsScript.URL_Fetch.HTTPResponse = sendBasecampGetRequest(requestUrl);
+    let cumulativeResponse: Record<string, any> = JSON.parse(getResponse.getContentText());
 
-  while(hasNextPageUrlFromGetResponse(response)) {
-    response = sendBasecampGetRequest(getNextPageUrlFromGetResponse(response));
-    cumulativeResponse.concat(JSON.parse(response.getContentText())); 
-  }
+    while (hasNextPageUrlFromGetResponse(getResponse)) {
+        getResponse = sendBasecampGetRequest(getNextPageUrlFromGetResponse(getResponse));
+        cumulativeResponse.concat(JSON.parse(getResponse.getContentText()));
+    }
 
-  return cumulativeResponse;
+    return cumulativeResponse;
 }
 
 // IMPORTANT: function name MUST match with OAUTH_CALLBACK_FUNCTION_NAME
 export function oauthCallback(request: any): any {
-  const service = getUnvalidatedBasecampService();
-  const authorized: boolean = service.handleCallback(request);
-  if (authorized) {
-    return HtmlService.createHtmlOutput(AUTH_SUCCESS_HTML);
-  } else {
-    return HtmlService.createHtmlOutput(AUTH_FAIL_HTML);
-  }
+    const authorized: boolean = getUnvalidatedBasecampService().handleCallback(request);
+    if (authorized) {
+        return HtmlService.createHtmlOutput(AUTH_SUCCESS_HTML);
+    } else {
+        return HtmlService.createHtmlOutput(AUTH_FAIL_HTML);
+    }
 }
 
 export function logout(): void {
-  getUnvalidatedBasecampService().reset();
+    getUnvalidatedBasecampService().reset();
 }
 
 export function checkAuthorization(): void {
-  Logger.log(sendBasecampGetRequest(BASECAMP_AUTH_CHECK_URL));
+    Logger.log(sendBasecampGetRequest(BASECAMP_AUTH_CHECK_URL));
 }
 
 /**
- * Named "unvalidated" because OAuth service may not have access
- * @returns 
+ * Gets the OAuth service to interact with Basecamp.
+ * "Unvalidated" because there may not be an active access token, see getValidatedBasecampService()
+ * 
+ * @returns OAuth service for Basecamp which may not have an active access token
  */
 function getUnvalidatedBasecampService(): OAuth2 {
+    // function name includes"unvalidated" because the access token may not be active
     return OAuth2.createService(OAUTH_BASECAMP_SERVICE_NAME)
-      .setAuthorizationBaseUrl(BASECAMP_AUTH_URL)
-      .setTokenUrl(BASECAMP_TOKEN_URL)
-      .setClientId(CLIENT_ID)
-      .setClientSecret(CLIENT_SECRET)
-      .setCallbackFunction(OAUTH_CALLBACK_FUNCTION_NAME)
-      .setPropertyStore(PropertiesService.getUserProperties());
+        .setAuthorizationBaseUrl(BASECAMP_AUTH_URL)
+        .setTokenUrl(BASECAMP_TOKEN_URL)
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .setCallbackFunction(OAUTH_CALLBACK_FUNCTION_NAME)
+        .setPropertyStore(PropertiesService.getUserProperties());
 }
 
+/**
+ * Returns the OAuth Basecamp service if the access token is valid, otherwise shows a dialog with a link the user
+ * must open to authorize and get a valid access token. 
+ * 
+ * @returns OAuth service for Basecamp, guaranteed to have an active access token
+ * @throws error if the OAuth service is not authorized, which must be thrown to avoid returning an unvalidated OAuth2 service
+ */
 function getValidatedBasecampService(): OAuth2 {
     const basecampService: OAuth2 = getUnvalidatedBasecampService();
 
     if (basecampService.hasAccess()) {
         return basecampService;
     } else {
-      showAuthorizationDialog(basecampService.getAuthorizationUrl());
-      throw new Error(BASECAMP_UNAUTH_ERROR_MSG);
+        showAuthorizationDialog(basecampService.getAuthorizationUrl());
+        throw new Error(BASECAMP_UNAUTH_ERROR_MSG);
     }
 }
 
@@ -115,26 +124,26 @@ function getHeaders(): Record<string, string> {
     };
 }
 
+function sendBasecampGetRequest(requestUrl: string): GoogleAppsScript.URL_Fetch.HTTPResponse {
+    return UrlFetchApp.fetch(requestUrl, {
+        method: HTTP_GET_METHOD,
+        headers: getHeaders()
+    });
+}
+
 function hasNextPageUrlFromGetResponse(response: GoogleAppsScript.URL_Fetch.HTTPResponse): boolean {
-  // responseHeaders is of type 'any' to easily pull the optional Link field
-  const responseHeaders: any = response.getAllHeaders();
-  return responseHeaders.Link !== undefined;
+    // responseHeaders is of type 'any' to easily pull the optional Link field
+    const responseHeaders: any = response.getAllHeaders();
+    return responseHeaders.Link !== undefined;
 }
 
 function getNextPageUrlFromGetResponse(response: GoogleAppsScript.URL_Fetch.HTTPResponse): string {
-  if (!hasNextPageUrlFromGetResponse(response)) {
-    throw new Error(LINK_HEADER_MISSING_ERROR_MSG);
-  } else {
-    // responseHeaders is of type 'any' to easily pull the optional Link field
-    const responseHeaders: any = response.getAllHeaders();
-    // Example Link header looks like <https://3.basecampapi.com/4474129/people.json?page=2>; rel="next". This extracts everything between <>
-    return responseHeaders.Link.split('<')[1].split('>')[0];
-  }
-}
-
-function sendBasecampGetRequest(requestUrl: string): GoogleAppsScript.URL_Fetch.HTTPResponse {
-  return UrlFetchApp.fetch(requestUrl, {
-    method: HTTP_GET_METHOD,
-    headers: getHeaders()
-  });
+    if (!hasNextPageUrlFromGetResponse(response)) {
+        throw new Error(LINK_HEADER_MISSING_ERROR_MSG);
+    } else {
+        // responseHeaders is of type 'any' to easily pull the optional Link field
+        const responseHeaders: any = response.getAllHeaders();
+        // Example Link header looks like <https://3.basecampapi.com/4474129/people.json?page=2>; rel="next". This extracts everything between <>
+        return responseHeaders.Link.split('<')[1].split('>')[0];
+    }
 }
