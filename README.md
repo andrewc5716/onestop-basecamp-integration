@@ -22,4 +22,13 @@ npm run build
 npm run deploy
 ```
 
+Register an application:
+Name of application: name it
+Company name:
+URL:
+Products:
+Redirect URI: 
 
+Services > Google Sheets
+
+in test app in bc, need to set redirect uri for each person!?
