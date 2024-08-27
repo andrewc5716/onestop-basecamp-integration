@@ -1,5 +1,4 @@
 import {onOpen} from './main/menu'
-import * as basecamp from './main/basecamp'
 
 export * from './main/basecamp'
 

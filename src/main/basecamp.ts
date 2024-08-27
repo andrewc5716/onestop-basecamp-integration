@@ -1,5 +1,5 @@
-const CLIENT_ID: string = 'e55ce6b583d50960565524bcfea9d148693820dc';
-const CLIENT_SECRET: string = 'ce22fb56f615ea144f1a26b88d2efac00ded321f';
+import { BASECAMP_CLIENT_ID, BASECAMP_CLIENT_SECRET } from "../../config/environmentVariables";
+
 const BASECAMP_AUTH_URL = 'https://launchpad.37signals.com/authorization/new?type=web_server';
 const BASECAMP_TOKEN_URL = 'https://launchpad.37signals.com/authorization/token?type=web_server';
 const BASECAMP_AUTH_CHECK_URL = 'https://launchpad.37signals.com/authorization.json';
@@ -21,10 +21,6 @@ const HEADER_JSON_CONTENT_TYPE = 'application/json';
 const HTTP_POST_METHOD = 'post';
 const HTTP_PUT_METHOD = 'put'
 const HTTP_GET_METHOD = 'get'
-
-export function test() {
-    Logger.log(sendBasecampGetRequest("https://3.basecampapi.com/4474129/people.json"));
-}
 
 export function sendBasecampPostRequest(requestUrl: string, requestPayload: Record<string, any>): Record<string, any> {
     const response: GoogleAppsScript.URL_Fetch.HTTPResponse = UrlFetchApp.fetch(requestUrl, {
@@ -56,7 +52,12 @@ export function sendPaginatedBasecampGetRequest(requestUrl: string): Record<stri
     return cumulativeResponse;
 }
 
-// IMPORTANT: function name MUST match with OAUTH_CALLBACK_FUNCTION_NAME
+/**
+ * Callback function for OAuth protocol
+ * IMPORTANT: function name MUST match with OAUTH_CALLBACK_FUNCTION_NAME
+ * @param request input from Basecamp authorization
+ * @returns HTML output of authorization status
+ */
 export function oauthCallback(request: any): any {
     const authorized: boolean = getUnvalidatedBasecampService().handleCallback(request);
     if (authorized) {
@@ -81,12 +82,12 @@ export function checkAuthorization(): void {
  * @returns OAuth service for Basecamp which may not have an active access token
  */
 function getUnvalidatedBasecampService(): OAuth2 {
-    // function name includes"unvalidated" because the access token may not be active
+    // function name includes "unvalidated" because the access token may not be active
     return OAuth2.createService(OAUTH_BASECAMP_SERVICE_NAME)
         .setAuthorizationBaseUrl(BASECAMP_AUTH_URL)
         .setTokenUrl(BASECAMP_TOKEN_URL)
-        .setClientId(CLIENT_ID)
-        .setClientSecret(CLIENT_SECRET)
+        .setClientId(BASECAMP_CLIENT_ID)
+        .setClientSecret(BASECAMP_CLIENT_SECRET)
         .setCallbackFunction(OAUTH_CALLBACK_FUNCTION_NAME)
         .setPropertyStore(PropertiesService.getUserProperties());
 }
@@ -143,7 +144,7 @@ function getNextPageUrlFromGetResponse(response: GoogleAppsScript.URL_Fetch.HTTP
     } else {
         // responseHeaders is of type 'any' to easily pull the optional Link field
         const responseHeaders: any = response.getAllHeaders();
-        // Example Link header looks like <https://3.basecampapi.com/4474129/people.json?page=2>; rel="next". This extracts everything between <>
+        // Example Link header looks like <https://3.basecampapi.com/12345/people.json?page=2>; rel="next". This extracts everything between <>
         return responseHeaders.Link.split('<')[1].split('>')[0];
     }
 }

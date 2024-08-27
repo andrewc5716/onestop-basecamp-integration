@@ -21,6 +21,5 @@ declare interface OAuth2 {
 }
 
 declare namespace OAuth2 {
-//  export function getService(): OAuth2
  export function createService(name: string): OAuth2
 }
