@@ -2,7 +2,6 @@ import {addDays, format, startOfWeek} from 'date-fns'
 import range from 'lodash/range'
 import partition from 'lodash/partition'
 
- // test
 const NUM_DAYS_IN_WEEK = 7
 
 interface DailyTabInfo {
