@@ -48,7 +48,9 @@ export function getAllSpreadsheetTabs(): Sheet[] {
 export function getActiveDailyTabs(spreadsheetTabs: Sheet[]): Sheet[] {
     const dailyActiveTabs: Sheet[] = [];
     for(const tab of spreadsheetTabs) {
-        checkIfActiveDailyTab(tab, dailyActiveTabs);
+        if(isActiveDailyTab(tab)) {
+            dailyActiveTabs.push(tab);
+        }
     }
 
     return dailyActiveTabs;
@@ -78,12 +80,10 @@ export function getRowsWithEvents(spreadsheetTab: Sheet): Row[] {
  * Checks if a given tab is not hidden and is a daily tab. If it is, add it to the dailyActiveTabs output array
  * 
  * @param tab the tab to check
- * @param dailyActiveTabs output array to add the tab to if it meets the criteria of not being hidden and being a daily tab
+ * @returns boolean representing the tab is an active and daily tab
  */
-function checkIfActiveDailyTab(tab: Sheet, dailyActiveTabs: Sheet[]): void {
-    if(!isTabHidden(tab) && isDailyTab(tab)) {
-        dailyActiveTabs.push(tab);
-    }
+function isActiveDailyTab(tab: Sheet): boolean {
+    return !isTabHidden(tab) && isDailyTab(tab);
 }
 
 /**
@@ -193,13 +193,14 @@ function processRow(rowData: CellData[], rows: Row[], currentDate: Date): void {
 
 /**
  * Determines if a given row is a valid event row. A row is considered a valid event row if the first two columns contain Date objects
- * and the row has not been crossed out (strikethrough)
+ * and and the what column is not empty and the row has not been crossed out (strikethrough)
  * 
  * @param rowData data for this row
  * @returns boolean representing whether the given row is a valid event row
  */
 function isValidEventRow(rowData: CellData[]): boolean {
-    return rowData[START_TIME_COL_INDEX].value instanceof Date && rowData[END_TIME_COL_INDEX].value instanceof Date && !isRowStrikethrough(rowData);
+    return rowData[START_TIME_COL_INDEX].value instanceof Date && rowData[END_TIME_COL_INDEX].value instanceof Date 
+    && rowData[WHAT_COL_INDEX].value != "" && !isRowStrikethrough(rowData);
 }
 
 /**

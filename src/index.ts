@@ -1,5 +1,7 @@
 import {onOpen} from './main/menu'
 
+export * from './main/scan'
+
 // Re-export all the exports from `menu` module into Webpack `globalThis` scope, so they are available at runtime
 // for the Google Apps Script to call.
 export * from './main/menu'
