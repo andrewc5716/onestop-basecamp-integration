@@ -7,7 +7,7 @@ const OAUTH_BASECAMP_SERVICE_NAME = 'Basecamp';
 const OAUTH_CALLBACK_FUNCTION_NAME = 'oauthCallback'
 const BASECAMP_UNAUTH_ERROR_MSG = 'Basecamp not authenticated. Please try again.';
 const AUTH_DIALOG_MSG = 'You are disconnected from Basecamp. Copy the following link on a new tab to be authorized:\n\n';
-const AUTH_SUCCESS_HTML = 'Connection with Basecamp was successful! You can can close this tab and re-run the program.';
+const AUTH_SUCCESS_HTML = 'Connection with Basecamp was successful! You can close this tab and re-run the program.';
 const AUTH_FAIL_HTML = 'Connection denied. Please close this tab and try again.';
 const LINK_HEADER_MISSING_ERROR_MSG = 'Next URL from Link header is undefined';
 
@@ -22,8 +22,10 @@ const HTTP_POST_METHOD = 'post';
 const HTTP_PUT_METHOD = 'put'
 const HTTP_GET_METHOD = 'get'
 
+type HTTPResponse = GoogleAppsScript.URL_Fetch.HTTPResponse;
+
 export function sendBasecampPostRequest(requestUrl: string, requestPayload: Record<string, any>): Record<string, any> {
-    const response: GoogleAppsScript.URL_Fetch.HTTPResponse = UrlFetchApp.fetch(requestUrl, {
+    const response: HTTPResponse = UrlFetchApp.fetch(requestUrl, {
         method: HTTP_POST_METHOD,
         headers: getHeaders(),
         payload: JSON.stringify(requestPayload)
@@ -32,7 +34,7 @@ export function sendBasecampPostRequest(requestUrl: string, requestPayload: Reco
 }
 
 export function sendBasecampPutRequest(requestUrl: string, requestPayload: Record<string, any>): Record<string, any> {
-    const response: GoogleAppsScript.URL_Fetch.HTTPResponse = UrlFetchApp.fetch(requestUrl, {
+    const response: HTTPResponse = UrlFetchApp.fetch(requestUrl, {
         method: HTTP_PUT_METHOD,
         headers: getHeaders(),
         payload: JSON.stringify(requestPayload)
@@ -41,7 +43,7 @@ export function sendBasecampPutRequest(requestUrl: string, requestPayload: Recor
 }
 
 export function sendPaginatedBasecampGetRequest(requestUrl: string): Record<string, any> {
-    let getResponse: GoogleAppsScript.URL_Fetch.HTTPResponse = sendBasecampGetRequest(requestUrl);
+    let getResponse: HTTPResponse = sendBasecampGetRequest(requestUrl);
     let cumulativeResponse: Record<string, any> = JSON.parse(getResponse.getContentText());
 
     while (hasNextPageUrlFromGetResponse(getResponse)) {
@@ -125,20 +127,20 @@ function getHeaders(): Record<string, string> {
     };
 }
 
-function sendBasecampGetRequest(requestUrl: string): GoogleAppsScript.URL_Fetch.HTTPResponse {
+function sendBasecampGetRequest(requestUrl: string): HTTPResponse {
     return UrlFetchApp.fetch(requestUrl, {
         method: HTTP_GET_METHOD,
         headers: getHeaders()
     });
 }
 
-function hasNextPageUrlFromGetResponse(response: GoogleAppsScript.URL_Fetch.HTTPResponse): boolean {
+function hasNextPageUrlFromGetResponse(response: HTTPResponse): boolean {
     // responseHeaders is of type 'any' to easily pull the optional Link field
     const responseHeaders: any = response.getAllHeaders();
     return responseHeaders.Link !== undefined;
 }
 
-function getNextPageUrlFromGetResponse(response: GoogleAppsScript.URL_Fetch.HTTPResponse): string {
+function getNextPageUrlFromGetResponse(response: HTTPResponse): string {
     if (!hasNextPageUrlFromGetResponse(response)) {
         throw new Error(LINK_HEADER_MISSING_ERROR_MSG);
     } else {
