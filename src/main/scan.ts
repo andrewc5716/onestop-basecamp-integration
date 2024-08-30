@@ -1,4 +1,5 @@
-type Range = GoogleAppsScript.Spreadsheet.Range;
+import { getMetadata } from "./metadata";
+
 type TextStyle = GoogleAppsScript.Spreadsheet.TextStyle;
 type RichTextValue = GoogleAppsScript.Spreadsheet.RichTextValue;
 
@@ -70,7 +71,15 @@ export function getRowsWithEvents(spreadsheetTab: Sheet): Row[] {
     const rows: Row[] = [];
     for(let i = 0; i < cellData.length; i++) {
         const rowData: CellData[] = cellData[i];
-        processRow(rowData, rows, currentDate);
+        if (isValidEventRow(rowData)) {
+            // Google sheets is 1 indexed
+            const rowIndex = i + 1;
+            // Need to grab Range of entire row because GAS only allows setting metadata on an entire row
+            // This is also only possible with the A1 notation api for some reason
+            const rowRange: Range = spreadsheetTab.getRange(rowIndex + ":" + rowIndex);
+            const currentRow: Row = constructRow(rowRange, rowData, currentDate);
+            rows.push(currentRow);
+        }
     }
 
     return rows;
@@ -178,20 +187,6 @@ function getDateOfDailyTab(cellData: CellData[][]): Date {
 }
 
 /**
- * Processes a row by checking if the row is a valid event row. If it is, a Row object is constructed and added to the output array
- * 
- * @param rowData array of CellData objects representing the data for a row
- * @param rows output array of all the rows
- * @param currentDate current date object used to construct the Date objects for a new Row
- */
-function processRow(rowData: CellData[], rows: Row[], currentDate: Date): void {
-    if (isValidEventRow(rowData)) {
-        const currentRow: Row = constructRow(rowData, currentDate);
-        rows.push(currentRow);
-    }
-}
-
-/**
  * Determines if a given row is a valid event row. A row is considered a valid event row if the first two columns contain Date objects
  * and and the what column is not empty and the row has not been crossed out (strikethrough)
  * 
@@ -226,15 +221,17 @@ function isRowStrikethrough(rowData: CellData[]): boolean {
 /**
  * Given the data for a row, construct and return a corresponding Row object
  * 
+ * @param rowRange reference to the Range for this row so Metadata can be added at a later time if necessary
  * @param rowData the data for the row
  * @param currentDate Date object containing the current date
  * @returns Row object that holds all of the data for the given row
  */
-function constructRow(rowData: CellData[], currentDate: Date): Row {
+function constructRow(rowRange: Range, rowData: CellData[], currentDate: Date): Row {
     const startTime: Date = rowData[START_TIME_COL_INDEX].value;
     const endTime: Date = rowData[END_TIME_COL_INDEX].value;
 
     return {
+        metadata: getMetadata(rowRange),
         startTime: constructDate(currentDate, startTime),
         endTime: constructDate(currentDate, endTime),
         who: rowData[WHO_COL_INDEX].value,
