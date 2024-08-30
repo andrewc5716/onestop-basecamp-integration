@@ -5,6 +5,30 @@ declare interface OpenEvent {
   readonly user?: GoogleAppsScript.Base.User
 }
 
+type Spreadsheet = GoogleAppsScript.Spreadsheet.Spreadsheet;
+type Sheet = GoogleAppsScript.Spreadsheet.Sheet;
+
+declare interface Text {
+  readonly value: string,
+  readonly hyperlink: string | null
+}
+
+declare interface Row {
+  readonly startTime: Date,
+  readonly endTime: Date,
+  readonly who: string,
+  readonly numAttendees: number,
+  readonly what: Text,
+  readonly where: Text,
+  readonly inCharge: Text,
+  readonly helpers: Text,
+  readonly foodLead: Text,
+  readonly childcare: Text,
+  readonly notes: Text
+}
+
+type HTTPResponse = GoogleAppsScript.URL_Fetch.HTTPResponse;
+
 declare interface OAuth2 {
   setAuthorizationBaseUrl(url: string): OAuth2;
   setTokenUrl(url: string): OAuth2;
