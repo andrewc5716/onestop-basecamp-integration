@@ -47,3 +47,22 @@ declare interface OAuth2 {
 declare namespace OAuth2 {
  export function createService(name: string): OAuth2
 }
+
+declare interface TodoIdentifier {
+  readonly todolistIdentifier: TodoListIdentifier,
+  readonly todoId: string
+}
+
+declare interface TodoListIdentifier {
+  readonly projectId: string,
+  readonly todolistId: string
+}
+
+declare interface Todo {
+  content: string,
+  description: string,
+  assigneeIds: string[],
+  completion_subscriber_ids?: string,
+  notify: boolean,
+  due_on: string
+}

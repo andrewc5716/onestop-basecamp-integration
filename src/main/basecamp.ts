@@ -22,7 +22,16 @@ const HTTP_POST_METHOD = 'post';
 const HTTP_PUT_METHOD = 'put'
 const HTTP_GET_METHOD = 'get'
 
-type HTTPResponse = GoogleAppsScript.URL_Fetch.HTTPResponse;
+const BASECAMP_API_URL = 'https://3.basecampapi.com/';
+const A2N_BASECAMP_ORG_ID = '4474129';
+
+export function getBasecampUrl(): string {
+    return BASECAMP_API_URL + A2N_BASECAMP_ORG_ID + '/';
+}
+
+function getBasecampOrganizationId(): string {
+    return A2N_BASECAMP_ORG_ID;
+}
 
 export function sendBasecampPostRequest(requestUrl: string, requestPayload: Record<string, any>): Record<string, any> {
     const response: HTTPResponse = UrlFetchApp.fetch(requestUrl, {
