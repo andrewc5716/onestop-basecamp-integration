@@ -1,4 +1,4 @@
-import { getMetadata } from "./metadata";
+import { getMetadata } from "./row";
 
 type TextStyle = GoogleAppsScript.Spreadsheet.TextStyle;
 type RichTextValue = GoogleAppsScript.Spreadsheet.RichTextValue;

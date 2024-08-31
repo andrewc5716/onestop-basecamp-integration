@@ -31,8 +31,7 @@ export function getId(row: Row): string {
     const id = row.metadata.getValue();
 
     if(id === null) {
-        throw Error(`Row does not have an id: [${row.startTime}, ${row.endTime}, ${row.who}, 
-            ${row.what.value}, ${row.where.value}, ${row.inCharge.value}, ${row.helpers.value}]`);
+        throw Error("Row does not have an id: " + toString(row));
     }
 
     return id;
@@ -58,4 +57,15 @@ export function assignId(row: Row): string {
  */
 export function hasId(row: Row): boolean {
     return row.metadata.getValue() !== null;
+}
+
+/**
+ * Returns a string representation of the given row
+ * 
+ * @param row the row to return a string representation for
+ * @returns string representation of the given row
+ */
+function toString(row: Row): string {
+    return `[${row.startTime}, ${row.endTime}, ${row.who}, ${row.what.value}, ${row.where.value}, 
+    ${row.inCharge.value}, ${row.helpers.value}]`;
 }
