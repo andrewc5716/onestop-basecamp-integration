@@ -27,8 +27,15 @@ export function getMetadata(range: Range): Metadata {
  * @param row the Row to retrieve the unique id for
  * @returns unique id for the row; null if one has not been set
  */
-export function getRowUniqueId(row: Row): string | null {
-    return row.metadata.getValue();
+export function getId(row: Row): string {
+    const id = row.metadata.getValue();
+
+    if(id === null) {
+        throw Error(`Row does not have an id: [${row.startTime}, ${row.endTime}, ${row.who}, 
+            ${row.what.value}, ${row.where.value}, ${row.inCharge.value}, ${row.helpers.value}]`);
+    }
+
+    return id;
 }
 
 /**
@@ -37,7 +44,7 @@ export function getRowUniqueId(row: Row): string | null {
  * @param row the row to assign a new unique id to
  * @returns the new unique id
  */
-export function assignRowUniqueId(row: Row): string {
+export function assignId(row: Row): string {
     const newId: string = Utilities.getUuid();
     row.metadata.setValue(newId);
     return newId;
@@ -49,6 +56,6 @@ export function assignRowUniqueId(row: Row): string {
  * @param row the row to check the unique id of
  * @returns boolean representing whether a given Row has been assigned a unique id or not
  */
-export function rowHasUniqueId(row: Row): boolean {
-    return getRowUniqueId(row) !== null;
+export function hasId(row: Row): boolean {
+    return row.metadata.getValue() !== null;
 }
