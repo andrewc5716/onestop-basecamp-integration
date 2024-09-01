@@ -66,6 +66,7 @@ export function hasId(row: Row): boolean {
  * @returns string representation of the given row
  */
 function toString(row: Row): string {
-    return `[${row.startTime}, ${row.endTime}, ${row.who}, ${row.what.value}, ${row.where.value}, 
-    ${row.inCharge.value}, ${row.helpers.value}]`;
+    return `[${row.startTime}, ${row.endTime}, ${row.who}, ${row.numAttendees}, ${row.what.value}, 
+    ${row.where.value}, ${row.inCharge.value}, ${row.helpers.value}, ${row.foodLead.value}, 
+    ${row.childcare.value}, ${row.notes.value}]`;
 }
