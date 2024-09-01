@@ -4,3 +4,46 @@ declare interface OpenEvent {
   readonly triggerUid?: string,
   readonly user?: GoogleAppsScript.Base.User
 }
+
+type Spreadsheet = GoogleAppsScript.Spreadsheet.Spreadsheet;
+type Sheet = GoogleAppsScript.Spreadsheet.Sheet;
+
+declare interface Text {
+  readonly value: string,
+  readonly hyperlink: string | null
+}
+
+declare interface Row {
+  readonly startTime: Date,
+  readonly endTime: Date,
+  readonly who: string,
+  readonly numAttendees: number,
+  readonly what: Text,
+  readonly where: Text,
+  readonly inCharge: Text,
+  readonly helpers: Text,
+  readonly foodLead: Text,
+  readonly childcare: Text,
+  readonly notes: Text
+}
+
+type HTTPResponse = GoogleAppsScript.URL_Fetch.HTTPResponse;
+
+declare interface OAuth2 {
+  setAuthorizationBaseUrl(url: string): OAuth2;
+  setTokenUrl(url: string): OAuth2;
+  setClientId(clientId: string): OAuth2;
+  setClientSecret(clientSecret: string): OAuth2;
+  setCallbackFunction(callback: string): OAuth2;
+  setPropertyStore(store: GoogleAppsScript.Properties.Properties): OAuth2;
+  setScope(scopes: string | string[]): OAuth2;
+  hasAccess(): boolean;
+  getAuthorizationUrl(): string;
+  getAccessToken(): string;
+  handleCallback(callbackRequest: any): boolean;
+  reset(): void;
+}
+
+declare namespace OAuth2 {
+ export function createService(name: string): OAuth2
+}
