@@ -38,12 +38,12 @@ export function getId(row: Row): string {
 }
 
 /**
- * Assigns a new unique id to a row
+ * Generates a new unique id for a row
  * 
- * @param row the row to assign a new unique id to
+ * @param row the row to generate a new unique id for
  * @returns the new unique id
  */
-export function assignId(row: Row): string {
+export function generateIdForRow(row: Row): string {
     const newId: string = Utilities.getUuid();
     row.metadata.setValue(newId);
     return newId;
