@@ -1,8 +1,9 @@
 import { startOneStopBaseCampIntegration } from './main/trigger';
 import { updateManualTriggerMenuUiOnOneStop } from './main/menu';
 
-export * from './main/basecamp'
-export * from './main/scan'
+export * from './main/basecamp';
+export * from './main/row';
+export * from './main/scan';
 
 // Re-export all the exports from `menu` module into Webpack `globalThis` scope, so they are available at runtime
 // for the Google Apps Script to call.
