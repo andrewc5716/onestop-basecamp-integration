@@ -36,7 +36,7 @@ export function getId(row: Row): string {
     // Creating the metadata object sets the value to the empty string so we need to check for
     // that here to determine if the id has been set or not
     if(id === null || id === "") {
-        throw Error("Row does not have an id: " + toString(row));
+        throw new RowMissingIdError(`Row does not have an id: ${toString(row)}`);
     }
 
     return id;
@@ -71,7 +71,7 @@ export function hasId(row: Row): boolean {
  */
 export function saveRow(row: Row): void {
     if(!hasId(row)) {
-        throw Error(`Row does not have an id: ${toString(row)}`);
+        throw new RowMissingIdError(`Row does not have an id: ${toString(row)}`);
     }
 
     const rowId: string = getId(row);
@@ -138,7 +138,7 @@ export function hasBeenSaved(row: Row): boolean {
  */
 export function hasChanged(row: Row): boolean {
     if(!hasId(row)) {
-        throw Error(`Row does not have an id: ${toString(row)}`);
+        throw new RowMissingIdError(`Row does not have an id: ${toString(row)}`);
     }
 
     if(!hasBeenSaved(row)) {
@@ -165,7 +165,7 @@ export function hasChanged(row: Row): boolean {
  */
 function getSavedHash(row: Row): string | null {
     if(!hasId(row)) {
-        throw Error(`Row does not have an id: ${toString(row)}`);
+        throw new RowMissingIdError(`Row does not have an id: ${toString(row)}`);
     }
 
     const rowBasecampMapping: RowBasecampMapping | null = getRowBasecampMapping(row);
@@ -181,7 +181,7 @@ function getSavedHash(row: Row): string | null {
  */
 function getRowBasecampMapping(row: Row): RowBasecampMapping | null {
     if(!hasId(row)) {
-        throw Error(`Row does not have an id: ${toString(row)}`);
+        throw new RowMissingIdError(`Row does not have an id: ${toString(row)}`);
     }
 
     const rowId: string = getId(row);
@@ -196,7 +196,7 @@ function getRowBasecampMapping(row: Row): RowBasecampMapping | null {
  * @param row the row to return a string representation for
  * @returns string representation of the given row
  */
-function toString(row: Row): string {
+export function toString(row: Row): string {
     return `[${row.startTime}, ${row.endTime}, ${row.who}, ${row.numAttendees}, ${row.what.value}, 
     ${row.where.value}, ${row.inCharge.value}, ${row.helpers.value}, ${row.foodLead.value}, 
     ${row.childcare.value}, ${row.notes.value}]`;
