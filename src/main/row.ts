@@ -1,4 +1,8 @@
+import { getDocumentProperty, setDocumentProperty } from "./propertiesService";
+
 const ROW_ID_KEY: string = "rowId";
+const HEXIDECIMAL_BASE: number = 16;
+const HEXIDECIMAL_CHAR_LENGTH: number = 2;
 
 /**
  * Retrieves the metadata object for a given range. If the metadata object does not exist,
@@ -59,6 +63,56 @@ export function hasId(row: Row): boolean {
     return row.metadata.getValue() !== null;
 }
 
+export function saveRow(row: Row): boolean {
+    if(!hasId(row)) {
+        throw Error(`Row does not have an id: ${toString(row)}`);
+    }
+
+    const rowId: string = getId(row);
+    const rowHash: string = toHexString(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, toString(row)));
+
+    return setDocumentProperty(rowId, rowHash);
+}
+
+export function hasBeenSaved(row: Row): boolean {
+    if(!hasId(row)) {
+        Logger.log(`Row does not have an id: ${toString(row)}`);
+        return false;
+    }
+
+    const rowId: string = getId(row);
+    let rowHash: string | null = getHash(row);
+
+    return rowHash !== null;
+}
+
+export function hasChanged(row: Row): boolean {
+    if(!hasId(row)) {
+        throw Error(`Row does not have an id: ${toString(row)}`);
+    }
+
+    const rowId: string = getId(row);
+    const currentRowHash: string = toHexString(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, toString(row)));
+    let storedRowHash: string | null = getHash(row);
+
+    if(currentRowHash === null || storedRowHash === null) {
+        throw Error(`current or stored row has is null: [current: ${currentRowHash}, stored: ${storedRowHash}, row: ${toString(row)}]`);
+    }
+
+    return currentRowHash !== storedRowHash;
+}
+
+function getHash(row: Row): string | null {
+    if(!hasId(row)) {
+        throw Error(`Row does not have an id: ${toString(row)}`);
+    }
+
+    const rowId: string = getId(row);
+    let rowHash: string | null = getDocumentProperty(rowId);
+
+    return rowHash;
+}
+
 /**
  * Returns a string representation of the given row
  * 
@@ -69,4 +123,12 @@ function toString(row: Row): string {
     return `[${row.startTime}, ${row.endTime}, ${row.who}, ${row.numAttendees}, ${row.what.value}, 
     ${row.where.value}, ${row.inCharge.value}, ${row.helpers.value}, ${row.foodLead.value}, 
     ${row.childcare.value}, ${row.notes.value}]`;
+}
+
+function toHexString(byteArray: number[]): string {
+    return byteArray.map(byte => {
+        const hexByteString = byte.toString(HEXIDECIMAL_BASE);
+        return hexByteString.length < HEXIDECIMAL_CHAR_LENGTH ? '0' + hexByteString : hexByteString;
+    })
+    .join('');
 }

@@ -1,6 +1,7 @@
 import {onOpen} from './main/menu';
 
 export * from './main/basecamp';
+export * from './main/propertiesService';
 export * from './main/row';
 export * from './main/scan';
 
