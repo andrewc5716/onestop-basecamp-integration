@@ -14,7 +14,7 @@ export function getDocumentProperty(key: string): string | null {
         value = documentProperties.getProperty(key);
     } catch (e: any) {
         const error = e as Error;
-        throw Error(`Failed to retrieve row: [key: ${key}] ${error.message}`);
+        throw new PropertiesServiceReadError(`Failed to retrieve row: [key: ${key}] ${error.message}`);
     }
 
     return value;
@@ -25,34 +25,26 @@ export function getDocumentProperty(key: string): string | null {
  * 
  * @param key the key to write
  * @param value the value to write
- * @returns boolean representing whether the writing was successful or not
  */
-export function setDocumentProperty(key: string, value: string): boolean {
+export function setDocumentProperty(key: string, value: string): void {
     try {
         documentProperties.setProperty(key, value);
     } catch (e: any) {
         const error = e as Error;
-        Logger.log(`Failed to save to document PropertiesService: [key: ${key}, value: ${value}] ${error.message}`);
-        return false;
+        throw new PropertiesServiceWriteError(`Failed to save to document PropertiesService: [key: ${key}, value: ${value}] ${error.message}`);
     }
-
-    return true;
 }
 
 /**
  * Batched write of document properties setting all of the provided document properties in the PropertiesService
  * 
  * @param properties object containing all of the key/value pairs to set in the PropertiesService
- * @returns boolean representing whether the writing was successful or not
  */
-export function setDocumentProperties(properties: {[key: string]: string}): boolean {
+export function setDocumentProperties(properties: {[key: string]: string}): void {
     try {
         documentProperties.setProperties(properties);
     } catch (e: any) {
         const error = e as Error;
-        Logger.log(`Failed to save to document PropertiesService: [properties: ${properties}] ${error.message}`);
-        return false;
+        throw new PropertiesServiceWriteError(`Failed to save to document PropertiesService: [properties: ${properties}] ${error.message}`);
     }
-
-    return true;
 }

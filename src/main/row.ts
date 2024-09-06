@@ -68,9 +68,8 @@ export function hasId(row: Row): boolean {
  * Saves a given row's contents to the PropertiesService
  * 
  * @param row the row's contents to write
- * @returns boolean representing whether the save operation was successful or not
  */
-export function saveRow(row: Row): boolean {
+export function saveRow(row: Row): void {
     if(!hasId(row)) {
         throw Error(`Row does not have an id: ${toString(row)}`);
     }
@@ -79,7 +78,7 @@ export function saveRow(row: Row): boolean {
     const rowHash: string = toHexString(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, toString(row)));
     const rowBasecampMapping: RowBasecampMapping = {rowHash: rowHash};
 
-    return setDocumentProperty(rowId, JSON.stringify(rowBasecampMapping));
+    setDocumentProperty(rowId, JSON.stringify(rowBasecampMapping));
 }
 
 /**
@@ -87,9 +86,8 @@ export function saveRow(row: Row): boolean {
  * to the PropertiesService at one time
  * 
  * @param rows array of rows to write
- * @returns boolean representing whether the save operation was successful or not
  */
-export function saveRows(rows: Row[]): boolean {
+export function saveRows(rows: Row[]): void {
     const rowsWithIds = rows.filter((row) => {
         const rowHasId: boolean = hasId(row);
         if(!rowHasId) {
@@ -109,12 +107,10 @@ export function saveRows(rows: Row[]): boolean {
             properties[rowId] = JSON.stringify(rowBasecampMapping);
         }
 
-        return setDocumentProperties(properties);
+        setDocumentProperties(properties);
     } else {
         Logger.log("No rows with ids provided");
     }
-
-    return true;
 }
 
 /**
