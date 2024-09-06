@@ -77,8 +77,9 @@ export function saveRow(row: Row): boolean {
 
     const rowId: string = getId(row);
     const rowHash: string = toHexString(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, toString(row)));
+    const rowBasecampMapping: RowBasecampMapping = {rowHash: rowHash};
 
-    return setDocumentProperty(rowId, rowHash);
+    return setDocumentProperty(rowId, JSON.stringify(rowBasecampMapping));
 }
 
 /**
@@ -103,8 +104,9 @@ export function saveRows(rows: Row[]): boolean {
         const properties: {[key: string]: string} = {};
         for(const row of rowsWithIds) {
             const rowId: string = getId(row);
-            const rowHash: string = toHexString(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, toString(row))); 
-            properties[rowId] = rowHash;
+            const rowHash: string = toHexString(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, toString(row)));
+            const rowBasecampMapping: RowBasecampMapping = {rowHash: rowHash};
+            properties[rowId] = JSON.stringify(rowBasecampMapping);
         }
 
         return setDocumentProperties(properties);
@@ -170,8 +172,26 @@ function getSavedHash(row: Row): string | null {
         throw Error(`Row does not have an id: ${toString(row)}`);
     }
 
+    const rowBasecampMapping: RowBasecampMapping | null = getRowBasecampMapping(row);
+    
+    return rowBasecampMapping !== null ? rowBasecampMapping.rowHash : null;
+}
+
+/**
+ * Helper function which fetches a given row's RowBasecampMapping object from the PropertiesService
+ * 
+ * @param row the row to retrieve the RowBasecampMapping object for
+ * @returns the RowBasecampMapping object or null if the row cannot be found in the PropertiesService
+ */
+function getRowBasecampMapping(row: Row): RowBasecampMapping | null {
+    if(!hasId(row)) {
+        throw Error(`Row does not have an id: ${toString(row)}`);
+    }
+
     const rowId: string = getId(row);
-    return getDocumentProperty(rowId);
+    const result: string | null = getDocumentProperty(rowId);
+
+    return result !== null ? JSON.parse(result) : null;
 }
 
 /**
