@@ -127,7 +127,7 @@ export function hasBeenSaved(row: Row): boolean {
         return false;
     }
 
-    const rowHash: string | null = getHash(row);
+    const rowHash: string | null = getSavedHash(row);
 
     return rowHash !== null;
 }
@@ -149,7 +149,7 @@ export function hasChanged(row: Row): boolean {
 
     const rowId: string = getId(row);
     const currentRowHash: string = toHexString(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, toString(row)));
-    const storedRowHash: string | null = getHash(row);
+    const storedRowHash: string | null = getSavedHash(row);
 
     // null check to catch cases where the hashes are null (although this shouldn't be the case)
     if(currentRowHash === null || storedRowHash === null) {
@@ -160,12 +160,12 @@ export function hasChanged(row: Row): boolean {
 }
 
 /**
- * Helper function which fetches a given row's hash from the PropertiesService
+ * Helper function which fetches a given row's saved hash from the PropertiesService
  * 
  * @param row the row to retrieve the hash for
  * @returns the row hash or null if the row cannot be found in the PropertiesService
  */
-function getHash(row: Row): string | null {
+function getSavedHash(row: Row): string | null {
     if(!hasId(row)) {
         throw Error(`Row does not have an id: ${toString(row)}`);
     }
