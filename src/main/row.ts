@@ -26,15 +26,16 @@ export function getMetadata(range: Range): Metadata {
 
 /**
  * Retrieves the unique id for a Row. The unique id is stored in the value of the metadata.
- * If the unique id has not been set, null will be returned
  * 
  * @param row the Row to retrieve the unique id for
- * @returns unique id for the row; null if one has not been set
+ * @returns unique id for the row
  */
 export function getId(row: Row): string {
     const id = row.metadata.getValue();
 
-    if(id === null) {
+    // Creating the metadata object sets the value to the empty string so we need to check for
+    // that here to determine if the id has been set or not
+    if(id === null || id === "") {
         throw Error("Row does not have an id: " + toString(row));
     }
 
@@ -63,6 +64,12 @@ export function hasId(row: Row): boolean {
     return row.metadata.getValue() !== null;
 }
 
+/**
+ * Saves a given row's contents to the PropertiesService
+ * 
+ * @param row the row's contents to write
+ * @returns boolean representing whether the save operation was successful or not
+ */
 export function saveRow(row: Row): boolean {
     if(!hasId(row)) {
         throw Error(`Row does not have an id: ${toString(row)}`);
@@ -74,27 +81,43 @@ export function saveRow(row: Row): boolean {
     return setDocumentProperty(rowId, rowHash);
 }
 
+/**
+ * Checks if a given row has been saved to the PropertiesService
+ * 
+ * @param row the row to check
+ * @returns boolean representing whether or not the given row has been saved to the PropertiesService or not
+ */
 export function hasBeenSaved(row: Row): boolean {
     if(!hasId(row)) {
         Logger.log(`Row does not have an id: ${toString(row)}`);
         return false;
     }
 
-    const rowId: string = getId(row);
-    let rowHash: string | null = getHash(row);
+    const rowHash: string | null = getHash(row);
 
     return rowHash !== null;
 }
 
+/**
+ * Checks if a given row's contents has been changed
+ * 
+ * @param row the row to check
+ * @returns boolean representing whether the given row's contents has been changed or not
+ */
 export function hasChanged(row: Row): boolean {
     if(!hasId(row)) {
         throw Error(`Row does not have an id: ${toString(row)}`);
     }
 
+    if(!hasBeenSaved(row)) {
+        throw Error(`Row has not yet been saved: ${toString(row)}`);
+    }
+
     const rowId: string = getId(row);
     const currentRowHash: string = toHexString(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, toString(row)));
-    let storedRowHash: string | null = getHash(row);
+    const storedRowHash: string | null = getHash(row);
 
+    // null check to catch cases where the hashes are null (although this shouldn't be the case)
     if(currentRowHash === null || storedRowHash === null) {
         throw Error(`current or stored row has is null: [current: ${currentRowHash}, stored: ${storedRowHash}, row: ${toString(row)}]`);
     }
@@ -102,15 +125,19 @@ export function hasChanged(row: Row): boolean {
     return currentRowHash !== storedRowHash;
 }
 
+/**
+ * Helper function which fetches a given row's hash from the PropertiesService
+ * 
+ * @param row the row to retrieve the hash for
+ * @returns the row hash or null if the row cannot be found in the PropertiesService
+ */
 function getHash(row: Row): string | null {
     if(!hasId(row)) {
         throw Error(`Row does not have an id: ${toString(row)}`);
     }
 
     const rowId: string = getId(row);
-    let rowHash: string | null = getDocumentProperty(rowId);
-
-    return rowHash;
+    return getDocumentProperty(rowId);
 }
 
 /**
@@ -125,9 +152,17 @@ function toString(row: Row): string {
     ${row.childcare.value}, ${row.notes.value}]`;
 }
 
+/**
+ * Helper function that transforms a byte array into a hexidecimal string
+ * 
+ * @param byteArray 
+ * @returns 
+ */
 function toHexString(byteArray: number[]): string {
     return byteArray.map(byte => {
+        // Convertes the raw byte to its corresponding hexidecimal string value
         const hexByteString = byte.toString(HEXIDECIMAL_BASE);
+        // Appends a leading 0 if the hex string is less than 2 characters long
         return hexByteString.length < HEXIDECIMAL_CHAR_LENGTH ? '0' + hexByteString : hexByteString;
     })
     .join('');
