@@ -1,4 +1,4 @@
-import { getDocumentProperty, setDocumentProperty } from "./propertiesService";
+import { getDocumentProperty, setDocumentProperties, setDocumentProperty } from "./propertiesService";
 
 const ROW_ID_KEY: string = "rowId";
 const HEXIDECIMAL_BASE: number = 16;
@@ -79,6 +79,40 @@ export function saveRow(row: Row): boolean {
     const rowHash: string = toHexString(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, toString(row)));
 
     return setDocumentProperty(rowId, rowHash);
+}
+
+/**
+ * Batched version of saveRow() which saves an array of row's contents
+ * to the PropertiesService at one time
+ * 
+ * @param rows array of rows to write
+ * @returns boolean representing whether the save operation was successful or not
+ */
+export function saveRows(rows: Row[]): boolean {
+    const rowsWithIds = rows.filter((row) => {
+        const rowHasId: boolean = hasId(row);
+        if(!rowHasId) {
+            Logger.log(`Row does not have an id: ${toString(row)}`);
+            return false;
+        }
+        return true;
+    });
+
+    if(rowsWithIds.length > 0) {
+        // Constructs an object containing all of the rowId/rowHash pairs to be written
+        const properties: {[key: string]: string} = {};
+        for(const row of rowsWithIds) {
+            const rowId: string = getId(row);
+            const rowHash: string = toHexString(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, toString(row))); 
+            properties[rowId] = rowHash;
+        }
+
+        return setDocumentProperties(properties);
+    } else {
+        Logger.log("No rows with ids provided");
+    }
+
+    return true;
 }
 
 /**

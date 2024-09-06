@@ -38,3 +38,21 @@ export function setDocumentProperty(key: string, value: string): boolean {
 
     return true;
 }
+
+/**
+ * Batched write of document properties setting all of the provided document properties in the PropertiesService
+ * 
+ * @param properties object containing all of the key/value pairs to set in the PropertiesService
+ * @returns boolean representing whether the writing was successful or not
+ */
+export function setDocumentProperties(properties: {[key: string]: string}): boolean {
+    try {
+        documentProperties.setProperties(properties);
+    } catch (e: any) {
+        const error = e as Error;
+        Logger.log(`Failed to save to document PropertiesService: [properties: ${properties}] ${error.message}`);
+        return false;
+    }
+
+    return true;
+}
