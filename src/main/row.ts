@@ -151,7 +151,7 @@ export function hasChanged(row: Row): boolean {
 
     // null check to catch cases where the hashes are null (although this shouldn't be the case)
     if(currentRowHash === null || storedRowHash === null) {
-        throw Error(`current or stored row has is null: [current: ${currentRowHash}, stored: ${storedRowHash}, row: ${toString(row)}]`);
+        throw new InvalidHashError(`current or stored row has is null: [current: ${currentRowHash}, stored: ${storedRowHash}, row: ${toString(row)}]`);
     }
 
     return currentRowHash !== storedRowHash;
