@@ -142,7 +142,7 @@ export function hasChanged(row: Row): boolean {
     }
 
     if(!hasBeenSaved(row)) {
-        throw Error(`Row has not yet been saved: ${toString(row)}`);
+        throw new RowNotSavedError(`Row has not yet been saved: ${toString(row)}`);
     }
 
     const rowId: string = getId(row);
