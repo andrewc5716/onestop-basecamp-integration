@@ -31,7 +31,7 @@ export function getMetadata(range: Range): Metadata {
  * @returns unique id for the row
  */
 export function getId(row: Row): string {
-    const id = row.metadata.getValue();
+    const id: string | null = row.metadata.getValue();
 
     // Creating the metadata object sets the value to the empty string so we need to check for
     // that here to determine if the id has been set or not
@@ -88,7 +88,7 @@ export function saveRow(row: Row): void {
  * @param rows array of rows to write
  */
 export function saveRows(rows: Row[]): void {
-    const rowsWithIds = rows.filter((row) => {
+    const rowsWithIds: Row[] = rows.filter((row) => {
         const rowHasId: boolean = hasId(row);
         if(!rowHasId) {
             Logger.log(`Row does not have an id: ${toString(row)}`);
