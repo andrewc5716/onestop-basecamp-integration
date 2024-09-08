@@ -10,14 +10,11 @@
     "deploy": "clasp push"
   },
   "dependencies": {
-    "core-js": "^3.38.0",
-    "date-fns": "^3.6.0",
-    "lodash": "^4.17.21"
+    "core-js": "^3.38.0"
   },
   "devDependencies": {
     "@google/clasp": "^2.4.2",
     "@types/google-apps-script": "^1.0.83",
-    "@types/lodash": "^4.17.7",
     "copy-webpack-plugin": "^12.0.2",
     "eslint": "^9.9.0",
     "eslint-webpack-plugin": "^4.2.0",

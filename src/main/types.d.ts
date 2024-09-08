@@ -30,6 +30,11 @@ declare interface Row {
   readonly notes: Text
 }
 
+declare interface RowBasecampMapping {
+  rowHash: string
+  // Other properties such as the Basecamp Todo id can be added here
+}
+
 type HTTPResponse = GoogleAppsScript.URL_Fetch.HTTPResponse;
 
 declare interface OAuth2 {
