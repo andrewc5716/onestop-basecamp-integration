@@ -7,6 +7,8 @@ declare interface OpenEvent {
 
 type Spreadsheet = GoogleAppsScript.Spreadsheet.Spreadsheet;
 type Sheet = GoogleAppsScript.Spreadsheet.Sheet;
+type Range = GoogleAppsScript.Spreadsheet.Range;
+type Metadata = GoogleAppsScript.Spreadsheet.DeveloperMetadata;
 
 declare interface Text {
   readonly value: string,
@@ -14,6 +16,7 @@ declare interface Text {
 }
 
 declare interface Row {
+  readonly metadata: Metadata,
   readonly startTime: Date,
   readonly endTime: Date,
   readonly who: string,
@@ -25,6 +28,11 @@ declare interface Row {
   readonly foodLead: Text,
   readonly childcare: Text,
   readonly notes: Text
+}
+
+declare interface RowBasecampMapping {
+  rowHash: string
+  // Other properties such as the Basecamp Todo id can be added here
 }
 
 type HTTPResponse = GoogleAppsScript.URL_Fetch.HTTPResponse;
