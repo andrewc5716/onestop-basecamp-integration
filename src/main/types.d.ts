@@ -55,3 +55,32 @@ declare interface OAuth2 {
 declare namespace OAuth2 {
  export function createService(name: string): OAuth2
 }
+
+type JsonData = JsonObject | JsonArray;
+type JsonObject = Record<string, unknown>;
+type JsonArray = Record<string, unknown>[];
+
+declare interface TodoIdentifier {
+  readonly projectId: string,
+  readonly todoId: string
+}
+
+declare interface TodolistIdentifier {
+  readonly projectId: string,
+  readonly todolistId: string
+}
+
+// This is the exact Basecamp Todo object, the keys cannot be changed
+declare interface BasecampTodoRequest extends JsonObject {
+  content: string, // todo name
+  description: string, // todo description
+  assignee_ids: string[], // list of assignee ids
+  completion_subscriber_ids?: string[], // list of people ids to be notified when the task is complete
+  notify: boolean, // whether to notify the assignees upon todo creation
+  due_on: string // YYYY-MM-DD
+}
+
+// Response from Basecamp Todo. Only need id for now, can add more later
+declare interface BasecampTodoResponse extends JsonObject {
+  id: string // id of the created todo
+}
