@@ -1,70 +1,112 @@
-declare interface BasecampTodo {
-    content: string,
-    description: string,
-    assignee_ids: number[],
-    completion_subscriber_ids: number[],
-    notify: boolean,
-    due_on: Date,
-    starts_on: Date
-}
+import { BasecampTodo } from "./models/basecampTodo";
+import { HelperGroup, Person } from "./models/helpers";
+//import { getPersonId } from "./getPersonId";
 
-declare interface Row {
-    readonly metadata: Metadata,
-    readonly startTime: Date,
-    readonly endTime: Date,
-    readonly who: string,
-    readonly numAttendees: number,
-    readonly what: Text,
-    readonly where: Text,
-    readonly inCharge: Text,
-    readonly helpers: Text,
-    readonly foodLead: Text,
-    readonly childcare: Text,
-    readonly notes: Text
-}
-
-export function getBasecampPersonIds(names: string[]): number[] {
-    return names.map(name => getBasecampPersonId(name));
-}
-
-export function getBasecampPersonId(name: string): number {
+// Waiting for Isaac's implementation
+export function getPersonId(name: string): number {
     // Implement logic for getting a person id
     return 1049715927
 }
 
-export function addLeadTodo(leadAssigneeId: number, row: Row, basecampTodos: BasecampTodo[]): void {
-    basecampTodos.push({
-        content: `Lead ${row.what.value}`,
-        description: `Where: ${row.where.value}\nIn Charge: ${row.inCharge.value}\nHelpers: ${row.helpers.value}\nFood Lead: ${row.foodLead.value}}\nChildcare: ${row.childcare.value}\nNotes: ${row.notes.value}`,
-        assignee_ids: [leadAssigneeId],
-        completion_subscriber_ids: [],
-        notify: true,
-        due_on: row.endTime,
-        starts_on: row.startTime
-    })
+export function filterInvalidNames(names: string): string[] {
+    return names.split(',').map(name => name.trim()).filter(name => name !== '');
 }
 
-export function addHelperTodo(helperAssigneeIds: number[], row: Row, basecampTodos: BasecampTodo[]): void {
-    basecampTodos.push({
-        content: `Help with ${row.what.value}`,
-        description: `Where: ${row.where.value}\nIn Charge: ${row.inCharge.value}\nHelpers: ${row.helpers.value}\nFood Lead: ${row.foodLead.value}}\nChildcare: ${row.childcare.value}\nNotes: ${row.notes.value}`,
-        assignee_ids: helperAssigneeIds,
-        completion_subscriber_ids: [],
-        notify: true,
-        due_on: row.endTime,
-        starts_on: row.startTime
+export function associateBasecampIdsWithNames(names: string[]) {
+    return names.map( name => ({ name: name, basecampId: getPersonId(name) }));
+}
+
+export function parseHelpersAndRoles(line: string, forChildcare: boolean = false): HelperGroup {
+
+    let filteredNames = [];
+    let helperRole = '';
+
+    if (line.includes(':')) {
+
+        const [role, names] = line.split(':');
+
+        if (role && names) {
+            helperRole = role;
+            filteredNames = filterInvalidNames(names);
+
+        } else {
+            throw new Error("Helpers with roles detected but the formatting for either the roles or helper names is invalid!")
+        }
+        
+    } else {
+
+        filteredNames = filterInvalidNames(line);
+    }
+
+    const helpers: Person[] = associateBasecampIdsWithNames(filteredNames);
+
+    return new HelperGroup(helperRole, helpers, forChildcare);
+}
+
+export function constructToDoContent(role: string, isChildcare: boolean, what: string) {
+
+    if(isChildcare) {
+        return (role !== '' && role !== 'Helpers') ? `Help with ${role.toLowerCase()} for childcare during ${what}` : `Help with childcare during ${what}`;
+
+    } else {
+        return role !== '' ? `Help with ${role.toLowerCase()} for ${what}` : `Help with ${what}`;
+    }
+}
+
+export function constructTodoDescription(row: Row) {
+
+    const location = `WHERE: ${row.where.value ?? "N\\A"}`;
+    const inCharge = `\n\nIN CHARAGE: ${row.inCharge.value ?? "N\\A"}`;
+    const helpers = `\n\nHELPERS: ${row.helpers.value ?? "N\\A"}`;
+    const foodLead = `\n\nFOOD LEAD: ${row.foodLead.value ?? "N\\A"}`;
+    const childcare = `\n\nCHILDCARE: ${row.childcare.value ?? "N\\A"}`;
+    const notes = `\n\nNOTES: ${row.notes.value ?? "N\\A"}`;
+    
+    return location + inCharge + helpers + foodLead + childcare + notes;
+}
+
+export function collectAllHelperGroups(row: Row): HelperGroup[] {
+    
+}
+
+export function extractHelperTodos(row: Row): BasecampTodo[] {
+
+    const basecampTodos: BasecampTodo[] = [];
+
+    const allHelpers: HelperGroup[] = [];
+    
+    const eventRolesAndHelpers = row.helpers.value.split('\n');
+
+    eventRolesAndHelpers.forEach( line => {
+        allHelpers.push(parseHelpersAndRoles(line));
+    });
+
+    const childcareRolesAndHelpers = row.childcare.value.split('\n');
+
+    childcareRolesAndHelpers.forEach( line => {
+        allHelpers.push(parseHelpersAndRoles(line))
     })
+
+    allHelpers.forEach( helpers => {
+        basecampTodos.push({
+            content: constructToDoContent(helpers.role, helpers.isChildcare, row.what.value),
+            description: constructTodoDescription(row),
+            assignee_ids: helpers.getBaseCampIds(),
+            completion_subscriber_ids: [],
+            notify: true,
+            due_on: row.endTime,
+            starts_on: row.startTime
+        })
+    })
+
+    return basecampTodos;
 }
 
 export function extractBasecampTodosFromRow(row: Row): BasecampTodo[] {
     
     let basecampTodos: BasecampTodo[] = [];
 
-    const leadAssigneeId: number = getBasecampPersonId(row.inCharge.value);
-    const helperAssigneeIds: number[] = getBasecampPersonIds(row.helpers.value.split(','))
-
-    addLeadTodo(leadAssigneeId, row, basecampTodos);
-    addHelperTodo(helperAssigneeIds, row, basecampTodos);
+    extractHelperTodos(row);
 
     return basecampTodos;
 }
