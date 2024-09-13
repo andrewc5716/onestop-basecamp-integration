@@ -58,7 +58,7 @@ declare namespace OAuth2 {
 
 type JsonData = JsonObject | JsonArray;
 type JsonObject = Record<string, unknown>;
-type JsonArray = Record<string, unknown>[];
+type JsonArray = JsonObject[];
 
 declare interface TodoIdentifier {
   readonly projectId: string,
@@ -83,4 +83,10 @@ declare interface BasecampTodoRequest extends JsonObject {
 // Response from Basecamp Todo. Only need id for now, can add more later
 declare interface BasecampTodoResponse extends JsonObject {
   id: string // id of the created todo
+}
+
+// Response from Basecamp people API. Only need id and name for now, can add more later
+declare interface Person extends JsonObject {
+  id: string,
+  name: string,
 }
