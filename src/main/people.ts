@@ -1,3 +1,4 @@
+import { SD_TEAM } from "../../config/sdTeam";
 import { getBasecampUrl, sendPaginatedBasecampGetRequest } from "./basecamp";
 import { getScriptProperty, setScriptProperties } from "./propertiesService";
 
@@ -15,7 +16,7 @@ export function populatePeopleInDb(): void {
     const peopleData: Person[] = sendPaginatedBasecampGetRequest(requestUrl) as Person[];
     
     // Filter people by SD; currently this is a no-op
-    const sdPeople: Person[] = peopleData.filter((person) => true);
+    const sdPeople: Person[] = peopleData.filter((person) => SD_TEAM.has(person.name));
 
     // Reduce all of the people to a single map
     const personNameIdMap: PersonNameIdMap = sdPeople.reduce((map, person) => {
