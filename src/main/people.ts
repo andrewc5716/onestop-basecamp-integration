@@ -5,6 +5,7 @@ import { getScriptProperty, setScriptProperties } from "./propertiesService";
 type PersonNameIdMap = {[key: string]: string};
 
 const PEOPLE_PATH: string = "/people.json";
+const PEOPLE_POPULATED_KEY = "peoplePopulated";
 
 /**
  * Utility function that retrieves people from the Basecamp API, selects SD people, and then populates
@@ -24,6 +25,8 @@ export function populatePeopleInDb(): void {
         return map;
     }, {} as PersonNameIdMap);
 
+    personNameIdMap[PEOPLE_POPULATED_KEY] = "true";
+
     setScriptProperties(personNameIdMap);
 }
 
@@ -41,4 +44,15 @@ export function getPersonId(personName: string): string {
     }
 
     return personId;
+}
+
+/**
+ * Returns whether or not the people have been populated in the db
+ * 
+ * @returns boolean representing whether or not the people have been populated in the db
+ */
+export function peopleHaveBeenPopulated(): boolean {
+    const populated: string | null = getScriptProperty(PEOPLE_POPULATED_KEY);
+    
+    return populated === "true";
 }
