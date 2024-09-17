@@ -1,5 +1,4 @@
 import { getBasecampUrl, sendPaginatedBasecampGetRequest } from "./basecamp";
-import { PeopleNotPopulatedError } from "./error/peopleNotPopulatedError";
 import { PersonMissingIdError } from "./error/personMissingIdError";
 import { PersonNameIdMapNotCachedError } from "./error/personNameIdMapNotCachedError";
 import { getScriptProperty, setScriptProperty } from "./propertiesService";
@@ -12,8 +11,8 @@ const PROJECT_ID: string = "38736474";
 const PEOPLE_PATH: string = `/projects/${PROJECT_ID}/people.json`;
 const PEOPLE_MAP_KEY: string = "PEOPLE_MAP";
 
-// Regex to match a person's name followed by a city. ex. John Doe (SD)
-const CITY_REGEX: string = "^(.+?) (.+?) \((.+)\)$";
+// Regex to match a person's name followed by a city in parentheses. ex. John MiddleName1 ... MiddleName5 Doe (SD)
+const CITY_REGEX: string = "^(.*)\(([^)]*)\)$";
 
 let cachedPersonNameIdMap: PersonNameIdMap | null = null;
 
@@ -30,7 +29,7 @@ export function populatePeopleInDb(): void {
     const personNameIdMap: PersonNameIdMap = peopleData.reduce((map: PersonNameIdMap, person: Person) => {
         const match: RegExpMatchArray | null = person.name.match(CITY_REGEX);
         // Extracts the person's name without the city
-        const personName: string = match ? `${match[1]} ${match[2]}` : person.name;
+        const personName: string = match ? `${match[1].trim()}` : person.name;
 
         map[personName] = person.id;
         return map;
@@ -57,7 +56,8 @@ export function getPersonId(personName: string): string {
     const personNameIdMap: string | null = getScriptProperty(PEOPLE_MAP_KEY);
 
     if(personNameIdMap === null) {
-        throw new PeopleNotPopulatedError("People have not been populated in the local db");
+        populatePeopleInDb();
+        return getPersonIdFromCache(personName);
     }
 
     // Populate the cache and fetch the person id if it exists
