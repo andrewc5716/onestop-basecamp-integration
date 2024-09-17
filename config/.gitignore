@@ -1,5 +1,4 @@
 # Ignore everything in this directory
 *
-# But not these files!
+# But not this file!
 !.gitignore
-!sdTeam.ts
