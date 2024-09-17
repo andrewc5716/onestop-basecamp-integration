@@ -1,4 +1,4 @@
-class PropertiesServiceReadError extends Error {
+export class PropertiesServiceReadError extends Error {
     constructor(message: string) {
         super(message);
         this.name = "PropertiesServiceReadError";

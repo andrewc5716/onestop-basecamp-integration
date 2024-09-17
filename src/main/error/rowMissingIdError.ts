@@ -1,4 +1,4 @@
-class RowMissingIdError extends Error {
+export class RowMissingIdError extends Error {
     constructor(message: string) {
         super(message);
         this.name = "RowMissingIdError";

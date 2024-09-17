@@ -1,3 +1,6 @@
+import { PropertiesServiceReadError } from "./error/propertiesServiceReadError";
+import { PropertiesServiceWriteError } from "./error/propertiesServiceWriteError";
+
 type Properties = GoogleAppsScript.Properties.Properties;
 
 const scriptProperties: Properties = PropertiesService.getScriptProperties();
@@ -76,7 +79,7 @@ export function getScriptProperty(key: string): string | null {
  */
 export function setScriptProperty(key: string, value: string): void {
     try {
-        documentProperties.setProperty(key, value);
+        scriptProperties.setProperty(key, value);
     } catch (e: any) {
         const error = e as Error;
         throw new PropertiesServiceWriteError(`Failed to save to script property PropertiesService: [key: ${key}, value: ${value}] ${error.message}`);

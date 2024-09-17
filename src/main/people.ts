@@ -1,11 +1,18 @@
-import { SD_TEAM } from "../../config/sdTeam";
 import { getBasecampUrl, sendPaginatedBasecampGetRequest } from "./basecamp";
-import { getScriptProperty, setScriptProperties } from "./propertiesService";
+import { PeopleNotPopulatedError } from "./error/peopleNotPopulatedError";
+import { PersonMissingIdError } from "./error/personMissingIdError";
+import { PersonNameIdMapNotCachedError } from "./error/personNameIdMapNotCachedError";
+import { getScriptProperty, setScriptProperty } from "./propertiesService";
 
 type PersonNameIdMap = {[key: string]: string};
 
-const PEOPLE_PATH: string = "/people.json";
-const PEOPLE_POPULATED_KEY = "peoplePopulated";
+// Project ID hardcoded to our SD Basecamp Integration project for testing
+// In the future we may consider moving this to a script property as a config value
+const PROJECT_ID: string = "38736474";
+const PEOPLE_PATH: string = `/projects/${PROJECT_ID}/people.json`;
+const PEOPLE_MAP_KEY: string = "PEOPLE_MAP";
+
+let cachedPersonNameIdMap: PersonNameIdMap | null = null;
 
 /**
  * Utility function that retrieves people from the Basecamp API, selects SD people, and then populates
@@ -15,35 +22,44 @@ const PEOPLE_POPULATED_KEY = "peoplePopulated";
 export function populatePeopleInDb(): void {
     const requestUrl = getBasecampUrl() + PEOPLE_PATH;
     const peopleData: Person[] = sendPaginatedBasecampGetRequest(requestUrl) as Person[];
-    
-    // Filter people by SD; currently this is a no-op
-    const sdPeople: Person[] = peopleData.filter((person) => SD_TEAM.has(person.name));
 
     // Reduce all of the people to a single map
-    const personNameIdMap: PersonNameIdMap = sdPeople.reduce((map, person) => {
+    const personNameIdMap: PersonNameIdMap = peopleData.reduce((map, person) => {
         map[person.name] = person.id;
         return map;
     }, {} as PersonNameIdMap);
 
-    personNameIdMap[PEOPLE_POPULATED_KEY] = "true";
-
-    setScriptProperties(personNameIdMap);
+    setScriptProperty(PEOPLE_MAP_KEY, JSON.stringify(personNameIdMap));
+    cachedPersonNameIdMap = personNameIdMap;
 }
 
 /**
- * Retrieves a person's id from the script properties
+ * Retrieves a person's id from their name first checking the in memory cache and then falling
+ * back on the script properties if necessary
  * 
  * @param personName the name of the person
  * @returns the person's Basecamp id
  */
 export function getPersonId(personName: string): string {
-    const personId: string | null = getScriptProperty(personName);
-
-    if(personId === null) {
-        throw new PersonMissingIdError(`Person does not have an id: [personName: ${personName}]`);
+    // Check the in memory cache first
+    if(cachedPersonNameIdMap !== null) {
+        return getPersonIdFromCache(personName);
     }
 
-    return personId;
+    // Otherwise attempt to fetch it from the script properties
+    const personNameIdMap: string | null = getScriptProperty(PEOPLE_MAP_KEY);
+
+    if(personNameIdMap === null) {
+        throw new PeopleNotPopulatedError("People have not been populated in the local db");
+    }
+
+    // Populate the cache and fetch the person id if it exists
+    cachedPersonNameIdMap = JSON.parse(personNameIdMap);
+    if(cachedPersonNameIdMap !== null && cachedPersonNameIdMap.hasOwnProperty(personName)) {
+        return cachedPersonNameIdMap[personName];
+    } else {
+        throw new PersonMissingIdError(`Person does not have an id: [personName: ${personName}]`);
+    }
 }
 
 /**
@@ -52,7 +68,25 @@ export function getPersonId(personName: string): string {
  * @returns boolean representing whether or not the people have been populated in the db
  */
 export function peopleHaveBeenPopulated(): boolean {
-    const populated: string | null = getScriptProperty(PEOPLE_POPULATED_KEY);
-    
-    return populated === "true";
+    const personNameIdMap: string | null = getScriptProperty(PEOPLE_MAP_KEY);
+
+    return personNameIdMap !== null;
+}
+
+/**
+ * Fetches a person's Basecampe id given their name from the in memory cache
+ * 
+ * @param personName the person's name to fetch the id for
+ * @returns the person's id
+ */
+function getPersonIdFromCache(personName: string): string {
+    if(cachedPersonNameIdMap !== null) {
+        if(cachedPersonNameIdMap.hasOwnProperty(personName)) {
+            return cachedPersonNameIdMap[personName];
+        } else {
+            throw new PersonMissingIdError(`Person does not have an id: [personName: ${personName}]`);
+        }
+    } else {
+        throw new PersonNameIdMapNotCachedError("Map of person name to id has not been cached");
+    }
 }

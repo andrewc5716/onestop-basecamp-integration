@@ -1,4 +1,4 @@
-class RowNotSavedError extends Error {
+export class RowNotSavedError extends Error {
     constructor(message: string) {
         super(message);
         this.name = "RowNotSavedError";

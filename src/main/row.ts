@@ -1,3 +1,6 @@
+import { InvalidHashError } from "./error/invalidHashError";
+import { RowMissingIdError } from "./error/rowMissingIdError";
+import { RowNotSavedError } from "./error/rowNotSavedError";
 import { getDocumentProperty, setDocumentProperties, setDocumentProperty } from "./propertiesService";
 
 const ROW_ID_KEY: string = "rowId";

@@ -1,4 +1,4 @@
-class PersonMissingIdError extends Error {
+export class PersonMissingIdError extends Error {
     constructor(message: string) {
         super(message);
         this.name = "PersonMissingIdError";
