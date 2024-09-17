@@ -13,7 +13,7 @@ const PEOPLE_PATH: string = `/projects/${PROJECT_ID}/people.json`;
 const PEOPLE_MAP_KEY: string = "PEOPLE_MAP";
 
 // Regex to match a person's name followed by a city. ex. John Doe (SD)
-const CITY_REGEX = "^(.+?) (.+?) \((.+)\)$";
+const CITY_REGEX: string = "^(.+?) (.+?) \((.+)\)$";
 
 let cachedPersonNameIdMap: PersonNameIdMap | null = null;
 
@@ -23,14 +23,14 @@ let cachedPersonNameIdMap: PersonNameIdMap | null = null;
  * from the Google Apps Script Developer UI
  */
 export function populatePeopleInDb(): void {
-    const requestUrl = getBasecampUrl() + PEOPLE_PATH;
+    const requestUrl: string = getBasecampUrl() + PEOPLE_PATH;
     const peopleData: Person[] = sendPaginatedBasecampGetRequest(requestUrl) as Person[];
 
     // Reduce all of the people to a single map
-    const personNameIdMap: PersonNameIdMap = peopleData.reduce((map, person) => {
-        const match = person.name.match(CITY_REGEX);
+    const personNameIdMap: PersonNameIdMap = peopleData.reduce((map: PersonNameIdMap, person: Person) => {
+        const match: RegExpMatchArray | null = person.name.match(CITY_REGEX);
         // Extracts the person's name without the city
-        const personName = match ? `${match[1]} ${match[2]}` : person.name;
+        const personName: string = match ? `${match[1]} ${match[2]}` : person.name;
 
         map[personName] = person.id;
         return map;
