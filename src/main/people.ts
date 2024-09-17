@@ -12,6 +12,9 @@ const PROJECT_ID: string = "38736474";
 const PEOPLE_PATH: string = `/projects/${PROJECT_ID}/people.json`;
 const PEOPLE_MAP_KEY: string = "PEOPLE_MAP";
 
+// Regex to match a person's name followed by a city. ex. John Doe (SD)
+const CITY_REGEX = "^(.+?) (.+?) \((.+)\)$";
+
 let cachedPersonNameIdMap: PersonNameIdMap | null = null;
 
 /**
@@ -25,7 +28,11 @@ export function populatePeopleInDb(): void {
 
     // Reduce all of the people to a single map
     const personNameIdMap: PersonNameIdMap = peopleData.reduce((map, person) => {
-        map[person.name] = person.id;
+        const match = person.name.match(CITY_REGEX);
+        // Extracts the person's name without the city
+        const personName = match ? `${match[1]} ${match[2]}` : person.name;
+
+        map[personName] = person.id;
         return map;
     }, {} as PersonNameIdMap);
 
