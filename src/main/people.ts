@@ -27,10 +27,7 @@ export function populatePeopleInDb(): void {
 
     // Reduce all of the people to a single map
     const personNameIdMap: PersonNameIdMap = peopleData.reduce((map: PersonNameIdMap, person: Person) => {
-        const match: RegExpMatchArray | null = person.name.match(CITY_REGEX);
-        // Extracts the person's name without the city
-        const personName: string = match ? `${match[1].trim()}` : person.name;
-
+        const personName: string = extractPersonName(person);
         map[personName] = person.id;
         return map;
     }, {} as PersonNameIdMap);
@@ -46,7 +43,7 @@ export function populatePeopleInDb(): void {
  * @param personName the name of the person
  * @returns the person's Basecamp id
  */
-export function getPersonId(personName: string): string {
+export function getPersonId(personName: string): string | undefined {
     // Check the in memory cache first
     if(cachedPersonNameIdMap !== null) {
         return getPersonIdFromCache(personName);
@@ -65,7 +62,7 @@ export function getPersonId(personName: string): string {
     if(cachedPersonNameIdMap !== null && cachedPersonNameIdMap.hasOwnProperty(personName)) {
         return cachedPersonNameIdMap[personName];
     } else {
-        throw new PersonMissingIdError(`Person does not have an id: [personName: ${personName}]`);
+        return undefined;
     }
 }
 
@@ -96,4 +93,16 @@ function getPersonIdFromCache(personName: string): string {
     } else {
         throw new PersonNameIdMapNotCachedError("Map of person name to id has not been cached");
     }
+}
+
+/**
+ * Extracts a person name from a Person object removing any parentheses and city if found 
+ * 
+ * @param person Person object retrieved from Basecamp
+ * @returns the person's name
+ */
+function extractPersonName(person: Person): string {
+    const match: RegExpMatchArray | null = person.name.match(CITY_REGEX);
+    // Extracts the person's name without the city
+    return match ? `${match[1].trim()}` : person.name;
 }
