@@ -1,9 +1,9 @@
-export class RowMissingIdError extends Error {
+export class PersonMissingIdError extends Error {
     constructor(message: string) {
         super(message);
-        this.name = "RowMissingIdError";
+        this.name = "PersonMissingIdError";
 
         // Fix the prototype chain to ensure proper inheritance so the instanceOf check is reliable
-        Object.setPrototypeOf(this, RowMissingIdError.prototype);
+        Object.setPrototypeOf(this, PersonMissingIdError.prototype);
     }
 }

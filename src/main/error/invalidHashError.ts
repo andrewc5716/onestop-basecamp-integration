@@ -1,4 +1,4 @@
-class InvalidHashError extends Error {
+export class InvalidHashError extends Error {
     constructor(message: string) {
         super(message);
         this.name = "InvalidHashError";

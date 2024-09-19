@@ -1,4 +1,4 @@
-class PropertiesServiceWriteError extends Error {
+export class PropertiesServiceWriteError extends Error {
     constructor(message: string) {
         super(message);
         this.name = "PropertiesServiceWriteError";
