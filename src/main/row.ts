@@ -1,11 +1,15 @@
 import { InvalidHashError } from "./error/invalidHashError";
 import { RowMissingIdError } from "./error/rowMissingIdError";
 import { RowNotSavedError } from "./error/rowNotSavedError";
+import { getPersonId } from "./people";
 import { getDocumentProperty, setDocumentProperties, setDocumentProperty } from "./propertiesService";
 
 const ROW_ID_KEY: string = "rowId";
 const HEXIDECIMAL_BASE: number = 16;
 const HEXIDECIMAL_CHAR_LENGTH: number = 2;
+const COMMA_FORWARD_SLASH_DELIM_REGEX: string = "/[,\/]/";
+const MONTH_LENGTH: number = 2;
+const DAY_LENGTH: number = 2;
 
 /**
  * Retrieves the metadata object for a given range. If the metadata object does not exist,
@@ -219,4 +223,27 @@ function toHexString(byteArray: number[]): string {
         return hexByteString.length < HEXIDECIMAL_CHAR_LENGTH ? '0' + hexByteString : hexByteString;
     })
     .join('');
+}
+
+export function getLeadsBasecampIds(row: Row): string[] {
+    return getLeadsNames(row).map((name) => getPersonId(name))
+    .filter((personId) => personId !== undefined);
+}
+
+function getLeadsNames(row: Row): string[] {
+    return row.inCharge.value.split(COMMA_FORWARD_SLASH_DELIM_REGEX);
+}
+
+export function getBasecampTodoDescription(row: Row): string {
+    
+}
+
+export function getBasecampDueDate(row: Row): string {
+    const year: number = row.startTime.getFullYear();
+    // Months are 0 indexed
+    const month: string = String(row.startTime.getMonth() + 1).padStart(MONTH_LENGTH, '0');
+    const day: string = String(row.startTime.getDate()).padStart(DAY_LENGTH, '0');
+
+    // Format the date as "YYYY-MM-DD"
+    return `${year}-${month}-${day}`;
 }

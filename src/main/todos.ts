@@ -1,4 +1,5 @@
 import { getBasecampProjectUrl, sendBasecampPostRequest, sendBasecampPutRequest } from "./basecamp";
+import { getBasecampDueDate, getBasecampTodoDescription, getLeadsBasecampIds } from "./row";
 
 const TODOLISTS_PATH = '/todolists/';
 const TODO_PATH = '/todos/';
@@ -35,4 +36,21 @@ function getCreateTodoUrl(todolistIdentifier: TodolistIdentifier): string {
 
 function getUpdateTodoUrl(todoIdentifier: TodoIdentifier): string {
     return getBasecampProjectUrl(todoIdentifier.projectId) + TODO_PATH + todoIdentifier.todoId + JSON_PATH;
+}
+
+export function getBasecampTodoForLeads(row: Row): BasecampTodoRequest {
+    const leadIds: string[] = getLeadsBasecampIds(row);
+    const basecampTodoDescription: string = getBasecampTodoDescription(row);
+    const basecampDueDate: string = getBasecampDueDate(row);
+
+    const basecampTodoRequest: BasecampTodoRequest = {
+        content: `Lead: ${row.what.value}`,
+        description: basecampTodoDescription,
+        assignee_ids: leadIds,
+        completion_subscriber_ids: leadIds,
+        notify: true,
+        due_on: basecampDueDate
+    }
+
+    return basecampTodoRequest;
 }
