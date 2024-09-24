@@ -276,12 +276,12 @@ function getLeadsNames(row: Row): string[] {
  * @returns Basecamp Todo description
  */
 function getBasecampTodoDescription(row: Row): string {
-    const location = `WHERE: ${row.where.value ?? "N\\A"}`;
-    const inCharge = `\n\nIN CHARAGE: ${row.inCharge.value ?? "N\\A"}`;
-    const helpers = `\n\nHELPERS: ${row.helpers.value ?? "N\\A"}`;
-    const foodLead = `\n\nFOOD LEAD: ${row.foodLead.value ?? "N\\A"}`;
-    const childcare = `\n\nCHILDCARE: ${row.childcare.value ?? "N\\A"}`;
-    const notes = `\n\nNOTES: ${row.notes.value ?? "N\\A"}`;
+    const location: string = `WHERE: ${row.where.value ?? "N\\A"}`;
+    const inCharge: string = `\n\nIN CHARAGE: ${row.inCharge.value ?? "N\\A"}`;
+    const helpers: string = `\n\nHELPERS: ${row.helpers.value ?? "N\\A"}`;
+    const foodLead: string = `\n\nFOOD LEAD: ${row.foodLead.value ?? "N\\A"}`;
+    const childcare: string = `\n\nCHILDCARE: ${row.childcare.value ?? "N\\A"}`;
+    const notes: string = `\n\nNOTES: ${row.notes.value ?? "N\\A"}`;
 
     return location + inCharge + helpers + foodLead + childcare + notes;
 }
