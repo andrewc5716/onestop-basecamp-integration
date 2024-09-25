@@ -1,11 +1,15 @@
 import { InvalidHashError } from "./error/invalidHashError";
 import { RowMissingIdError } from "./error/rowMissingIdError";
 import { RowNotSavedError } from "./error/rowNotSavedError";
+import { getPersonId } from "./people";
 import { getDocumentProperty, setDocumentProperties, setDocumentProperty } from "./propertiesService";
 
 const ROW_ID_KEY: string = "rowId";
 const HEXIDECIMAL_BASE: number = 16;
 const HEXIDECIMAL_CHAR_LENGTH: number = 2;
+const COMMA_FORWARD_SLASH_DELIM_REGEX: string = "/[,\/]/";
+const MONTH_LENGTH: number = 2;
+const DAY_LENGTH: number = 2;
 
 /**
  * Retrieves the metadata object for a given range. If the metadata object does not exist,
@@ -219,4 +223,81 @@ function toHexString(byteArray: number[]): string {
         return hexByteString.length < HEXIDECIMAL_CHAR_LENGTH ? '0' + hexByteString : hexByteString;
     })
     .join('');
+}
+
+/**
+ * Constructs a BasecampTodoRequest object for the lead of a given row
+ * 
+ * @param row row to construct the BasecampTodoRequest for
+ * @returns BasecampTodoRequest
+ */
+export function getBasecampTodoForLeads(row: Row): BasecampTodoRequest {
+    const leadIds: string[] = getLeadsBasecampIds(row);
+    const basecampTodoDescription: string = getBasecampTodoDescription(row);
+    const basecampDueDate: string = getBasecampDueDate(row);
+
+    const basecampTodoRequest: BasecampTodoRequest = {
+        content: `Lead: ${row.what.value}`,
+        description: basecampTodoDescription,
+        assignee_ids: leadIds,
+        completion_subscriber_ids: leadIds,
+        notify: true,
+        due_on: basecampDueDate
+    }
+
+    return basecampTodoRequest;
+}
+
+/**
+ * Retrieves Basecamp ids for the leads of a given row
+ * 
+ * @param row row containing the leads to retrieve Basecamp ids for
+ * @returns array of Basecamp ids
+ */
+function getLeadsBasecampIds(row: Row): string[] {
+    return getLeadsNames(row).map((name) => getPersonId(name))
+    .filter((personId) => personId !== undefined);
+}
+
+/**
+ * Retrieves an array of leads' names from a row
+ * 
+ * @param row row to retrieve leads' names from
+ * @returns array of leads names
+ */
+function getLeadsNames(row: Row): string[] {
+    return row.inCharge.value.split(COMMA_FORWARD_SLASH_DELIM_REGEX);
+}
+
+/**
+ * Constructs the Basecampe Todo description for a given row
+ * 
+ * @param row row to construct the Basecamp Todo for
+ * @returns Basecamp Todo description
+ */
+function getBasecampTodoDescription(row: Row): string {
+    const location: string = `WHERE: ${row.where.value ?? "N\\A"}`;
+    const inCharge: string = `\n\nIN CHARAGE: ${row.inCharge.value ?? "N\\A"}`;
+    const helpers: string = `\n\nHELPERS: ${row.helpers.value ?? "N\\A"}`;
+    const foodLead: string = `\n\nFOOD LEAD: ${row.foodLead.value ?? "N\\A"}`;
+    const childcare: string = `\n\nCHILDCARE: ${row.childcare.value ?? "N\\A"}`;
+    const notes: string = `\n\nNOTES: ${row.notes.value ?? "N\\A"}`;
+
+    return location + inCharge + helpers + foodLead + childcare + notes;
+}
+
+/**
+ * Retrieves the date from a given row in the format required for a Basecamp Todo (YYYY-MM-DD)
+ * 
+ * @param row row to retrieve the due date from
+ * @returns due date for the row in the Basecamp Todo format (YYYY-MM-DD)
+ */
+function getBasecampDueDate(row: Row): string {
+    const year: number = row.startTime.getFullYear();
+    // Months are 0 indexed
+    const month: string = String(row.startTime.getMonth() + 1).padStart(MONTH_LENGTH, '0');
+    const day: string = String(row.startTime.getDate()).padStart(DAY_LENGTH, '0');
+
+    // Format the date as "YYYY-MM-DD"
+    return `${year}-${month}-${day}`;
 }
