@@ -3,6 +3,7 @@ import { RowMissingIdError } from "./error/rowMissingIdError";
 import { RowNotSavedError } from "./error/rowNotSavedError";
 import { getPersonId } from "./people";
 import { getDocumentProperty, setDocumentProperties, setDocumentProperty } from "./propertiesService";
+import { getBasecampTodoRequest } from "./todos";
 
 const ROW_ID_KEY: string = "rowId";
 const HEXIDECIMAL_BASE: number = 16;
@@ -10,6 +11,13 @@ const HEXIDECIMAL_CHAR_LENGTH: number = 2;
 const COMMA_FORWARD_SLASH_DELIM_REGEX: string = "/[,\/]/";
 const MONTH_LENGTH: number = 2;
 const DAY_LENGTH: number = 2;
+const NEW_LINE_DELIM = "\n";
+const COLON_DELIM = ":";
+
+declare interface HelperGroup {
+    readonly role?: string,
+    readonly helperIds: string[]
+}
 
 /**
  * Retrieves the metadata object for a given range. If the metadata object does not exist,
@@ -232,30 +240,33 @@ function toHexString(byteArray: number[]): string {
  * @returns BasecampTodoRequest
  */
 export function getBasecampTodoForLeads(row: Row): BasecampTodoRequest {
+    const basecampTodoContent: string = `Lead: ${row.what.value}`;
     const leadIds: string[] = getLeadsBasecampIds(row);
     const basecampTodoDescription: string = getBasecampTodoDescription(row);
     const basecampDueDate: string = getBasecampDueDate(row);
 
-    const basecampTodoRequest: BasecampTodoRequest = {
-        content: `Lead: ${row.what.value}`,
-        description: basecampTodoDescription,
-        assignee_ids: leadIds,
-        completion_subscriber_ids: leadIds,
-        notify: true,
-        due_on: basecampDueDate
-    }
-
-    return basecampTodoRequest;
+    return getBasecampTodoRequest(basecampTodoContent, basecampTodoDescription, leadIds, leadIds, true, basecampDueDate);
 }
 
 /**
  * Retrieves Basecamp ids for the leads of a given row
  * 
- * @param row row containing the leads to retrieve Basecamp ids for
- * @returns array of Basecamp ids
+ * @param row row to retrive leads' Basecamp ids for
+ * @returns array of Basecamp ids for the leads of a row
  */
 function getLeadsBasecampIds(row: Row): string[] {
-    return getLeadsNames(row).map((name) => getPersonId(name))
+    const leadNames: string[] = getLeadsNames(row);
+    return getBasecampIdsFromPersonNameList(leadNames);
+}
+
+/**
+ * Retrieves Basecamp ids for a list of people's names
+ * 
+ * @param personNameList list of people's names to fetch Basecamp ids for
+ * @returns array of Basecamp ids
+ */
+function getBasecampIdsFromPersonNameList(personNameList: string[]): string[] {
+    return personNameList.map((name) => getPersonId(name))
     .filter((personId) => personId !== undefined);
 }
 
@@ -300,4 +311,58 @@ function getBasecampDueDate(row: Row): string {
 
     // Format the date as "YYYY-MM-DD"
     return `${year}-${month}-${day}`;
+}
+
+export function getBasecampTodosForHelpers(row: Row): BasecampTodoRequest[] {
+    const basecampTodoRequests: BasecampTodoRequest[] = [];
+
+    const helperGroups: HelperGroup[] = getHelperGroups(row);
+    const leadIds: string[] = getLeadsBasecampIds(row);
+
+    for(const helperGroup of helperGroups) {
+        const roleTitle: string = helperGroup.role ? `${helperGroup.role} Helper` : "Helper";
+        const basecampTodoContent: string = `${roleTitle}: ${row.what.value}`;
+        const basecampTodoDescription: string = getBasecampTodoDescription(row);
+        const asssigneeIds: string[] = leadIds.concat(helperGroup.helperIds);
+        const basecampDueDate: string = getBasecampDueDate(row);
+
+        basecampTodoRequests.push(getBasecampTodoRequest(basecampTodoContent, basecampTodoDescription, asssigneeIds, asssigneeIds, true, basecampDueDate));
+    }
+
+    return basecampTodoRequests;
+}
+
+function getHelperGroups(row: Row): HelperGroup[] {
+    const helperGroups: HelperGroup[] = [];
+
+    const helperLines: string[] = row.helpers.value.split(NEW_LINE_DELIM);
+    for(const helperLine of helperLines) {
+        if (helperLine.includes(COLON_DELIM)) {
+            const [role, helperNameList] = helperLine.split(COLON_DELIM);
+            const helperNames: string[] = getHelpersNames(helperNameList);
+            const helperIds: string[] = getBasecampIdsFromPersonNameList(helperNames);
+            const helperGroup: HelperGroup = {
+                role: role,
+                helperIds: helperIds
+            };
+
+            helperGroups.push(helperGroup);
+        } else {
+            const helperNames: string[] = getHelpersNames(helperLine);
+            const helperIds: string[] = getBasecampIdsFromPersonNameList(helperNames);
+            const helperGroup: HelperGroup = {
+                helperIds: helperIds
+            };
+
+            helperGroups.push(helperGroup);
+        }
+    }
+
+    return helperGroups;
+}
+
+function getHelpersNames(helpers: string): string[] {
+    return helpers.split(COMMA_FORWARD_SLASH_DELIM_REGEX)
+    .map(name => name.trim())
+    .filter(name => name !== "");
 }

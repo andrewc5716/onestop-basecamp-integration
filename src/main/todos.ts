@@ -36,3 +36,26 @@ function getCreateTodoUrl(todolistIdentifier: TodolistIdentifier): string {
 function getUpdateTodoUrl(todoIdentifier: TodoIdentifier): string {
     return getBasecampProjectUrl(todoIdentifier.projectId) + TODO_PATH + todoIdentifier.todoId + JSON_PATH;
 }
+
+/**
+ * Constructs a BasecampTodoRequest object
+ * 
+ * @param content Name for the Todo object
+ * @param description Description for the Todo object
+ * @param assigneeIds array of assignee ids who the Todo will be assigned to
+ * @param completionSubsciberIds array of user ids who will be notified when the Todo is completed
+ * @param notify whether to notify the assignees upon Todo creation
+ * @param basecampDueDate when the Todo is due; YYYY-MM-DD
+ * @returns BasecampTodoRequest object
+ */
+export function getBasecampTodoRequest(content: string, description: string, assigneeIds: string[], completionSubsciberIds: string[], 
+    notify: boolean, basecampDueDate: string): BasecampTodoRequest {
+    return {
+        content: content,
+        description: description,
+        assignee_ids: assigneeIds,
+        completion_subscriber_ids: completionSubsciberIds,
+        notify: notify,
+        due_on: basecampDueDate
+    }
+}
