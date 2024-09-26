@@ -22,9 +22,30 @@ const HTTP_POST_METHOD = 'post';
 const HTTP_PUT_METHOD = 'put'
 const HTTP_GET_METHOD = 'get'
 
-type HTTPResponse = GoogleAppsScript.URL_Fetch.HTTPResponse;
+const BASECAMP_API_URL = 'https://3.basecampapi.com';
+const A2N_BASECAMP_ORG_ID = '4474129';
+const BUCKETS_PATH = '/buckets/'
 
-export function sendBasecampPostRequest(requestUrl: string, requestPayload: Record<string, any>): Record<string, any> {
+/**
+ * Gets the Basecamp URL for a specific project
+ * 
+ * @param projectId the "bucket" or project
+ * @returns the Basecamp URL for the specific project
+ */
+export function getBasecampProjectUrl(projectId: string) {
+    return getBasecampUrl() + BUCKETS_PATH + projectId;
+}
+
+/**
+ * Gets the Basecamp URL for A2N. Used for non-project specific data like for people.json
+ * 
+ * @returns the Basecamp URL for A2N
+ */
+export function getBasecampUrl(): string {
+    return BASECAMP_API_URL + '/' + A2N_BASECAMP_ORG_ID;
+}
+
+export function sendBasecampPostRequest(requestUrl: string, requestPayload: JsonObject): JsonData {
     const response: HTTPResponse = UrlFetchApp.fetch(requestUrl, {
         method: HTTP_POST_METHOD,
         headers: getHeaders(),
@@ -33,7 +54,7 @@ export function sendBasecampPostRequest(requestUrl: string, requestPayload: Reco
     return JSON.parse(response.getContentText());
 }
 
-export function sendBasecampPutRequest(requestUrl: string, requestPayload: Record<string, any>): Record<string, any> {
+export function sendBasecampPutRequest(requestUrl: string, requestPayload: JsonObject): JsonData {
     const response: HTTPResponse = UrlFetchApp.fetch(requestUrl, {
         method: HTTP_PUT_METHOD,
         headers: getHeaders(),
@@ -42,13 +63,27 @@ export function sendBasecampPutRequest(requestUrl: string, requestPayload: Recor
     return JSON.parse(response.getContentText());
 }
 
-export function sendPaginatedBasecampGetRequest(requestUrl: string): Record<string, any> {
+/**
+ * Performs a GET request for a Basecamp API, with built in pagination if applicable
+ * 
+ * @param requestUrl GET request URL
+ * @returns the GET response. If paginated, most likely a JsonArray
+ */
+export function sendPaginatedBasecampGetRequest(requestUrl: string): JsonData {
     let getResponse: HTTPResponse = sendBasecampGetRequest(requestUrl);
-    let cumulativeResponse: Record<string, any> = JSON.parse(getResponse.getContentText());
+
+    const jsonResponse: JsonData = JSON.parse(getResponse.getContentText());
+    // If the response isn't an array, pagination won't be possible anyway so return the response object
+    if (!Array.isArray(jsonResponse)) {
+        return jsonResponse;
+    }
+
+    let cumulativeResponse: JsonArray = jsonResponse;
 
     while (hasNextPageUrlFromGetResponse(getResponse)) {
         getResponse = sendBasecampGetRequest(getNextPageUrlFromGetResponse(getResponse));
-        cumulativeResponse.concat(JSON.parse(getResponse.getContentText()));
+        const jsonResponse: JsonData = JSON.parse(getResponse.getContentText());
+        cumulativeResponse.concat(jsonResponse);
     }
 
     return cumulativeResponse;

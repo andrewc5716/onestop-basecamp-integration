@@ -30,6 +30,11 @@ declare interface Row {
   readonly notes: Text
 }
 
+declare interface RowBasecampMapping {
+  rowHash: string
+  // Other properties such as the Basecamp Todo id can be added here
+}
+
 type HTTPResponse = GoogleAppsScript.URL_Fetch.HTTPResponse;
 
 declare interface OAuth2 {
@@ -49,4 +54,39 @@ declare interface OAuth2 {
 
 declare namespace OAuth2 {
  export function createService(name: string): OAuth2
+}
+
+type JsonData = JsonObject | JsonArray;
+type JsonObject = Record<string, unknown>;
+type JsonArray = JsonObject[];
+
+declare interface TodoIdentifier {
+  readonly projectId: string,
+  readonly todoId: string
+}
+
+declare interface TodolistIdentifier {
+  readonly projectId: string,
+  readonly todolistId: string
+}
+
+// This is the exact Basecamp Todo object, the keys cannot be changed
+declare interface BasecampTodoRequest extends JsonObject {
+  content: string, // todo name
+  description: string, // todo description
+  assignee_ids: string[], // list of assignee ids
+  completion_subscriber_ids?: string[], // list of people ids to be notified when the task is complete
+  notify: boolean, // whether to notify the assignees upon todo creation
+  due_on: string // YYYY-MM-DD
+}
+
+// Response from Basecamp Todo. Only need id for now, can add more later
+declare interface BasecampTodoResponse extends JsonObject {
+  id: string // id of the created todo
+}
+
+// Response from Basecamp people API. Only need id and name for now, can add more later
+declare interface Person extends JsonObject {
+  id: string,
+  name: string,
 }

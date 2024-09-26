@@ -1,4 +1,15 @@
+import { InvalidHashError } from "./error/invalidHashError";
+import { RowMissingIdError } from "./error/rowMissingIdError";
+import { RowNotSavedError } from "./error/rowNotSavedError";
+import { getPersonId } from "./people";
+import { getDocumentProperty, setDocumentProperties, setDocumentProperty } from "./propertiesService";
+
 const ROW_ID_KEY: string = "rowId";
+const HEXIDECIMAL_BASE: number = 16;
+const HEXIDECIMAL_CHAR_LENGTH: number = 2;
+const COMMA_FORWARD_SLASH_DELIM_REGEX: string = "/[,\/]/";
+const MONTH_LENGTH: number = 2;
+const DAY_LENGTH: number = 2;
 
 /**
  * Retrieves the metadata object for a given range. If the metadata object does not exist,
@@ -22,16 +33,17 @@ export function getMetadata(range: Range): Metadata {
 
 /**
  * Retrieves the unique id for a Row. The unique id is stored in the value of the metadata.
- * If the unique id has not been set, null will be returned
  * 
  * @param row the Row to retrieve the unique id for
- * @returns unique id for the row; null if one has not been set
+ * @returns unique id for the row
  */
 export function getId(row: Row): string {
-    const id = row.metadata.getValue();
+    const id: string | null = row.metadata.getValue();
 
-    if(id === null) {
-        throw Error("Row does not have an id: " + toString(row));
+    // Creating the metadata object sets the value to the empty string so we need to check for
+    // that here to determine if the id has been set or not
+    if(id === null || id === "") {
+        throw new RowMissingIdError(`Row does not have an id: ${toString(row)}`);
     }
 
     return id;
@@ -60,13 +72,232 @@ export function hasId(row: Row): boolean {
 }
 
 /**
+ * Saves a given row's contents to the PropertiesService
+ * 
+ * @param row the row's contents to write
+ */
+export function saveRow(row: Row): void {
+    if(!hasId(row)) {
+        throw new RowMissingIdError(`Row does not have an id: ${toString(row)}`);
+    }
+
+    const rowId: string = getId(row);
+    const rowHash: string = toHexString(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, toString(row)));
+    const rowBasecampMapping: RowBasecampMapping = {rowHash: rowHash};
+
+    setDocumentProperty(rowId, JSON.stringify(rowBasecampMapping));
+}
+
+/**
+ * Batched version of saveRow() which saves an array of row's contents
+ * to the PropertiesService at one time
+ * 
+ * @param rows array of rows to write
+ */
+export function saveRows(rows: Row[]): void {
+    const rowsWithIds: Row[] = rows.filter((row) => {
+        const rowHasId: boolean = hasId(row);
+        if(!rowHasId) {
+            Logger.log(`Row does not have an id: ${toString(row)}`);
+            return false;
+        }
+        return true;
+    });
+
+    if(rowsWithIds.length > 0) {
+        // Constructs an object containing all of the rowId/rowHash pairs to be written
+        const properties: {[key: string]: string} = {};
+        for(const row of rowsWithIds) {
+            const rowId: string = getId(row);
+            const rowHash: string = toHexString(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, toString(row)));
+            const rowBasecampMapping: RowBasecampMapping = {rowHash: rowHash};
+            properties[rowId] = JSON.stringify(rowBasecampMapping);
+        }
+
+        setDocumentProperties(properties);
+    } else {
+        Logger.log("No rows with ids provided");
+    }
+}
+
+/**
+ * Checks if a given row has been saved to the PropertiesService
+ * 
+ * @param row the row to check
+ * @returns boolean representing whether or not the given row has been saved to the PropertiesService or not
+ */
+export function hasBeenSaved(row: Row): boolean {
+    if(!hasId(row)) {
+        Logger.log(`Row does not have an id: ${toString(row)}`);
+        return false;
+    }
+
+    const rowHash: string | null = getSavedHash(row);
+
+    return rowHash !== null;
+}
+
+/**
+ * Checks if a given row's contents has been changed
+ * 
+ * @param row the row to check
+ * @returns boolean representing whether the given row's contents has been changed or not
+ */
+export function hasChanged(row: Row): boolean {
+    if(!hasId(row)) {
+        throw new RowMissingIdError(`Row does not have an id: ${toString(row)}`);
+    }
+
+    if(!hasBeenSaved(row)) {
+        throw new RowNotSavedError(`Row has not yet been saved: ${toString(row)}`);
+    }
+
+    const rowId: string = getId(row);
+    const currentRowHash: string = toHexString(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, toString(row)));
+    const storedRowHash: string | null = getSavedHash(row);
+
+    // null check to catch cases where the hashes are null (although this shouldn't be the case)
+    if(currentRowHash === null || storedRowHash === null) {
+        throw new InvalidHashError(`current or stored row has is null: [current: ${currentRowHash}, stored: ${storedRowHash}, row: ${toString(row)}]`);
+    }
+
+    return currentRowHash !== storedRowHash;
+}
+
+/**
+ * Helper function which fetches a given row's saved hash from the PropertiesService
+ * 
+ * @param row the row to retrieve the hash for
+ * @returns the row hash or null if the row cannot be found in the PropertiesService
+ */
+function getSavedHash(row: Row): string | null {
+    if(!hasId(row)) {
+        throw new RowMissingIdError(`Row does not have an id: ${toString(row)}`);
+    }
+
+    const rowBasecampMapping: RowBasecampMapping | null = getRowBasecampMapping(row);
+    
+    return rowBasecampMapping !== null ? rowBasecampMapping.rowHash : null;
+}
+
+/**
+ * Helper function which fetches a given row's RowBasecampMapping object from the PropertiesService
+ * 
+ * @param row the row to retrieve the RowBasecampMapping object for
+ * @returns the RowBasecampMapping object or null if the row cannot be found in the PropertiesService
+ */
+function getRowBasecampMapping(row: Row): RowBasecampMapping | null {
+    if(!hasId(row)) {
+        throw new RowMissingIdError(`Row does not have an id: ${toString(row)}`);
+    }
+
+    const rowId: string = getId(row);
+    const result: string | null = getDocumentProperty(rowId);
+
+    return result !== null ? JSON.parse(result) : null;
+}
+
+/**
  * Returns a string representation of the given row
  * 
  * @param row the row to return a string representation for
  * @returns string representation of the given row
  */
-function toString(row: Row): string {
+export function toString(row: Row): string {
     return `[${row.startTime}, ${row.endTime}, ${row.who}, ${row.numAttendees}, ${row.what.value}, 
     ${row.where.value}, ${row.inCharge.value}, ${row.helpers.value}, ${row.foodLead.value}, 
     ${row.childcare.value}, ${row.notes.value}]`;
+}
+
+/**
+ * Helper function that transforms a byte array into a hexidecimal string
+ * 
+ * @param byteArray 
+ * @returns 
+ */
+function toHexString(byteArray: number[]): string {
+    return byteArray.map(byte => {
+        // Convertes the raw byte to its corresponding hexidecimal string value
+        const hexByteString = byte.toString(HEXIDECIMAL_BASE);
+        // Appends a leading 0 if the hex string is less than 2 characters long
+        return hexByteString.length < HEXIDECIMAL_CHAR_LENGTH ? '0' + hexByteString : hexByteString;
+    })
+    .join('');
+}
+
+/**
+ * Constructs a BasecampTodoRequest object for the lead of a given row
+ * 
+ * @param row row to construct the BasecampTodoRequest for
+ * @returns BasecampTodoRequest
+ */
+export function getBasecampTodoForLeads(row: Row): BasecampTodoRequest {
+    const leadIds: string[] = getLeadsBasecampIds(row);
+    const basecampTodoDescription: string = getBasecampTodoDescription(row);
+    const basecampDueDate: string = getBasecampDueDate(row);
+
+    const basecampTodoRequest: BasecampTodoRequest = {
+        content: `Lead: ${row.what.value}`,
+        description: basecampTodoDescription,
+        assignee_ids: leadIds,
+        completion_subscriber_ids: leadIds,
+        notify: true,
+        due_on: basecampDueDate
+    }
+
+    return basecampTodoRequest;
+}
+
+/**
+ * Retrieves Basecamp ids for the leads of a given row
+ * 
+ * @param row row containing the leads to retrieve Basecamp ids for
+ * @returns array of Basecamp ids
+ */
+function getLeadsBasecampIds(row: Row): string[] {
+    return getLeadsNames(row).map((name) => getPersonId(name))
+    .filter((personId) => personId !== undefined);
+}
+
+/**
+ * Retrieves an array of leads' names from a row
+ * 
+ * @param row row to retrieve leads' names from
+ * @returns array of leads names
+ */
+function getLeadsNames(row: Row): string[] {
+    return row.inCharge.value.split(COMMA_FORWARD_SLASH_DELIM_REGEX);
+}
+
+/**
+ * Constructs the Basecampe Todo description for a given row
+ * 
+ * @param row row to construct the Basecamp Todo for
+ * @returns Basecamp Todo description
+ */
+function getBasecampTodoDescription(row: Row): string {
+    const location: string = `WHERE: ${row.where.value ?? "N\\A"}`;
+    const inCharge: string = `\n\nIN CHARAGE: ${row.inCharge.value ?? "N\\A"}`;
+    const helpers: string = `\n\nHELPERS: ${row.helpers.value ?? "N\\A"}`;
+    const foodLead: string = `\n\nFOOD LEAD: ${row.foodLead.value ?? "N\\A"}`;
+    const childcare: string = `\n\nCHILDCARE: ${row.childcare.value ?? "N\\A"}`;
+    const notes: string = `\n\nNOTES: ${row.notes.value ?? "N\\A"}`;
+
+    return location + inCharge + helpers + foodLead + childcare + notes;
+}
+
+/**
+ * Retrieves the date from a given row in the format required for a Basecamp Todo (YYYY-MM-DD)
+ * 
+ * @param row row to retrieve the due date from
+ * @returns due date for the row in the Basecamp Todo format (YYYY-MM-DD)
+ */
+function getBasecampDueDate(row: Row): string {
+    const year: number = row.startTime.getFullYear();
+    // Months are 0 indexed
+    const month: string = String(row.startTime.getMonth() + 1).padStart(MONTH_LENGTH, '0');
+    const day: string = String(row.startTime.getDate()).padStart(DAY_LENGTH, '0');
+
+    // Format the date as "YYYY-MM-DD"
+    return `${year}-${month}-${day}`;
 }
