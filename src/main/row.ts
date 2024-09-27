@@ -313,6 +313,12 @@ function getBasecampDueDate(row: Row): string {
     return `${year}-${month}-${day}`;
 }
 
+/**
+ * Constructs Basecamp Todo requests for helpers
+ * 
+ * @param row row to construct the Basecamp Todo request for
+ * @returns array of BasecampTodoRequest objects; one for each group of helpers
+ */
 export function getBasecampTodosForHelpers(row: Row): BasecampTodoRequest[] {
     const basecampTodoRequests: BasecampTodoRequest[] = [];
 
@@ -326,12 +332,19 @@ export function getBasecampTodosForHelpers(row: Row): BasecampTodoRequest[] {
         const asssigneeIds: string[] = leadIds.concat(helperGroup.helperIds);
         const basecampDueDate: string = getBasecampDueDate(row);
 
-        basecampTodoRequests.push(getBasecampTodoRequest(basecampTodoContent, basecampTodoDescription, asssigneeIds, asssigneeIds, true, basecampDueDate));
+        basecampTodoRequests.push(getBasecampTodoRequest(basecampTodoContent, basecampTodoDescription, asssigneeIds, 
+            asssigneeIds, true, basecampDueDate));
     }
 
     return basecampTodoRequests;
 }
 
+/**
+ * Retrieves an array of HelperGroup objects from a row
+ * 
+ * @param row row to retrieve the different HelperGroups from
+ * @returns array of HelperGroups
+ */
 function getHelperGroups(row: Row): HelperGroup[] {
     const helperGroups: HelperGroup[] = [];
 
@@ -339,30 +352,39 @@ function getHelperGroups(row: Row): HelperGroup[] {
     for(const helperLine of helperLines) {
         if (helperLine.includes(COLON_DELIM)) {
             const [role, helperNameList] = helperLine.split(COLON_DELIM);
-            const helperNames: string[] = getHelpersNames(helperNameList);
-            const helperIds: string[] = getBasecampIdsFromPersonNameList(helperNames);
-            const helperGroup: HelperGroup = {
-                role: role,
-                helperIds: helperIds
-            };
-
-            helperGroups.push(helperGroup);
+            helperGroups.push(getHelperGroupFromNameList(helperNameList, role));
         } else {
-            const helperNames: string[] = getHelpersNames(helperLine);
-            const helperIds: string[] = getBasecampIdsFromPersonNameList(helperNames);
-            const helperGroup: HelperGroup = {
-                helperIds: helperIds
-            };
-
-            helperGroups.push(helperGroup);
+            helperGroups.push(getHelperGroupFromNameList(helperLine, undefined));
         }
     }
 
     return helperGroups;
 }
 
+/**
+ * Parses out the helpers' name into an array of names
+ * 
+ * @param helpers comma and foward slash deliminated list of helper names
+ * @returns array of helper names
+ */
 function getHelpersNames(helpers: string): string[] {
     return helpers.split(COMMA_FORWARD_SLASH_DELIM_REGEX)
     .map(name => name.trim())
     .filter(name => name !== "");
+}
+
+/**
+ * Constructs a HelperGroup object given a list of helper names and a role for the group
+ * 
+ * @param helperNameList list of comma and foward slash deliminated helper names
+ * @param role the role for the group or undefined if one is not provided
+ * @returns constructed HelperGroup object
+ */
+function getHelperGroupFromNameList(helperNameList: string, role: string | undefined): HelperGroup {
+    const helperNames: string[] = getHelpersNames(helperNameList);
+    const helperIds: string[] = getBasecampIdsFromPersonNameList(helperNames);
+    return {
+        role: role,
+        helperIds: helperIds
+    };
 }
