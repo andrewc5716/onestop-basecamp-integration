@@ -239,13 +239,20 @@ function toHexString(byteArray: number[]): string {
  * @param row row to construct the BasecampTodoRequest for
  * @returns BasecampTodoRequest
  */
-export function getBasecampTodoForLeads(row: Row): BasecampTodoRequest {
+export function getBasecampTodoForLeads(row: Row): BasecampTodoRequest | undefined {
     const basecampTodoContent: string = `Lead: ${row.what.value}`;
     const leadIds: string[] = getLeadsBasecampIds(row);
     const basecampTodoDescription: string = getBasecampTodoDescription(row);
     const basecampDueDate: string = getBasecampDueDate(row);
 
-    return getBasecampTodoRequest(basecampTodoContent, basecampTodoDescription, leadIds, leadIds, true, basecampDueDate);
+    if(leadIds.length > 0) {
+        return getBasecampTodoRequest(basecampTodoContent, basecampTodoDescription, leadIds, leadIds, 
+            true, basecampDueDate);
+    } else {
+        Logger.log(`${leadIds} do not have any Basecamp ids`);
+        
+        return undefined;
+    }
 }
 
 /**
@@ -332,8 +339,12 @@ export function getBasecampTodosForHelpers(row: Row): BasecampTodoRequest[] {
         const asssigneeIds: string[] = leadIds.concat(helperGroup.helperIds);
         const basecampDueDate: string = getBasecampDueDate(row);
 
-        basecampTodoRequests.push(getBasecampTodoRequest(basecampTodoContent, basecampTodoDescription, asssigneeIds, 
-            asssigneeIds, true, basecampDueDate));
+        if(asssigneeIds.length > 0) {
+            basecampTodoRequests.push(getBasecampTodoRequest(basecampTodoContent, basecampTodoDescription, 
+                asssigneeIds, asssigneeIds, true, basecampDueDate));
+        } else {
+            Logger.log(`${row.helpers.value} do not have any Basecamp ids`);
+        }
     }
 
     return basecampTodoRequests;
@@ -346,6 +357,10 @@ export function getBasecampTodosForHelpers(row: Row): BasecampTodoRequest[] {
  * @returns array of HelperGroups
  */
 function getHelperGroups(row: Row): HelperGroup[] {
+    if(row.helpers.value === "") {
+        return [];
+    }
+
     const helperGroups: HelperGroup[] = [];
 
     const helperLines: string[] = row.helpers.value.split(NEW_LINE_DELIM);
