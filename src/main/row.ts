@@ -337,7 +337,8 @@ export function getBasecampTodosForHelpers(row: Row): BasecampTodoRequest[] {
         const roleTitle: string = helperGroup.role ? `${helperGroup.role} Helper` : "Helper";
         const basecampTodoContent: string = `${roleTitle}: ${row.what.value}`;
         const basecampTodoDescription: string = getBasecampTodoDescription(row);
-        const asssigneeIds: string[] = leadIds.concat(helperGroup.helperIds);
+        const helperIds: string[] = helperGroup.helperIds.filter(id => !leadIds.includes(id));
+        const asssigneeIds: string[] = leadIds.concat(helperIds);
         const basecampDueDate: string = getBasecampDueDate(row);
 
         if(asssigneeIds.length > 0) {
