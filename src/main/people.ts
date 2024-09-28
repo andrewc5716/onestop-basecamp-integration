@@ -45,8 +45,10 @@ export function populatePeopleInDb(): void {
  */
 export function getPersonId(personName: string): string | undefined {
     // Check the in memory cache first
-    if(cachedPersonNameIdMap !== null) {
-        return getPersonIdFromCache(personName);
+    if(cachedPersonNameIdMap !== null && cachedPersonNameIdMap.hasOwnProperty(personName)) {
+        return cachedPersonNameIdMap[personName];
+    } else if(cachedPersonNameIdMap !== null) {
+        return undefined;
     }
 
     // Otherwise attempt to fetch it from the script properties
