@@ -8,7 +8,7 @@ import { getBasecampTodoRequest } from "./todos";
 const ROW_ID_KEY: string = "rowId";
 const HEXIDECIMAL_BASE: number = 16;
 const HEXIDECIMAL_CHAR_LENGTH: number = 2;
-const COMMA_FORWARD_SLASH_DELIM_REGEX: string = "/[,\/]/";
+const COMMA_FORWARD_SLASH_DELIM_REGEX: RegExp = /[,\/]/;
 const MONTH_LENGTH: number = 2;
 const DAY_LENGTH: number = 2;
 const NEW_LINE_DELIM = "\n";
@@ -284,7 +284,8 @@ function getBasecampIdsFromPersonNameList(personNameList: string[]): string[] {
  * @returns array of leads names
  */
 function getLeadsNames(row: Row): string[] {
-    return row.inCharge.value.split(COMMA_FORWARD_SLASH_DELIM_REGEX);
+    return row.inCharge.value.split(COMMA_FORWARD_SLASH_DELIM_REGEX)
+    .map(name => name.trim());
 }
 
 /**
@@ -367,7 +368,8 @@ function getHelperGroups(row: Row): HelperGroup[] {
     for(const helperLine of helperLines) {
         if (helperLine.includes(COLON_DELIM)) {
             const [role, helperNameList] = helperLine.split(COLON_DELIM);
-            helperGroups.push(getHelperGroupFromNameList(helperNameList, role));
+            const trimmedHelperNameList: string = helperNameList.trim();
+            helperGroups.push(getHelperGroupFromNameList(trimmedHelperNameList, role));
         } else {
             helperGroups.push(getHelperGroupFromNameList(helperLine, undefined));
         }
