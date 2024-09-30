@@ -1,5 +1,4 @@
 import { getBasecampUrl, sendPaginatedBasecampGetRequest } from "./basecamp";
-import { PersonMissingIdError } from "./error/personMissingIdError";
 import { PersonNameIdMapNotCachedError } from "./error/personNameIdMapNotCachedError";
 import { getScriptProperty, setScriptProperty } from "./propertiesService";
 
@@ -46,7 +45,11 @@ export function populatePeopleInDb(): void {
 export function getPersonId(personName: string): string | undefined {
     // Check the in memory cache first
     if(cachedPersonNameIdMap !== null) {
-        return getPersonIdFromCache(personName);
+        const id: string | undefined = getPersonIdFromCache(personName);
+
+        if(id !== undefined) {
+            return id;
+        }
     }
 
     // Otherwise attempt to fetch it from the script properties
@@ -59,11 +62,7 @@ export function getPersonId(personName: string): string | undefined {
 
     // Populate the cache and fetch the person id if it exists
     cachedPersonNameIdMap = JSON.parse(personNameIdMap);
-    if(cachedPersonNameIdMap !== null && cachedPersonNameIdMap.hasOwnProperty(personName)) {
-        return cachedPersonNameIdMap[personName];
-    } else {
-        return undefined;
-    }
+    return getPersonIdFromCache(personName);
 }
 
 /**
@@ -83,12 +82,12 @@ export function peopleHaveBeenPopulated(): boolean {
  * @param personName the person's name to fetch the id for
  * @returns the person's id
  */
-function getPersonIdFromCache(personName: string): string {
+function getPersonIdFromCache(personName: string): string | undefined {
     if(cachedPersonNameIdMap !== null) {
         if(cachedPersonNameIdMap.hasOwnProperty(personName)) {
             return cachedPersonNameIdMap[personName];
         } else {
-            throw new PersonMissingIdError(`Person does not have an id: [personName: ${personName}]`);
+            return undefined;
         }
     } else {
         throw new PersonNameIdMapNotCachedError("Map of person name to id has not been cached");
