@@ -9,7 +9,8 @@ const DEFAULT_TODOLIST_IDENTIFIER: TodolistIdentifier = {
 };
 
 /**
- * 
+ * Main entry point for the Onestop to Basecamp Integration that contains the core logic for
+ * adding/updating/deleting Basecamp Todos based on the rows on the Onestop
  */
 export function main(): void {
     const eventRows: Row[] = getEventRowsFromSpreadsheet();
@@ -33,7 +34,9 @@ function processExistingRow(row: Row): void {
 }
 
 /**
- * 
+ * Processes new event rows by creating a new Basecamp Todo for each of the roles associated with that 
+ * particular event row. If at least on Todo is creaed in Bascamp, the row is saved for easier retrieval
+ * and updating later
  * 
  * @param row 
  */
@@ -41,14 +44,17 @@ function processNewRow(row: Row): void {
     const basecampTodoRequests: BasecampTodoRequest[] = getBasecampTodoRequestsForRow(row);
     const basecampTodoIds: string[] = createNewTodos(basecampTodoRequests);
 
-    generateIdForRow(row);
-    saveRow(row, basecampTodoIds);
+    if(basecampTodoIds.length > 0) {
+        generateIdForRow(row);
+        saveRow(row, basecampTodoIds);
+    }
 }
 
 /**
+ * Sends requests to create new Basecamp Todos
  * 
- * @param basecampRequests 
- * @returns 
+ * @param basecampRequests array of BasecampTodoRequest objects to send
+ * @returns array of corresponding Basecamp Todo ids
  */
 function createNewTodos(basecampRequests: BasecampTodoRequest[]): string[] {
     const basecampTodoIds: string[] = [];

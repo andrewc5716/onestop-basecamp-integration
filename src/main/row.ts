@@ -190,8 +190,8 @@ export function toString(row: Row): string {
 /**
  * Helper function that transforms a byte array into a hexidecimal string
  * 
- * @param byteArray 
- * @returns 
+ * @param byteArray byte array input
+ * @returns hexidecimal string representation of the byte array
  */
 function toHexString(byteArray: number[]): string {
     return byteArray.map(byte => {
@@ -204,8 +204,11 @@ function toHexString(byteArray: number[]): string {
 }
 
 /**
+ * Retrieves an array of BasecampTodoRequest objects for an event row. BasecampTodoRequest
+ * objects are constructed for both the leads and the helpers
  * 
- * @param row 
+ * @param row Row to construct and retrieve BasecampTodoRequest objects for
+ * @returns array of BasecampTodoRequest objects
  */
 export function getBasecampTodoRequestsForRow(row: Row): BasecampTodoRequest[] {
     let basecampTodoRequests: BasecampTodoRequest[] = [];

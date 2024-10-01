@@ -31,7 +31,9 @@ interface CellData {
 }
 
 /**
+ * Retrieves all event rows from the spreadsheet
  * 
+ * @returns an array of event rows from all of the daily active tabs of the spreadsheet
  */
 export function getEventRowsFromSpreadsheet(): Row[] {
     const tabs: Sheet[] = getAllSpreadsheetTabs();
