@@ -1,12 +1,9 @@
-import { getBasecampUrl, sendPaginatedBasecampGetRequest } from "./basecamp";
+import { getBasecampUrl, PROJECT_ID, sendPaginatedBasecampGetRequest } from "./basecamp";
 import { PersonNameIdMapNotCachedError } from "./error/personNameIdMapNotCachedError";
 import { getScriptProperty, setScriptProperty } from "./propertiesService";
 
 type PersonNameIdMap = {[key: string]: string};
 
-// Project ID hardcoded to our SD Basecamp Integration project for testing
-// In the future we may consider moving this to a script property as a config value
-const PROJECT_ID: string = "38736474";
 const PEOPLE_PATH: string = `/projects/${PROJECT_ID}/people.json`;
 const PEOPLE_MAP_KEY: string = "PEOPLE_MAP";
 

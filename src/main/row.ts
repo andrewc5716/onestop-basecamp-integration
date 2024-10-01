@@ -84,48 +84,16 @@ export function hasId(row: Row): boolean {
  * 
  * @param row the row's contents to write
  */
-export function saveRow(row: Row): void {
+export function saveRow(row: Row, basecampTodoIds: string[]): void {
     if(!hasId(row)) {
         throw new RowMissingIdError(`Row does not have an id: ${toString(row)}`);
     }
 
     const rowId: string = getId(row);
     const rowHash: string = toHexString(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, toString(row)));
-    const rowBasecampMapping: RowBasecampMapping = {rowHash: rowHash};
+    const rowBasecampMapping: RowBasecampMapping = {rowHash: rowHash, basecampTodoIds: basecampTodoIds};
 
     setDocumentProperty(rowId, JSON.stringify(rowBasecampMapping));
-}
-
-/**
- * Batched version of saveRow() which saves an array of row's contents
- * to the PropertiesService at one time
- * 
- * @param rows array of rows to write
- */
-export function saveRows(rows: Row[]): void {
-    const rowsWithIds: Row[] = rows.filter((row) => {
-        const rowHasId: boolean = hasId(row);
-        if(!rowHasId) {
-            Logger.log(`Row does not have an id: ${toString(row)}`);
-            return false;
-        }
-        return true;
-    });
-
-    if(rowsWithIds.length > 0) {
-        // Constructs an object containing all of the rowId/rowHash pairs to be written
-        const properties: {[key: string]: string} = {};
-        for(const row of rowsWithIds) {
-            const rowId: string = getId(row);
-            const rowHash: string = toHexString(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, toString(row)));
-            const rowBasecampMapping: RowBasecampMapping = {rowHash: rowHash};
-            properties[rowId] = JSON.stringify(rowBasecampMapping);
-        }
-
-        setDocumentProperties(properties);
-    } else {
-        Logger.log("No rows with ids provided");
-    }
 }
 
 /**

@@ -1,9 +1,10 @@
 import { getBasecampProjectUrl, sendBasecampPostRequest, sendBasecampPutRequest } from "./basecamp";
 
-const TODOLISTS_PATH = '/todolists/';
-const TODO_PATH = '/todos/';
-const JSON_PATH = '.json';
-const TODO_JSON_PATH = '/todos' + JSON_PATH;
+const TODOLISTS_PATH: string = '/todolists/';
+const TODO_PATH: string = '/todos/';
+const JSON_PATH: string = '.json';
+const TODO_JSON_PATH: string = '/todos' + JSON_PATH;
+export const TODOLIST_ID: string= "7865336721";
 
 /**
  * Creates a todo in Basecamp
