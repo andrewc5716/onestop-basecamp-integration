@@ -1,6 +1,6 @@
 import { PROJECT_ID } from "./basecamp";
-import { generateIdForRow, getBasecampTodoForLeads, getBasecampTodosForHelpers, getId, hasId, saveRow } from "./row";
-import { getActiveDailyTabs, getAllSpreadsheetTabs, getRowsWithEvents } from "./scan";
+import { generateIdForRow, getBasecampTodoRequestsForRow, getId, hasId, saveRow } from "./row";
+import { getEventRowsFromSpreadsheet } from "./scan";
 import { createTodo, TODOLIST_ID } from "./todos";
 
 const DEFAULT_TODOLIST_IDENTIFIER: TodolistIdentifier = {
@@ -8,12 +8,11 @@ const DEFAULT_TODOLIST_IDENTIFIER: TodolistIdentifier = {
     todolistId: TODOLIST_ID
 };
 
+/**
+ * 
+ */
 export function main(): void {
-    const tabs: Sheet[] = getAllSpreadsheetTabs();
-    const dailyActiveTabs: Sheet[] = getActiveDailyTabs(tabs);
-    
-    // Fetches all event rows from all of the daily active tabs
-    const eventRows: Row[] = dailyActiveTabs.flatMap((dailyActiveTab) => getRowsWithEvents(dailyActiveTab));
+    const eventRows: Row[] = getEventRowsFromSpreadsheet();
     const processedRowIds: string[] = [];
 
     for(const eventRow of eventRows) {
@@ -30,24 +29,28 @@ export function main(): void {
 }
 
 function processExistingRow(row: Row): void {
-
+    // Will be implemented as part of https://3.basecamp.com/4474129/buckets/38736474/todos/7717428992
 }
 
+/**
+ * 
+ * 
+ * @param row 
+ */
 function processNewRow(row: Row): void {
-    const leadsBasecampTodoRequest: BasecampTodoRequest | undefined = getBasecampTodoForLeads(row);
-    const helpersBasecampTodoRequest: BasecampTodoRequest[] = getBasecampTodosForHelpers(row);
-
-    if(leadsBasecampTodoRequest !== undefined) {
-        helpersBasecampTodoRequest.push(leadsBasecampTodoRequest);
-    }
-
-    const basecampTodoIds: string[] = addNewTodos(helpersBasecampTodoRequest);
+    const basecampTodoRequests: BasecampTodoRequest[] = getBasecampTodoRequestsForRow(row);
+    const basecampTodoIds: string[] = createNewTodos(basecampTodoRequests);
 
     generateIdForRow(row);
     saveRow(row, basecampTodoIds);
 }
 
-function addNewTodos(basecampRequests: BasecampTodoRequest[]): string[] {
+/**
+ * 
+ * @param basecampRequests 
+ * @returns 
+ */
+function createNewTodos(basecampRequests: BasecampTodoRequest[]): string[] {
     const basecampTodoIds: string[] = [];
     for(const request of basecampRequests) {
         basecampTodoIds.push(createTodo(request, DEFAULT_TODOLIST_IDENTIFIER));
@@ -57,5 +60,5 @@ function addNewTodos(basecampRequests: BasecampTodoRequest[]): string[] {
 }
 
 function deleteOldRows(processedRowIds: string[]): void {
-
+    // Will be implemented as part of https://3.basecamp.com/4474129/buckets/38736474/todos/7762398829
 }

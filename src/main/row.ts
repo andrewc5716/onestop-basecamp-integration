@@ -2,7 +2,7 @@ import { InvalidHashError } from "./error/invalidHashError";
 import { RowMissingIdError } from "./error/rowMissingIdError";
 import { RowNotSavedError } from "./error/rowNotSavedError";
 import { getPersonId } from "./people";
-import { getDocumentProperty, setDocumentProperties, setDocumentProperty } from "./propertiesService";
+import { deleteAllDocumentProperties, getDocumentProperty, setDocumentProperty } from "./propertiesService";
 import { getBasecampTodoRequest } from "./todos";
 
 const ROW_ID_KEY: string = "rowId";
@@ -76,7 +76,9 @@ export function generateIdForRow(row: Row): string {
  * @returns boolean representing whether a given Row has been assigned a unique id or not
  */
 export function hasId(row: Row): boolean {
-    return row.metadata.getValue() !== null;
+    const id: string | null = row.metadata.getValue();
+
+    return id !== null && id !== "";
 }
 
 /**
@@ -202,6 +204,27 @@ function toHexString(byteArray: number[]): string {
 }
 
 /**
+ * 
+ * @param row 
+ */
+export function getBasecampTodoRequestsForRow(row: Row): BasecampTodoRequest[] {
+    let basecampTodoRequests: BasecampTodoRequest[] = [];
+    const leadsBasecampTodoRequest: BasecampTodoRequest | undefined = getBasecampTodoForLeads(row);
+
+    if(leadsBasecampTodoRequest !== undefined) {
+        basecampTodoRequests.push(leadsBasecampTodoRequest);
+    }
+
+    const helpersBasecampTodoRequest: BasecampTodoRequest[] = getBasecampTodosForHelpers(row);
+
+    if(helpersBasecampTodoRequest.length > 0) {
+        basecampTodoRequests = basecampTodoRequests.concat(helpersBasecampTodoRequest);
+    }
+
+    return basecampTodoRequests;
+}
+
+/**
  * Constructs a BasecampTodoRequest object for the lead of a given row
  * 
  * @param row row to construct the BasecampTodoRequest for
@@ -217,7 +240,7 @@ export function getBasecampTodoForLeads(row: Row): BasecampTodoRequest | undefin
         return getBasecampTodoRequest(basecampTodoContent, basecampTodoDescription, leadIds, leadIds, 
             true, basecampDueDate);
     } else {
-        Logger.log(`${leadIds} do not have any Basecamp ids`);
+        Logger.log(`${getLeadsNames(row)} do not have any Basecamp ids`);
         
         return undefined;
     }
@@ -373,4 +396,11 @@ function getHelperGroupFromNameList(helperNameList: string, role: string | undef
         role: role,
         helperIds: helperIds
     };
+}
+
+/**
+ * Helpful debugging function which clears all row metadata
+ */
+export function clearAllRowMetadata(): void {
+    deleteAllDocumentProperties();
 }
