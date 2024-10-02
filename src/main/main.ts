@@ -12,7 +12,7 @@ const DEFAULT_TODOLIST_IDENTIFIER: TodolistIdentifier = {
  * Main entry point for the Onestop to Basecamp Integration that contains the core logic for
  * adding/updating/deleting Basecamp Todos based on the rows on the Onestop
  */
-export function main(): void {
+export function importOnestopToBascamp(): void {
     const eventRows: Row[] = getEventRowsFromSpreadsheet();
     const processedRowIds: string[] = [];
 
@@ -35,7 +35,7 @@ function processExistingRow(row: Row): void {
 
 /**
  * Processes new event rows by creating a new Basecamp Todo for each of the roles associated with that 
- * particular event row. If at least on Todo is creaed in Bascamp, the row is saved for easier retrieval
+ * particular event row. If at least on Todo is created in Bascamp, the row is saved for easier retrieval
  * and updating later
  * 
  * @param row 

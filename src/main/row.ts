@@ -78,6 +78,8 @@ export function generateIdForRow(row: Row): string {
 export function hasId(row: Row): boolean {
     const id: string | null = row.metadata.getValue();
 
+    // Creating the metadata object sets the value to the empty string so we need to check for 
+    // that here to determine if the id has been set or not
     return id !== null && id !== "";
 }
 
