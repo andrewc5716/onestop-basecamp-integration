@@ -12,7 +12,7 @@ const DEFAULT_TODOLIST_IDENTIFIER: TodolistIdentifier = {
  * Main entry point for the Onestop to Basecamp Integration that contains the core logic for
  * adding/updating/deleting Basecamp Todos based on the rows on the Onestop
  */
-export function importOnestopToBascamp(): void {
+export function importOnestopToBasecamp(): void {
     const eventRows: Row[] = getEventRowsFromSpreadsheet();
     const processedRowIds: string[] = [];
 
