@@ -1,30 +1,56 @@
 import { BASECAMP_CLIENT_ID, BASECAMP_CLIENT_SECRET } from "../../config/environmentVariables";
 
-const BASECAMP_AUTH_URL = 'https://launchpad.37signals.com/authorization/new?type=web_server';
-const BASECAMP_TOKEN_URL = 'https://launchpad.37signals.com/authorization/token?type=web_server';
-const BASECAMP_AUTH_CHECK_URL = 'https://launchpad.37signals.com/authorization.json';
-const OAUTH_BASECAMP_SERVICE_NAME = 'Basecamp';
-const OAUTH_CALLBACK_FUNCTION_NAME = 'oauthCallback'
-const BASECAMP_UNAUTH_ERROR_MSG = 'Basecamp not authenticated. Please try again.';
-const AUTH_DIALOG_MSG = 'You are disconnected from Basecamp. Copy the following link on a new tab to be authorized:\n\n';
-const AUTH_SUCCESS_HTML = 'Connection with Basecamp was successful! You can close this tab and re-run the program.';
-const AUTH_FAIL_HTML = 'Connection denied. Please close this tab and try again.';
-const LINK_HEADER_MISSING_ERROR_MSG = 'Next URL from Link header is undefined';
+type HttpMethod = GoogleAppsScript.URL_Fetch.HttpMethod;
 
-const HEADER_AUTHORIZATION = 'Authorization';
-const HEADER_BEARER_TOKEN = 'Bearer ';
-const HEADER_USER_AGENT = 'User-Agent';
-const HEADER_USER_AGENT_NAME = 'Google App Script Onestop Basecamp Integration';
-const HEADER_CONTENT_TYPE = 'Content-Type';
-const HEADER_JSON_CONTENT_TYPE = 'application/json';
+const BASECAMP_AUTH_URL: string = 'https://launchpad.37signals.com/authorization/new?type=web_server';
+const BASECAMP_TOKEN_URL: string = 'https://launchpad.37signals.com/authorization/token?type=web_server';
+const BASECAMP_AUTH_CHECK_URL: string = 'https://launchpad.37signals.com/authorization.json';
+const OAUTH_BASECAMP_SERVICE_NAME: string = 'Basecamp';
+const OAUTH_CALLBACK_FUNCTION_NAME: string = 'oauthCallback'
+const BASECAMP_UNAUTH_ERROR_MSG: string = 'Basecamp not authenticated. Please try again.';
+const AUTH_DIALOG_MSG: string = 'You are disconnected from Basecamp. Copy the following link on a new tab to be authorized:\n\n';
+const AUTH_SUCCESS_HTML: string = 'Connection with Basecamp was successful! You can close this tab and re-run the program.';
+const AUTH_FAIL_HTML: string = 'Connection denied. Please close this tab and try again.';
+const LINK_HEADER_MISSING_ERROR_MSG: string = 'Next URL from Link header is undefined';
 
-const HTTP_POST_METHOD = 'post';
-const HTTP_PUT_METHOD = 'put'
-const HTTP_GET_METHOD = 'get'
+const HEADER_AUTHORIZATION: string = 'Authorization';
+const HEADER_BEARER_TOKEN: string = 'Bearer ';
+const HEADER_USER_AGENT: string = 'User-Agent';
+const HEADER_USER_AGENT_NAME: string = 'Google App Script Onestop Basecamp Integration';
+const HEADER_CONTENT_TYPE: string = 'Content-Type';
+const HEADER_JSON_CONTENT_TYPE: string = 'application/json';
 
-type HTTPResponse = GoogleAppsScript.URL_Fetch.HTTPResponse;
+const HTTP_POST_METHOD: HttpMethod = 'post';
+const HTTP_PUT_METHOD: HttpMethod = 'put';
+const HTTP_GET_METHOD: HttpMethod = 'get';
 
-export function sendBasecampPostRequest(requestUrl: string, requestPayload: Record<string, any>): Record<string, any> {
+const BASECAMP_API_URL: string = 'https://3.basecampapi.com';
+const A2N_BASECAMP_ORG_ID: string = '4474129';
+const BUCKETS_PATH: string = '/buckets/';
+// Project ID hardcoded to our SD Basecamp Integration project for testing
+// In the future we may consider moving this to a script property as a config value
+export const PROJECT_ID: string = "38736474";
+
+/**
+ * Gets the Basecamp URL for a specific project
+ * 
+ * @param projectId the "bucket" or project
+ * @returns the Basecamp URL for the specific project
+ */
+export function getBasecampProjectUrl(projectId: string) {
+    return getBasecampUrl() + BUCKETS_PATH + projectId;
+}
+
+/**
+ * Gets the Basecamp URL for A2N. Used for non-project specific data like for people.json
+ * 
+ * @returns the Basecamp URL for A2N
+ */
+export function getBasecampUrl(): string {
+    return BASECAMP_API_URL + '/' + A2N_BASECAMP_ORG_ID;
+}
+
+export function sendBasecampPostRequest(requestUrl: string, requestPayload: JsonObject): JsonData {
     const response: HTTPResponse = UrlFetchApp.fetch(requestUrl, {
         method: HTTP_POST_METHOD,
         headers: getHeaders(),
@@ -33,7 +59,7 @@ export function sendBasecampPostRequest(requestUrl: string, requestPayload: Reco
     return JSON.parse(response.getContentText());
 }
 
-export function sendBasecampPutRequest(requestUrl: string, requestPayload: Record<string, any>): Record<string, any> {
+export function sendBasecampPutRequest(requestUrl: string, requestPayload: JsonObject): JsonData {
     const response: HTTPResponse = UrlFetchApp.fetch(requestUrl, {
         method: HTTP_PUT_METHOD,
         headers: getHeaders(),
@@ -42,13 +68,27 @@ export function sendBasecampPutRequest(requestUrl: string, requestPayload: Recor
     return JSON.parse(response.getContentText());
 }
 
-export function sendPaginatedBasecampGetRequest(requestUrl: string): Record<string, any> {
+/**
+ * Performs a GET request for a Basecamp API, with built in pagination if applicable
+ * 
+ * @param requestUrl GET request URL
+ * @returns the GET response. If paginated, most likely a JsonArray
+ */
+export function sendPaginatedBasecampGetRequest(requestUrl: string): JsonData {
     let getResponse: HTTPResponse = sendBasecampGetRequest(requestUrl);
-    let cumulativeResponse: Record<string, any> = JSON.parse(getResponse.getContentText());
+
+    const jsonResponse: JsonData = JSON.parse(getResponse.getContentText());
+    // If the response isn't an array, pagination won't be possible anyway so return the response object
+    if (!Array.isArray(jsonResponse)) {
+        return jsonResponse;
+    }
+
+    let cumulativeResponse: JsonArray = jsonResponse;
 
     while (hasNextPageUrlFromGetResponse(getResponse)) {
         getResponse = sendBasecampGetRequest(getNextPageUrlFromGetResponse(getResponse));
-        cumulativeResponse.concat(JSON.parse(getResponse.getContentText()));
+        const jsonResponse: JsonData = JSON.parse(getResponse.getContentText());
+        cumulativeResponse.concat(jsonResponse);
     }
 
     return cumulativeResponse;

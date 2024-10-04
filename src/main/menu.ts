@@ -1,11 +1,11 @@
-export { assignBaseCampTasks } from "./main"
+export { importOnestopToBasecamp } from "./main"
 
 export const updateManualTriggerMenuUiOnOneStop = () => {
 
   console.log("Updating OneStop Utils menu...")
   const tabSyncMenu: GoogleAppsScript.Base.Menu = SpreadsheetApp.getUi()
     .createMenu('OneStop Utils')
-    .addItem('Assign Basecamp Tasks', 'assignBaseCampTasks')
+    .addItem('Assign Basecamp Tasks', 'importOnestopToBasecamp')
 
   tabSyncMenu.addToUi()
 }
