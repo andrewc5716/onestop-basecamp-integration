@@ -1,3 +1,4 @@
+import { PropertiesServiceDeleteError } from "./error/propertiesServiceDeleteError";
 import { PropertiesServiceReadError } from "./error/propertiesServiceReadError";
 import { PropertiesServiceWriteError } from "./error/propertiesServiceWriteError";
 
@@ -17,7 +18,7 @@ export function getDocumentProperty(key: string): string | null {
     try {
         value = documentProperties.getProperty(key);
     } catch (e: any) {
-        const error = e as Error;
+        const error: Error = e as Error;
         throw new PropertiesServiceReadError(`Failed to retrieve document property: [key: ${key}] ${error.message}`);
     }
 
@@ -34,7 +35,7 @@ export function setDocumentProperty(key: string, value: string): void {
     try {
         documentProperties.setProperty(key, value);
     } catch (e: any) {
-        const error = e as Error;
+        const error: Error = e as Error;
         throw new PropertiesServiceWriteError(`Failed to save to document property PropertiesService: [key: ${key}, value: ${value}] ${error.message}`);
     }
 }
@@ -48,7 +49,7 @@ export function setDocumentProperties(properties: {[key: string]: string}): void
     try {
         documentProperties.setProperties(properties);
     } catch (e: any) {
-        const error = e as Error;
+        const error: Error = e as Error;
         throw new PropertiesServiceWriteError(`Failed to save to document property PropertiesService: [properties: ${properties}] ${error.message}`);
     }
 }
@@ -64,7 +65,7 @@ export function getScriptProperty(key: string): string | null {
     try {
         value = scriptProperties.getProperty(key);
     } catch (e: any) {
-        const error = e as Error;
+        const error: Error = e as Error;
         throw new PropertiesServiceReadError(`Failed to retrieve script property: [key: ${key}] ${error.message}`);
     }
 
@@ -81,7 +82,7 @@ export function setScriptProperty(key: string, value: string): void {
     try {
         scriptProperties.setProperty(key, value);
     } catch (e: any) {
-        const error = e as Error;
+        const error: Error = e as Error;
         throw new PropertiesServiceWriteError(`Failed to save to script property PropertiesService: [key: ${key}, value: ${value}] ${error.message}`);
     }
 }
@@ -95,7 +96,19 @@ export function setScriptProperties(properties: {[key: string]: string}): void {
     try {
         scriptProperties.setProperties(properties);
     } catch (e: any) {
-        const error = e as Error;
+        const error: Error = e as Error;
         throw new PropertiesServiceWriteError(`Failed to save to script property PropertiesService: [properties: ${properties}] ${error.message}`);
+    }
+}
+
+/**
+ * Useful debugging function that will clear all document properties
+ */
+export function deleteAllDocumentProperties(): void {
+    try {
+        documentProperties.deleteAllProperties();
+    } catch (e: any) {
+        const error: Error = e as Error;
+        throw new PropertiesServiceDeleteError(`Failed to delete all document properties: ${error.message}`)
     }
 }

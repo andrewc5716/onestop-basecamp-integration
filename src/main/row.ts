@@ -2,7 +2,7 @@ import { InvalidHashError } from "./error/invalidHashError";
 import { RowMissingIdError } from "./error/rowMissingIdError";
 import { RowNotSavedError } from "./error/rowNotSavedError";
 import { getPersonId } from "./people";
-import { getDocumentProperty, setDocumentProperties, setDocumentProperty } from "./propertiesService";
+import { deleteAllDocumentProperties, getDocumentProperty, setDocumentProperty } from "./propertiesService";
 import { getBasecampTodoRequest } from "./todos";
 
 const ROW_ID_KEY: string = "rowId";
@@ -76,7 +76,11 @@ export function generateIdForRow(row: Row): string {
  * @returns boolean representing whether a given Row has been assigned a unique id or not
  */
 export function hasId(row: Row): boolean {
-    return row.metadata.getValue() !== null;
+    const id: string | null = row.metadata.getValue();
+
+    // Creating the metadata object sets the value to the empty string so we need to check for 
+    // that here to determine if the id has been set or not
+    return id !== null && id !== "";
 }
 
 /**
@@ -84,48 +88,16 @@ export function hasId(row: Row): boolean {
  * 
  * @param row the row's contents to write
  */
-export function saveRow(row: Row): void {
+export function saveRow(row: Row, basecampTodoIds: string[]): void {
     if(!hasId(row)) {
         throw new RowMissingIdError(`Row does not have an id: ${toString(row)}`);
     }
 
     const rowId: string = getId(row);
     const rowHash: string = toHexString(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, toString(row)));
-    const rowBasecampMapping: RowBasecampMapping = {rowHash: rowHash};
+    const rowBasecampMapping: RowBasecampMapping = {rowHash: rowHash, basecampTodoIds: basecampTodoIds};
 
     setDocumentProperty(rowId, JSON.stringify(rowBasecampMapping));
-}
-
-/**
- * Batched version of saveRow() which saves an array of row's contents
- * to the PropertiesService at one time
- * 
- * @param rows array of rows to write
- */
-export function saveRows(rows: Row[]): void {
-    const rowsWithIds: Row[] = rows.filter((row) => {
-        const rowHasId: boolean = hasId(row);
-        if(!rowHasId) {
-            Logger.log(`Row does not have an id: ${toString(row)}`);
-            return false;
-        }
-        return true;
-    });
-
-    if(rowsWithIds.length > 0) {
-        // Constructs an object containing all of the rowId/rowHash pairs to be written
-        const properties: {[key: string]: string} = {};
-        for(const row of rowsWithIds) {
-            const rowId: string = getId(row);
-            const rowHash: string = toHexString(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, toString(row)));
-            const rowBasecampMapping: RowBasecampMapping = {rowHash: rowHash};
-            properties[rowId] = JSON.stringify(rowBasecampMapping);
-        }
-
-        setDocumentProperties(properties);
-    } else {
-        Logger.log("No rows with ids provided");
-    }
 }
 
 /**
@@ -220,8 +192,8 @@ export function toString(row: Row): string {
 /**
  * Helper function that transforms a byte array into a hexidecimal string
  * 
- * @param byteArray 
- * @returns 
+ * @param byteArray byte array input
+ * @returns hexidecimal string representation of the byte array
  */
 function toHexString(byteArray: number[]): string {
     return byteArray.map(byte => {
@@ -231,6 +203,30 @@ function toHexString(byteArray: number[]): string {
         return hexByteString.length < HEXIDECIMAL_CHAR_LENGTH ? '0' + hexByteString : hexByteString;
     })
     .join('');
+}
+
+/**
+ * Retrieves an array of BasecampTodoRequest objects for an event row. BasecampTodoRequest
+ * objects are constructed for both the leads and the helpers
+ * 
+ * @param row Row to construct and retrieve BasecampTodoRequest objects for
+ * @returns array of BasecampTodoRequest objects
+ */
+export function getBasecampTodoRequestsForRow(row: Row): BasecampTodoRequest[] {
+    let basecampTodoRequests: BasecampTodoRequest[] = [];
+    const leadsBasecampTodoRequest: BasecampTodoRequest | undefined = getBasecampTodoForLeads(row);
+
+    if(leadsBasecampTodoRequest !== undefined) {
+        basecampTodoRequests.push(leadsBasecampTodoRequest);
+    }
+
+    const helpersBasecampTodoRequest: BasecampTodoRequest[] = getBasecampTodosForHelpers(row);
+
+    if(helpersBasecampTodoRequest.length > 0) {
+        basecampTodoRequests = basecampTodoRequests.concat(helpersBasecampTodoRequest);
+    }
+
+    return basecampTodoRequests;
 }
 
 /**
@@ -249,7 +245,7 @@ export function getBasecampTodoForLeads(row: Row): BasecampTodoRequest | undefin
         return getBasecampTodoRequest(basecampTodoContent, basecampTodoDescription, leadIds, leadIds, 
             true, basecampDueDate);
     } else {
-        Logger.log(`${leadIds} do not have any Basecamp ids`);
+        Logger.log(`${getLeadsNames(row)} do not have any Basecamp ids`);
         
         return undefined;
     }
@@ -405,4 +401,11 @@ function getHelperGroupFromNameList(helperNameList: string, role: string | undef
         role: role,
         helperIds: helperIds
     };
+}
+
+/**
+ * Helpful debugging function which clears all row metadata
+ */
+export function clearAllRowMetadata(): void {
+    deleteAllDocumentProperties();
 }

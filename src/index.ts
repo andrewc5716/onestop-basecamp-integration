@@ -1,6 +1,7 @@
 import {onOpen} from './main/menu';
 
 export * from './main/basecamp';
+export * from './main/main';
 export * from './main/people';
 export * from './main/propertiesService';
 export * from './main/row';
