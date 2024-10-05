@@ -1,5 +1,4 @@
 import { PROJECT_ID } from "./basecamp";
-import { updateManualTriggerMenuUiOnOneStop } from "./menu";
 import { generateIdForRow, getBasecampTodoRequestsForRow, getId, hasId, saveRow } from "./row";
 import { getEventRowsFromSpreadsheet } from "./scan";
 import { createTodo, TODOLIST_ID } from "./todos";
@@ -15,7 +14,7 @@ const DEFAULT_TODOLIST_IDENTIFIER: TodolistIdentifier = {
  * create a menu item to give users the ability to manually trigger the import process. 
  */
 export function importOnestopToBasecamp(): void {
-    
+
     const eventRows: Row[] = getEventRowsFromSpreadsheet();
     const processedRowIds: string[] = [];
 
