@@ -15,4 +15,4 @@ export * from './main/menu';
 // Assign `global` so gas-webpack-plugin will generate a stub for `onOpen` in the top-level scope. A top-level
 // declaration is needed for Google Apps Script to detect the function, so it is available as a trigger.
 
-global.updateManualTriggerMenuUiOnOneStop = updateManualTriggerMenuUiOnOneStop;
+global.onOpen = onOpen;

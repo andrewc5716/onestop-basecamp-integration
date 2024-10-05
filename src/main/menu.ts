@@ -1,14 +1,11 @@
-export { importOnestopToBasecamp } from "./main"
-
 /**
  * Adds/updates a Basecamp menu item at the top of the Onestop with an 'Assign Basecamp Tasks' button
  * for users to manually kick off the importOneStopToBasecamp() function
  * 
- * NOTE: Run this function manually in the AppScript Editor whenever there is a change in the menu
+ * @param e the open event that gets raised whenever a user opens the sheet
  */
 
-export const updateManualTriggerMenuUiOnOneStop = () => {
-
+export const onOpen = (e: OpenEvent) => {
   console.log("Updating OneStop menu...")
   const tabSyncMenu: GoogleAppsScript.Base.Menu = SpreadsheetApp.getUi()
     .createMenu('Basecamp')
