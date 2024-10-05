@@ -15,9 +15,7 @@ const DEFAULT_TODOLIST_IDENTIFIER: TodolistIdentifier = {
  * create a menu item to give users the ability to manually trigger the import process. 
  */
 export function importOnestopToBasecamp(): void {
-
-    updateManualTriggerMenuUiOnOneStop();
-
+    
     const eventRows: Row[] = getEventRowsFromSpreadsheet();
     const processedRowIds: string[] = [];
 
