@@ -7,9 +7,6 @@ type PersonNameIdMap = {[key: string]: string};
 const PEOPLE_PATH: string = `/projects/${PROJECT_ID}/people.json`;
 const PEOPLE_MAP_KEY: string = "PEOPLE_MAP";
 
-// Regex to match a person's name followed by a city in parentheses. ex. John MiddleName1 ... MiddleName5 Doe (SD)
-const CITY_REGEX: string = "^(.*)\(([^)]*)\)$";
-
 let cachedPersonNameIdMap: PersonNameIdMap | null = null;
 
 /**
@@ -23,7 +20,7 @@ export function populatePeopleInDb(): void {
 
     // Reduce all of the people to a single map
     const personNameIdMap: PersonNameIdMap = peopleData.reduce((map: PersonNameIdMap, person: Person) => {
-        const personName: string = extractPersonName(person);
+        const personName: string = normalizePersonName(person.name);
         map[personName] = person.id;
         return map;
     }, {} as PersonNameIdMap);
@@ -40,9 +37,10 @@ export function populatePeopleInDb(): void {
  * @returns the person's Basecamp id
  */
 export function getPersonId(personName: string): string | undefined {
+    const normalizedPersonName = normalizePersonName(personName);
     // Check the in memory cache first
     if(cachedPersonNameIdMap !== null) {
-        const id: string | undefined = getPersonIdFromCache(personName);
+        const id: string | undefined = getPersonIdFromCache(normalizedPersonName);
 
         if(id !== undefined) {
             return id;
@@ -54,12 +52,12 @@ export function getPersonId(personName: string): string | undefined {
 
     if(personNameIdMap === null) {
         populatePeopleInDb();
-        return getPersonIdFromCache(personName);
+        return getPersonIdFromCache(normalizedPersonName);
     }
 
     // Populate the cache and fetch the person id if it exists
     cachedPersonNameIdMap = JSON.parse(personNameIdMap);
-    return getPersonIdFromCache(personName);
+    return getPersonIdFromCache(normalizedPersonName);
 }
 
 /**
@@ -92,13 +90,14 @@ function getPersonIdFromCache(personName: string): string | undefined {
 }
 
 /**
- * Extracts a person name from a Person object removing any parentheses and city if found 
+ * Normalizes a person name removing any city in parenthesis if found, and also removes middle names
  * 
- * @param person Person object retrieved from Basecamp
- * @returns the person's name
+ * @param rawPersonName person name that may include city in parenthesis or middle names, e.g. Andrew Chan (Sd)
+ * @returns the person's first and last name only, e.g. Andrew Chan
  */
-function extractPersonName(person: Person): string {
-    const match: RegExpMatchArray | null = person.name.match(CITY_REGEX);
-    // Extracts the person's name without the city
-    return match ? `${match[1].trim()}` : person.name;
+function normalizePersonName(rawPersonName: string): string {
+    const parenthesisIndex = rawPersonName.indexOf('(');
+    const nameWithoutParenthesis = parenthesisIndex === -1 ? rawPersonName : rawPersonName.slice(0, parenthesisIndex);
+    const fullName = nameWithoutParenthesis.trim().split(' ');
+    return `${fullName[0]} ${fullName[fullName.length - 1]}`;
 }
