@@ -243,9 +243,9 @@ export function getBasecampTodoForLeads(row: Row): BasecampTodoRequest | undefin
 
     if(leadIds.length > 0) {
         return getBasecampTodoRequest(basecampTodoContent, basecampTodoDescription, leadIds, leadIds, 
-            true, basecampDueDate);
+            false, basecampDueDate);
     } else {
-        Logger.log(`${getLeadsNames(row)} do not have any Basecamp ids`);
+        Logger.log(`${getLeadsNames(row)} do not have any Basecamp ids. row: ${row}`);
         
         return undefined;
     }
@@ -334,14 +334,14 @@ export function getBasecampTodosForHelpers(row: Row): BasecampTodoRequest[] {
         const basecampTodoContent: string = `${roleTitle}: ${row.what.value}`;
         const basecampTodoDescription: string = getBasecampTodoDescription(row);
         const helperIds: string[] = helperGroup.helperIds.filter(id => !leadIds.includes(id));
-        const asssigneeIds: string[] = leadIds.concat(helperIds);
+        const assigneeIds: string[] = leadIds.concat(helperIds);
         const basecampDueDate: string = getBasecampDueDate(row);
 
-        if(asssigneeIds.length > 0) {
+        if(assigneeIds.length > 0) {
             basecampTodoRequests.push(getBasecampTodoRequest(basecampTodoContent, basecampTodoDescription, 
-                asssigneeIds, asssigneeIds, true, basecampDueDate));
+                assigneeIds, leadIds, false, basecampDueDate));
         } else {
-            Logger.log(`${row.helpers.value} do not have any Basecamp ids`);
+            Logger.log(`${row.helpers.value} do not have any Basecamp ids. row: ${row}`);
         }
     }
 

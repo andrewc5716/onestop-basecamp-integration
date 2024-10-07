@@ -23,7 +23,10 @@ export function importOnestopToBasecamp(): void {
             processNewRow(eventRow);
         }
 
-        processedRowIds.push(getId(eventRow));
+        // Some rows may not have an id if a todo request isn't successfully made
+        if (hasId(eventRow)) {
+            processedRowIds.push(getId(eventRow));
+        }
     }
 
     deleteOldRows(processedRowIds);
