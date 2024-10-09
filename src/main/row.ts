@@ -283,8 +283,8 @@ function getLeadsNames(row: Row): string[] {
  */
 function getBasecampTodoDescription(row: Row): string {
     const location: string = `WHERE: ${row.where.value ?? "N\\A"}`;
-    const inCharge: string = `\n\nIN CHARAGE: ${row.inCharge.value ?? "N\\A"}`;
-    const helpers: string = `\n\nHELPERS: ${row.helpers.value ?? "N\\A"}`;
+    const inCharge: string = `\n\nIN CHARGE: ${row.inCharge.value ?? "N\\A"}`;
+    const helpers: string = `\n\nHELPERS:\n${row.helpers.value ?? "N\\A"}`;
     const foodLead: string = `\n\nFOOD LEAD: ${row.foodLead.value ?? "N\\A"}`;
     const childcare: string = `\n\nCHILDCARE: ${row.childcare.value ?? "N\\A"}`;
     const notes: string = `\n\nNOTES: ${row.notes.value ?? "N\\A"}`;
