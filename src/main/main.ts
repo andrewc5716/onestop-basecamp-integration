@@ -23,8 +23,10 @@ export function importOnestopToBasecamp(): void {
 
     for(const eventRow of eventRows) {
         if(hasId(eventRow)) {
+            console.log(`Row for ${eventRow.what.value} on ${eventRow.startTime} already exists! Processing as exiting row...\n`);
             processExistingRow(eventRow);
         } else {
+            console.log(`Row for ${eventRow.what.value} on ${eventRow.startTime} is new! Processing as a new row...\n`)
             processNewRow(eventRow);
         }
 
@@ -45,8 +47,11 @@ export function importOnestopToBasecamp(): void {
  */
 function processExistingRow(row: Row): void {
 
+    Logger.log("Checking if the row has changed...\n")
+
     if(hasChanged(row)) {
 
+        Logger.log("Changes detected in row! Updateding associated todos to reflect changes...\n")
         const basecampTodoRequests: Map<string, BasecampTodoRequest> = getBasecampTodoRequestsForRow(row);
 
         const savedRowBasecampMapping: RowBasecampMapping | null = getRowBasecampMapping(row);
@@ -62,18 +67,20 @@ function processExistingRow(row: Row): void {
                 throw new BasecampRequestMissingError("Missing basecamp request!");
                 
             } else if (todoId == undefined) {
+                Logger.log(`Todo Id is undefined in the roleRodoIdMap! Creating new todo for ${row.what.value}...\n`)
                 createTodo(request, DEFAULT_TODOLIST_IDENTIFIER)
-
+                
             } else {
-
+                
                 let todoIdentifier: TodoIdentifier = {
                     projectId: PROJECT_ID,
                     todoId: todoId
                 }
-
+                
+                Logger.log(`Updating todo for ${row.what.value} (${row.startTime.getDate()})...\n`)
                 updateTodo(request, todoIdentifier)
             }
-        }
+        }   
 
         const newRoles = Array.from(basecampTodoRequests.keys());
         const oldRoles: string[] = roles.filter(role => !newRoles.includes(role));

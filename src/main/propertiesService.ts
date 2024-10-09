@@ -25,6 +25,7 @@ export function getDocumentProperty(key: string): string | null {
     return value;
 }
 
+
 /**
  * Sets a document property in the PropertiesService
  * 
@@ -111,4 +112,24 @@ export function deleteAllDocumentProperties(): void {
         const error: Error = e as Error;
         throw new PropertiesServiceDeleteError(`Failed to delete all document properties: ${error.message}`)
     }
+}
+
+/**
+ * Logs all document properties of the current Google Sheets document.
+ *
+ * Retrieves and logs key-value pairs from the document properties using the 
+ * Apps Script Logger. Useful for debugging and auditing document metadata.
+ *
+ * @function logDocumentProperties
+ * @returns {void}
+ *
+ * @example
+ * logDocumentProperties();
+ */
+export function logDocumentProperties() {
+    var allProperties = documentProperties.getProperties();
+    for (var key in allProperties) {
+      Logger.log(key + ': ' + allProperties[key]);
+    }
+
 }
