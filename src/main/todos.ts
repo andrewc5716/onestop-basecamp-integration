@@ -30,6 +30,10 @@ export function updateTodo(todo: BasecampTodoRequest, todoIdentifier: TodoIdenti
     sendBasecampPutRequest(getUpdateTodoUrl(todoIdentifier), todo);
 }
 
+export function deleteTodo() {
+    
+}
+
 function getCreateTodoUrl(todolistIdentifier: TodolistIdentifier): string {
     return getBasecampProjectUrl(todolistIdentifier.projectId) + TODOLISTS_PATH + todolistIdentifier.todolistId + TODO_JSON_PATH;
 }

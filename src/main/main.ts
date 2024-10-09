@@ -1,7 +1,10 @@
 import { PROJECT_ID } from "./basecamp";
-import { generateIdForRow, getBasecampTodoRequestsForRow, getId, hasId, saveRow } from "./row";
+import { BasecampRequestMissingError } from "./error/basecampRequestMissingError";
+import { RowBasecampMappingMissingError } from "./error/rowBasecampMappingMissingError";
+import { TodoIsMissingError } from "./error/todoIdMissingError";
+import { generateIdForRow, getBasecampTodoRequestsForRow, getId, getRowBasecampMapping, hasChanged, hasId, saveRow } from "./row";
 import { getEventRowsFromSpreadsheet } from "./scan";
-import { createTodo, TODOLIST_ID } from "./todos";
+import { createTodo, TODOLIST_ID, updateTodo } from "./todos";
 
 const DEFAULT_TODOLIST_IDENTIFIER: TodolistIdentifier = {
     projectId: PROJECT_ID,
@@ -34,8 +37,51 @@ export function importOnestopToBasecamp(): void {
     deleteOldRows(processedRowIds);
 }
 
+/**
+ * Processes existing event rows by checking whether the row has been modified and if so indiscriminately
+ * updates all the tasks with the new information
+ * 
+ * @param row 
+ */
 function processExistingRow(row: Row): void {
-    // Will be implemented as part of https://3.basecamp.com/4474129/buckets/38736474/todos/7717428992
+
+    if(hasChanged(row)) {
+
+        const basecampTodoRequests: Map<string, BasecampTodoRequest> = getBasecampTodoRequestsForRow(row);
+
+        const savedRowBasecampMapping: RowBasecampMapping | null = getRowBasecampMapping(row);
+
+        const roles: string[] = Array.from(basecampTodoRequests.keys());
+
+        for (const role of roles) {
+
+            let todoId = savedRowBasecampMapping?.roleTodoIdMap.get(role);
+            let request = basecampTodoRequests.get(role);
+
+            if(request == undefined) {
+                throw new BasecampRequestMissingError("Missing basecamp request!");
+                
+            } else if (todoId == undefined) {
+                createTodo(request, DEFAULT_TODOLIST_IDENTIFIER)
+
+            } else {
+
+                let todoIdentifier: TodoIdentifier = {
+                    projectId: PROJECT_ID,
+                    todoId: todoId
+                }
+
+                updateTodo(request, todoIdentifier)
+            }
+        }
+
+        const newRoles = Array.from(basecampTodoRequests.keys());
+        const oldRoles: string[] = roles.filter(role => !newRoles.includes(role));
+
+        for(const oldRole of oldRoles) {
+            // Delete the todo associated with the old helper role
+        }
+    }
 }
 
 /**

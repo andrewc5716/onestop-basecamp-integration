@@ -167,7 +167,7 @@ function getSavedHash(row: Row): string | null {
  * @param row the row to retrieve the RowBasecampMapping object for
  * @returns the RowBasecampMapping object or null if the row cannot be found in the PropertiesService
  */
-function getRowBasecampMapping(row: Row): RowBasecampMapping | null {
+export function getRowBasecampMapping(row: Row): RowBasecampMapping | null {
     if(!hasId(row)) {
         throw new RowMissingIdError(`Row does not have an id: ${toString(row)}`);
     }
