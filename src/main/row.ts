@@ -89,7 +89,7 @@ export function hasId(row: Row): boolean {
  * @param row the row's contents to write
  * @param roleTodoIdMap a map that has role titles as the keys and todo ids as the values
  */
-export function saveRow(row: Row, roleTodoIdMap: Map<string, string>): void {
+export function saveRow(row: Row, roleTodoIdMap: { [key: string]: string }): void {
     if(!hasId(row)) {
         throw new RowMissingIdError(`Row does not have an id: ${toString(row)}`);
     }

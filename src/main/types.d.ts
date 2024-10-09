@@ -32,7 +32,7 @@ declare interface Row {
 
 declare interface RowBasecampMapping {
   rowHash: string,
-  roleTodoIdMap: Map<string, string>
+  roleTodoIdMap: { [key: string]: string }
 }
 
 type HTTPResponse = GoogleAppsScript.URL_Fetch.HTTPResponse;

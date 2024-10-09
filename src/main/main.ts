@@ -55,7 +55,7 @@ function processExistingRow(row: Row): void {
 
         for (const role of roles) {
 
-            let todoId = savedRowBasecampMapping?.roleTodoIdMap.get(role);
+            let todoId = savedRowBasecampMapping?.roleTodoIdMap[role];
             let request = basecampTodoRequests.get(role);
 
             if(request == undefined) {
@@ -93,9 +93,9 @@ function processExistingRow(row: Row): void {
  */
 function processNewRow(row: Row): void {
     const basecampTodoRequests: Map<string, BasecampTodoRequest> = getBasecampTodoRequestsForRow(row);
-    const roleTodoIdMap: Map<string, string> = createNewTodos(basecampTodoRequests);
+    const roleTodoIdMap: { [key: string]: string } = createNewTodos(basecampTodoRequests);
 
-    if(roleTodoIdMap.size > 0) {
+    if(Object.keys(roleTodoIdMap).length > 0) {
         generateIdForRow(row);
         saveRow(row, roleTodoIdMap);
     }
@@ -107,12 +107,12 @@ function processNewRow(row: Row): void {
  * @param basecampRequests array of BasecampTodoRequest objects to send
  * @returns a map that associates role titles with basecamp todo ids
  */
-function createNewTodos(basecampRequests: Map<string, BasecampTodoRequest>): Map<string, string> {
-    const basecampTodoIds = new Map<string, string>();
+function createNewTodos(basecampRequests: Map<string, BasecampTodoRequest>): { [key: string]: string } {
+    const basecampTodoIds: { [key: string]: string } = {};
 
     for (const [roleTitle, basecampRequest] of basecampRequests) {
         let basecampTodoId: string = createTodo(basecampRequest, DEFAULT_TODOLIST_IDENTIFIER)
-        basecampTodoIds.set(roleTitle, basecampTodoId);
+        basecampTodoIds[roleTitle] = basecampTodoId;
     }
 
     return basecampTodoIds;
