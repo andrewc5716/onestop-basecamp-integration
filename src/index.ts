@@ -1,4 +1,4 @@
-import {onOpen} from './main/menu';
+import { onOpen } from './main/menu';
 
 export * from './main/basecamp';
 export * from './main/main';
