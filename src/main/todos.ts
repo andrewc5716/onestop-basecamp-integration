@@ -1,9 +1,12 @@
-import { getBasecampProjectUrl, sendBasecampPostRequest, sendBasecampPutRequest } from "./basecamp";
+import { getBasecampProjectUrl, sendBasecampDeleteRequest, sendBasecampPostRequest, sendBasecampPutRequest } from "./basecamp";
 
 const TODOLISTS_PATH: string = '/todolists/';
 const TODO_PATH: string = '/todos/';
+const RECORDINGS_PATH: string = '/recordings/';
 const JSON_PATH: string = '.json';
 const TODO_JSON_PATH: string = '/todos' + JSON_PATH;
+const TRASHED_TODO_JSON_PATH: string = '/status/trashed' + JSON_PATH;
+
 export const TODOLIST_ID: string= "7865336721";
 
 /**
@@ -14,6 +17,7 @@ export const TODOLIST_ID: string= "7865336721";
  * @returns the id of the created todo. This must be saved by the caller to update this todo in the future.
  */
 export function createTodo(todo: BasecampTodoRequest, todolistIdentifier: TodolistIdentifier): string {
+    Logger.log(`Creating new "${todo.content}" todo...\n`)
     const rawTodoResponse: JsonData = sendBasecampPostRequest(getCreateTodoUrl(todolistIdentifier), todo);
     const todoResponse: BasecampTodoResponse = rawTodoResponse as BasecampTodoResponse;
     return todoResponse.id;
@@ -30,8 +34,15 @@ export function updateTodo(todo: BasecampTodoRequest, todoIdentifier: TodoIdenti
     sendBasecampPutRequest(getUpdateTodoUrl(todoIdentifier), todo);
 }
 
-export function deleteTodo() {
-    
+
+/**
+ * Trashes a todo in Basecamp. 
+ * 
+ * @param todo payload to replace the existing todo
+ * @param todoIdentifier id of the existing todo to replace
+ */
+export function deleteTodo(todoIdentifier: TodoIdentifier): void {
+    sendBasecampDeleteRequest(getDeleteTodoUrl(todoIdentifier));
 }
 
 function getCreateTodoUrl(todolistIdentifier: TodolistIdentifier): string {
@@ -40,6 +51,10 @@ function getCreateTodoUrl(todolistIdentifier: TodolistIdentifier): string {
 
 function getUpdateTodoUrl(todoIdentifier: TodoIdentifier): string {
     return getBasecampProjectUrl(todoIdentifier.projectId) + TODO_PATH + todoIdentifier.todoId + JSON_PATH;
+}
+
+function getDeleteTodoUrl(todoIdentifier: TodoIdentifier): string {
+    return getBasecampProjectUrl(todoIdentifier.projectId) + RECORDINGS_PATH + todoIdentifier.todoId + TRASHED_TODO_JSON_PATH;
 }
 
 /**

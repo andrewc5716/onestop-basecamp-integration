@@ -68,6 +68,18 @@ export function sendBasecampPutRequest(requestUrl: string, requestPayload: JsonO
     return JSON.parse(response.getContentText());
 }
 
+export function sendBasecampDeleteRequest(requestUrl: string): void {
+    const response: HTTPResponse = UrlFetchApp.fetch(requestUrl, {
+        method: HTTP_PUT_METHOD,
+        headers: getHeaders()
+    });
+
+    // Check if the response is ok (status code in the range 200-299)
+    if (response.getResponseCode() != 204) {
+        throw new Error(`HTTP error! Status: ${response.getResponseCode()}`);
+    }
+}
+
 /**
  * Performs a GET request for a Basecamp API, with built in pagination if applicable
  * 
