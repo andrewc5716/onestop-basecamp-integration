@@ -1,4 +1,1 @@
-# Ignore everything in this directory
-*
-# But not this file!
-!.gitignore
+development.ts
