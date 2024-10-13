@@ -126,10 +126,9 @@ export function deleteAllDocumentProperties(): void {
  * @example
  * logDocumentProperties();
  */
-export function logDocumentProperties() {
-    var allProperties = documentProperties.getProperties();
-    for (var key in allProperties) {
+export function logDocumentProperties(): void {
+    const allProperties: DocumentProperties = documentProperties.getProperties();
+    for (const key in allProperties) {
       Logger.log(key + ': ' + allProperties[key]);
     }
-
 }

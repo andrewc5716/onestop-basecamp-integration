@@ -36,14 +36,14 @@ interface CellData {
  * @returns an array of event rows from all of the daily active tabs of the spreadsheet
  */
 export function getEventRowsFromSpreadsheet(): Row[] {
-    console.log("Getting event rows from spreadsheet...\n");
+    Logger.log("Getting event rows from spreadsheet...\n");
     
     const tabs: Sheet[] = getAllSpreadsheetTabs();
     const dailyActiveTabs: Sheet[] = getActiveDailyTabs(tabs);
     // Fetches all event rows from all of the daily active tabs
     const eventRows: Row[] = dailyActiveTabs.flatMap((dailyActiveTab) => getRowsWithEvents(dailyActiveTab));
     
-    console.log(`Found ${eventRows.length} active rows from the spreadsheet...`)
+    Logger.log(`Found ${eventRows.length} active rows from the spreadsheet...`)
     return eventRows;
 }
 

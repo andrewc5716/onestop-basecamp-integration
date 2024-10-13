@@ -30,9 +30,11 @@ declare interface Row {
   readonly notes: Text
 }
 
+type RoleTodoIdMap = { [key: string]: string };
+
 declare interface RowBasecampMapping {
   rowHash: string,
-  roleTodoIdMap: { [key: string]: string }
+  roleTodoIdMap: RoleTodoIdMap
 }
 
 type HTTPResponse = GoogleAppsScript.URL_Fetch.HTTPResponse;
@@ -90,3 +92,5 @@ declare interface Person extends JsonObject {
   id: string,
   name: string,
 }
+
+type DocumentProperties = { [key: string]: string };
