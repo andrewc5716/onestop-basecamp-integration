@@ -1,4 +1,5 @@
 import { getBasecampProjectUrl, sendBasecampPostRequest, sendBasecampPutRequest } from "./basecamp";
+import { BasecampRequestMissingError } from "./error/basecampRequestMissingError";
 
 const TODOLISTS_PATH: string = '/todolists/';
 const TODO_PATH: string = '/todos/';
@@ -16,11 +17,16 @@ export const TODOLIST_ID: string= "7865336721";
  * @param todolistIdentifier id of the todolist where the todo will be created in
  * @returns the id of the created todo. This must be saved by the caller to update this todo in the future.
  */
-export function createTodo(todo: BasecampTodoRequest, todolistIdentifier: TodolistIdentifier): string {
-    Logger.log(`Creating new "${todo.content}" todo...\n`)
-    const rawTodoResponse: JsonData = sendBasecampPostRequest(getCreateTodoUrl(todolistIdentifier), todo);
-    const todoResponse: BasecampTodoResponse = rawTodoResponse as BasecampTodoResponse;
-    return todoResponse.id;
+export function createTodo(request: BasecampTodoRequest | undefined, todolistIdentifier: TodolistIdentifier): string {
+    
+    if(request == undefined) {
+        throw new BasecampRequestMissingError("Missing basecamp request!");
+    } else {
+        Logger.log(`Creating new todo: "${request.content}"...\n`)
+        const rawTodoResponse: JsonData = sendBasecampPostRequest(getCreateTodoUrl(todolistIdentifier), request);
+        const todoResponse: BasecampTodoResponse = rawTodoResponse as BasecampTodoResponse;
+        return todoResponse.id;
+    }
 }
 
 /**
@@ -30,8 +36,14 @@ export function createTodo(todo: BasecampTodoRequest, todolistIdentifier: Todoli
  * @param todo payload to replace the existing todo
  * @param todoIdentifier id of the existing todo to replace
  */
-export function updateTodo(todo: BasecampTodoRequest, todoIdentifier: TodoIdentifier): void {
-    sendBasecampPutRequest(getUpdateTodoUrl(todoIdentifier), todo);
+export function updateTodo(request: BasecampTodoRequest | undefined, todoIdentifier: TodoIdentifier): void {
+
+    if(request == undefined) {
+        throw new BasecampRequestMissingError("Missing basecamp request!");
+    } else {
+        Logger.log(`Updating existing todo: "${request.content}"...\n`)
+        sendBasecampPutRequest(getUpdateTodoUrl(todoIdentifier), request);
+    }
 }
 
 
