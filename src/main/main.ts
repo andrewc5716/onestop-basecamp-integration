@@ -41,69 +41,90 @@ export function importOnestopToBasecamp(): void {
 
 /**
  * Processes existing event rows by checking whether the row has been modified and if so indiscriminately
- * updates all the tasks with the new information
+ * updates all the tasks in basecamp with the new information while updating backend metadata
  * 
  * @param row 
  */
 function processExistingRow(row: Row): void {
 
-    Logger.log("Checking if the row has changed...\n")
-
     if(hasChanged(row)) {
 
-        Logger.log("Changes detected in row! Updateding associated todos to reflect changes...\n")
-        
-        const savedRowBasecampMapping: RowBasecampMapping | null = getRowBasecampMapping(row);
-        
-        if(savedRowBasecampMapping == null) {
-            throw new RowBasecampMappingMissingError("The rowBasecampMapping object is null! Unable to proceed with updating the todo!");
-        }
-        
+        const roleTodoIdMap = getRoleTodoIdMap(row);
         const basecampTodoRequests: Map<string, BasecampTodoRequest> = getBasecampTodoRequestsForRow(row);
-        const currentRoles: string[] = Array.from(basecampTodoRequests.keys());
+        
+        updateTodos(basecampTodoRequests, roleTodoIdMap)
 
-        const roleTodoIdMap = savedRowBasecampMapping.roleTodoIdMap
-        const originalRoles: string[] = Object.keys(roleTodoIdMap)
-
-        for (const role of currentRoles) {
-
-            let todoId = roleTodoIdMap[role];
-            let request = basecampTodoRequests.get(role);
-
-            if(request == undefined) {
-                throw new BasecampRequestMissingError("Missing basecamp request!");
-                
-            } else if (todoId == undefined) {
-                let newTodoId = createTodo(request, DEFAULT_TODOLIST_IDENTIFIER)
-                roleTodoIdMap[role] = newTodoId // Modify the roleTodoIdMap to reflect changes in the document properties
-                
-            } else {
-                
-                let todoIdentifier: TodoIdentifier = {
-                    projectId: PROJECT_ID,
-                    todoId: todoId
-                }
-                
-                Logger.log(`Updating todo for ${row.what.value} (${row.startTime})...\n`)
-                updateTodo(request, todoIdentifier)
-            }
-        }   
-
-        deleteObsoleteTodos(originalRoles, currentRoles, roleTodoIdMap);
+        deleteObsoleteTodos(basecampTodoRequests, roleTodoIdMap);
 
         saveRow(row, roleTodoIdMap);
     }
 }
 
 /**
+ * Updates todos in basecamp if an existing todo exists. Otherwise create a new todo
+ * 
+ * @param basecampTodoRequests a map associating role titles with BasecampTodoRequest objects
+ * @param roleTodoIdMap a map associating an event's roles with todo ids
+ */
+function updateTodos(basecampTodoRequests: Map<string, BasecampTodoRequest>, roleTodoIdMap: { [key: string]: string }) {
+    
+    Logger.log("Changes detected in a row! Updateding associated todos to reflect changes...\n")
+
+    const currentRoles: string[] = Array.from(basecampTodoRequests.keys());
+
+    for (const role of currentRoles) {
+
+        let todoId = roleTodoIdMap[role];
+        let request = basecampTodoRequests.get(role);
+
+        if(request == undefined) {
+            throw new BasecampRequestMissingError("Missing basecamp request!");
+            
+        } else if (todoId == undefined) {
+            let newTodoId = createTodo(request, DEFAULT_TODOLIST_IDENTIFIER)
+            roleTodoIdMap[role] = newTodoId // Modify the roleTodoIdMap to reflect changes in the document properties
+            
+        } else {
+            
+            let todoIdentifier: TodoIdentifier = {
+                projectId: PROJECT_ID,
+                todoId: todoId
+            }
+            
+            Logger.log(`Updating todo: "${request.content}"...\n`)
+            updateTodo(request, todoIdentifier)
+        }
+    }
+}
+
+/**
+ * Gets the roleTodoIdMap object from the RowBasecampMapping object.
+ * Used for downstream processing
+ * 
+ * @param row a list of all the current roles associated with the row including the lead role. This may be identical to the original roles
+ * @returns a map that associates role titles with basecamp todo ids
+ */
+function getRoleTodoIdMap(row: Row) {
+    const savedRowBasecampMapping: RowBasecampMapping | null = getRowBasecampMapping(row);
+    if(savedRowBasecampMapping == null) {
+        throw new RowBasecampMappingMissingError("The rowBasecampMapping object is null! Unable to proceed with updating the todo!");
+    }
+    return savedRowBasecampMapping.roleTodoIdMap
+}
+
+/**
  * Deletes todos associated with helper groups that are no longer present on the event row.
  * The first line checks whether there are any rows present in the original roles that are not present in the current roles (indicating an obsolete role)
  * 
- * @param originalRoles a list of all the original roles associated with the row including the lead role 
- * @param currentRoles a list of all the current roles associated with the row including the lead role. This may be identical to the original roles
+ * @param basecampTodoRequests a map associating role titles with BasecampTodoRequest objects
+ * @param roleTodoIdMap a map associating an event's roles with todo ids
  */
-function deleteObsoleteTodos(originalRoles: string[], currentRoles: string[], roleTodoIdMap: { [key: string]: string }): void {
+function deleteObsoleteTodos(basecampTodoRequests: Map<string, BasecampTodoRequest>, roleTodoIdMap: { [key: string]: string }): void {
+
     Logger.log("Checking for obsolete roles...\n")
+
+    const currentRoles : string[] = Array.from(basecampTodoRequests.keys());
+    const originalRoles: string[] = Object.keys(roleTodoIdMap);
     const obsoleteRoles: string[] = originalRoles.filter(role => !currentRoles.includes(role));
     
     for(const role of obsoleteRoles) {
@@ -115,7 +136,6 @@ function deleteObsoleteTodos(originalRoles: string[], currentRoles: string[], ro
             todoId: todoId
         }
 
-        Logger.log("Deleting todo...\n")
         deleteTodo(todoIdentifier);
 
         delete roleTodoIdMap[role]; // Modify the roleTodoIdMap to reflect changes in the document properties

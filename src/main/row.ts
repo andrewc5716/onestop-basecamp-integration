@@ -125,6 +125,7 @@ export function hasBeenSaved(row: Row): boolean {
  * @returns boolean representing whether the given row's contents has been changed or not
  */
 export function hasChanged(row: Row): boolean {
+    Logger.log("Checking if the row has changed...\n")
     if(!hasId(row)) {
         throw new RowMissingIdError(`Row does not have an id: ${toString(row)}`);
     }

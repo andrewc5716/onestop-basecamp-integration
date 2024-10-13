@@ -42,7 +42,8 @@ export function updateTodo(todo: BasecampTodoRequest, todoIdentifier: TodoIdenti
  * @param todoIdentifier id of the existing todo to replace
  */
 export function deleteTodo(todoIdentifier: TodoIdentifier): void {
-    sendBasecampDeleteRequest(getDeleteTodoUrl(todoIdentifier));
+    Logger.log("Deleting todo...\n")
+    sendBasecampPutRequest(getDeleteTodoUrl(todoIdentifier), {});
 }
 
 function getCreateTodoUrl(todolistIdentifier: TodolistIdentifier): string {
