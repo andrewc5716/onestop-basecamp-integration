@@ -13,6 +13,7 @@ const MONTH_LENGTH: number = 2;
 const DAY_LENGTH: number = 2;
 const NEW_LINE_DELIM = "\n";
 const COLON_DELIM = ":";
+const LEAD_ROLE_TITLE = "Lead";
 
 declare interface HelperGroup {
     readonly role?: string,
@@ -229,15 +230,14 @@ export function getBasecampTodoRequestsForRow(row: Row): Map<string, BasecampTod
  */
 export function getBasecampTodoForLeads(row: Row, basecampTodoRequests: Map<string, BasecampTodoRequest>): void {
 
-    const roleTitle = "Lead"
-    const basecampTodoContent: string = `${roleTitle}: ${row.what.value}`;
+    const basecampTodoContent: string = `${LEAD_ROLE_TITLE}: ${row.what.value}`;
     const leadIds: string[] = getLeadsBasecampIds(row);
     const basecampTodoDescription: string = getBasecampTodoDescription(row);
     const basecampDueDate: string = getBasecampDueDate(row);
 
     if(leadIds.length > 0) {
         const leadsRequest: BasecampTodoRequest = getBasecampTodoRequest(basecampTodoContent, basecampTodoDescription, leadIds, leadIds, false, basecampDueDate);
-        basecampTodoRequests.set( roleTitle, leadsRequest );
+        basecampTodoRequests.set( LEAD_ROLE_TITLE, leadsRequest );
     } else {
         Logger.log(`${getLeadsNames(row)} do not have any Basecamp ids. row: ${row}`);
     }
