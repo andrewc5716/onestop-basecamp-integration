@@ -54,9 +54,10 @@ function processExistingRow(row: Row): void {
         
         updateTodos(basecampTodoRequests, roleTodoIdMap)
 
-        deleteObsoleteTodos(basecampTodoRequests, roleTodoIdMap);
+        const obsoleteRoles = deleteObsoleteTodos(basecampTodoRequests, roleTodoIdMap);
+        const newRoleIdTodoIdMap = deleteObsoleteRolesFromRoleTodoIdMap(obsoleteRoles, roleTodoIdMap)
 
-        saveRow(row, roleTodoIdMap);
+        saveRow(row, newRoleIdTodoIdMap);
     }
 }
 
@@ -118,8 +119,9 @@ function getRoleTodoIdMap(row: Row) {
  * 
  * @param basecampTodoRequests a map associating role titles with BasecampTodoRequest objects
  * @param roleTodoIdMap a map associating an event's roles with todo ids
+ * @returns a string array of obsolete roles that were deleted
  */
-function deleteObsoleteTodos(basecampTodoRequests: Map<string, BasecampTodoRequest>, roleTodoIdMap: { [key: string]: string }): void {
+function deleteObsoleteTodos(basecampTodoRequests: Map<string, BasecampTodoRequest>, roleTodoIdMap: { [key: string]: string }): string[] {
 
     Logger.log("Checking for obsolete roles...\n")
 
@@ -137,9 +139,25 @@ function deleteObsoleteTodos(basecampTodoRequests: Map<string, BasecampTodoReque
         }
 
         deleteTodo(todoIdentifier);
+    }
 
+    return obsoleteRoles;
+}
+
+/**
+ * Modifies the roleTodoIdMap by removing obsolete roles.
+ * 
+ * @param obsoleteRoles a string array of obsolete roles no longer needed for an event
+ * @param roleTodoIdMap a map associating an event's roles with todo ids
+ * @returns the updated roleTodoIdMap without the obsolete roles
+ */
+function deleteObsoleteRolesFromRoleTodoIdMap(obsoleteRoles: string[], roleTodoIdMap: { [key: string]: string }):  { [key: string]: string } {
+
+    for(const role of obsoleteRoles) {
         delete roleTodoIdMap[role]; // Modify the roleTodoIdMap to reflect changes in the document properties
     }
+
+    return roleTodoIdMap
 }
 
 /**

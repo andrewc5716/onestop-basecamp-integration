@@ -1,4 +1,4 @@
-import { getBasecampProjectUrl, sendBasecampDeleteRequest, sendBasecampPostRequest, sendBasecampPutRequest } from "./basecamp";
+import { getBasecampProjectUrl, sendBasecampPostRequest, sendBasecampPutRequest } from "./basecamp";
 
 const TODOLISTS_PATH: string = '/todolists/';
 const TODO_PATH: string = '/todos/';
