@@ -1,6 +1,5 @@
 import { getBasecampProjectUrl, PROJECT_ID, sendBasecampPostRequest, sendBasecampPutRequest } from "./basecamp";
 import { BasecampRequestMissingError } from "./error/basecampRequestMissingError";
-import { DEFAULT_TODOLIST_IDENTIFIER } from "./main";
 import { getRoles, RoleStatus } from "./role";
 
 const TODOLISTS_PATH: string = '/todolists/';
@@ -11,6 +10,11 @@ const TODO_JSON_PATH: string = '/todos' + JSON_PATH;
 const TRASHED_TODO_JSON_PATH: string = '/status/trashed' + JSON_PATH;
 
 export const TODOLIST_ID: string= "7865336721";
+
+const DEFAULT_TODOLIST_IDENTIFIER: TodolistIdentifier = {
+    projectId: PROJECT_ID,
+    todolistId: TODOLIST_ID
+};
 
 /**
  * Creates a todo in Basecamp
