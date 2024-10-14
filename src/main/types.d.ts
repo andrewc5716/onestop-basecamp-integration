@@ -93,6 +93,6 @@ declare interface Person extends JsonObject {
   name: string,
 }
 
-type DocumentProperties = { [key: string]: string };
+type DocumentProperties = { [key: string]: RowBasecampMapping };
 
 type RoleRequestMap = { [key: string]: BasecampTodoRequest }

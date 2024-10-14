@@ -1,14 +1,10 @@
 import { PROJECT_ID } from "./basecamp";
 import { RowBasecampMappingMissingError } from "./error/rowBasecampMappingMissingError";
+import { deleteDocumentProperty, getAllDocumentProperties } from "./propertiesService";
 import { getRoleTodoIdMap } from "./role";
 import { generateIdForRow, getBasecampTodoRequestsForRow, getId, getRowBasecampMapping, hasChanged, hasId, saveRow } from "./row";
 import { getEventRowsFromSpreadsheet } from "./scan";
 import { createNewTodos, createTodo, createTodosForNewRoles, deleteObsoleteTodos, deleteTodo, deleteTodos, TODOLIST_ID, updateTodo, updateTodosForSurvivingRoles } from "./todos";
-
-export const DEFAULT_TODOLIST_IDENTIFIER: TodolistIdentifier = {
-    projectId: PROJECT_ID,
-    todolistId: TODOLIST_ID
-};
 
 /**
  * Main entry point for the Onestop to Basecamp Integration that contains the core logic for
@@ -85,5 +81,17 @@ function processNewRow(row: Row): void {
 }
 
 function deleteOldRows(processedRowIds: string[]): void {
-    // Will be implemented as part of https://3.basecamp.com/4474129/buckets/38736474/todos/7762398829
+    const propertyStore: DocumentProperties = getAllDocumentProperties();
+
+    for(const rowId in propertyStore) {
+        if(!processedRowIds.includes(rowId)) {
+
+            let rowBasecampMapping = propertyStore[rowId];
+            let roleTodoIdMap = rowBasecampMapping.roleTodoIdMap;
+            let todoIds = Object.values(roleTodoIdMap);
+
+            deleteTodos(todoIds);
+            deleteDocumentProperty(rowId);
+        }
+    }
 }

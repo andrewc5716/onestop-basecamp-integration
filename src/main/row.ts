@@ -180,6 +180,26 @@ export function getRowBasecampMapping(row: Row): RowBasecampMapping | null {
     return result !== null ? JSON.parse(result) : null;
 }
 
+
+/**
+ * Helper function which fetches RowBasecampMapping objects from the PropertiesService for an array of row ids
+ * 
+ * @param rowIds a list of row ids
+ * @returns an array of RowBasecampMapping objects or null if the row cannot be found in the PropertiesService
+ */
+export function getRowBasecampMappings(rowIds: string[]): (RowBasecampMapping | null)[] {
+    
+    const rowBasecampMappings: (RowBasecampMapping | null)[] = [];
+
+    for(const rowId of rowIds) {
+        let mapping: string | null = getDocumentProperty(rowId);
+        let rowBasecampMapping = mapping !== null ? JSON.parse(mapping) : null
+        rowBasecampMappings.push(rowBasecampMapping);
+    }
+
+    return rowBasecampMappings;
+}
+
 /**
  * Returns a string representation of the given row
  * 
@@ -366,7 +386,7 @@ function getHelperGroups(row: Row): HelperGroup[] {
             const [role, helperNameList] = helperLine.split(COLON_DELIM);
             const trimmedHelperNameList: string = helperNameList.trim();
             helperGroups.push(getHelperGroupFromNameList(trimmedHelperNameList, role));
-            
+
         } else if(helperLine != "") {
             helperGroups.push(getHelperGroupFromNameList(helperLine, undefined));
         }
