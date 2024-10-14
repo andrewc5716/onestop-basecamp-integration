@@ -65,7 +65,14 @@ export function sendBasecampPutRequest(requestUrl: string, requestPayload: JsonO
         headers: getHeaders(),
         payload: JSON.stringify(requestPayload)
     });
-    return JSON.parse(response.getContentText());
+
+    const contentText = response.getContentText();
+
+    if (contentText) {
+        return JSON.parse(contentText);
+    } else {
+        return {};
+    }
 }
 
 /**

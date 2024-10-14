@@ -215,20 +215,24 @@ function toHexString(byteArray: number[]): string {
  * @param row Row to construct and retrieve BasecampTodoRequest objects for
  * @returns a map associating role titles with BasecampTodoRequest objects
  */
-export function getBasecampTodoRequestsForRow(row: Row): Map<string, BasecampTodoRequest> {
-    let basecampTodoRequests = new Map<string, BasecampTodoRequest>();
-    getBasecampTodoForLeads(row, basecampTodoRequests);
-    getBasecampTodosForHelpers(row, basecampTodoRequests);
-    return basecampTodoRequests;
+export function getBasecampTodoRequestsForRow(row: Row): RoleRequestMap {
+
+    const leadsRoleRequestMap: RoleRequestMap = getBasecampTodoForLeads(row);
+    const helperRoleRequestMap: RoleRequestMap = getBasecampTodosForHelpers(row);
+
+    const allRoleRequestMap = {...leadsRoleRequestMap, ...helperRoleRequestMap};
+
+    return allRoleRequestMap;
 }
 
 /**
  * Constructs a BasecampTodoRequest object for the lead of a given row
  * 
  * @param row row to construct the BasecampTodoRequest for
- * @param basecampTodoRequests the Map that associates the roleTitle with the request
+ * @param roleRequestMap the Map that associates the roleTitle with the request
  */
-export function getBasecampTodoForLeads(row: Row, basecampTodoRequests: Map<string, BasecampTodoRequest>): void {
+export function getBasecampTodoForLeads(row: Row): RoleRequestMap {
+    const leadsRoleRequestMap: RoleRequestMap = {};
 
     const basecampTodoContent: string = `${LEAD_ROLE_TITLE}: ${row.what.value}`;
     const leadIds: string[] = getLeadsBasecampIds(row);
@@ -237,10 +241,12 @@ export function getBasecampTodoForLeads(row: Row, basecampTodoRequests: Map<stri
 
     if(leadIds.length > 0) {
         const leadsRequest: BasecampTodoRequest = getBasecampTodoRequest(basecampTodoContent, basecampTodoDescription, leadIds, leadIds, false, basecampDueDate);
-        basecampTodoRequests.set( LEAD_ROLE_TITLE, leadsRequest );
+        leadsRoleRequestMap[LEAD_ROLE_TITLE] = leadsRequest;
     } else {
         Logger.log(`${getLeadsNames(row)} do not have any Basecamp ids. row: ${row}`);
     }
+
+    return leadsRoleRequestMap;
 }
 
 /**
@@ -313,9 +319,10 @@ function getBasecampDueDate(row: Row): string {
  * Constructs Basecamp Todo requests for helpers
  * 
  * @param row row to construct the Basecamp Todo request for
- * @param basecampTodoRequests the Map that associates the roleTitle with the request
+ * @returns a RoleRequestMap object that associates roles with their corresponding todos
  */
-export function getBasecampTodosForHelpers(row: Row, basecampTodoRequests: Map<string, BasecampTodoRequest>): void {
+export function getBasecampTodosForHelpers(row: Row): RoleRequestMap {
+    const helperRoleRequestMap: RoleRequestMap = {};
 
     const helperGroups: HelperGroup[] = getHelperGroups(row);
     const leadIds: string[] = getLeadsBasecampIds(row);
@@ -330,12 +337,14 @@ export function getBasecampTodosForHelpers(row: Row, basecampTodoRequests: Map<s
 
         if(assigneeIds.length > 0) {
             const basecampTodoRequest = getBasecampTodoRequest(basecampTodoContent, basecampTodoDescription, assigneeIds, leadIds, false, basecampDueDate);
-            basecampTodoRequests.set( roleTitle, basecampTodoRequest );
+            helperRoleRequestMap[roleTitle] = basecampTodoRequest;
 
         } else {
             Logger.log(`${row.helpers.value} do not have any Basecamp ids. row: ${row}`);
         }
     }
+
+    return helperRoleRequestMap;
 }
 
 /**
@@ -357,11 +366,11 @@ function getHelperGroups(row: Row): HelperGroup[] {
             const [role, helperNameList] = helperLine.split(COLON_DELIM);
             const trimmedHelperNameList: string = helperNameList.trim();
             helperGroups.push(getHelperGroupFromNameList(trimmedHelperNameList, role));
-        } else {
+            
+        } else if(helperLine != "") {
             helperGroups.push(getHelperGroupFromNameList(helperLine, undefined));
         }
     }
-
     return helperGroups;
 }
 
