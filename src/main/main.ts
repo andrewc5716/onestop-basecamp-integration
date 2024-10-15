@@ -78,5 +78,17 @@ function processNewRow(row: Row): void {
 }
 
 function deleteOldRows(processedRowIds: string[]): void {
-    // Will be implemented as part of https://3.basecamp.com/4474129/buckets/38736474/todos/7762398829
+    const propertyStore: DocumentProperties = getAllDocumentProperties();
+
+    for(const rowId in propertyStore) {
+        if(!processedRowIds.includes(rowId)) {
+
+            let rowBasecampMapping = propertyStore[rowId];
+            let roleTodoIdMap = rowBasecampMapping.roleTodoIdMap;
+            let todoIds = Object.values(roleTodoIdMap);
+
+            deleteTodos(todoIds);
+            deleteDocumentProperty(rowId);
+        }
+    }
 }
