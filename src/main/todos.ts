@@ -1,5 +1,6 @@
 import { getBasecampProjectUrl, PROJECT_ID, sendBasecampPostRequest, sendBasecampPutRequest } from "./basecamp";
 import { BasecampRequestMissingError } from "./error/basecampRequestMissingError";
+import { TodoIdMissingError } from "./error/todoIdMissingError";
 import { getRoles, RoleStatus } from "./role";
 
 const TODOLISTS_PATH: string = '/todolists/';
@@ -19,37 +20,27 @@ const DEFAULT_TODOLIST_IDENTIFIER: TodolistIdentifier = {
 /**
  * Creates a todo in Basecamp
  * 
- * @param todo object to put in Basecamp
+ * @param request object to put in Basecamp
  * @param todolistIdentifier id of the todolist where the todo will be created in
  * @returns the id of the created todo. This must be saved by the caller to update this todo in the future.
  */
-export function createTodo(request: BasecampTodoRequest | undefined, todolistIdentifier: TodolistIdentifier): string {
-    
-    if(request == undefined) {
-        throw new BasecampRequestMissingError("Missing basecamp request!");
-    } else {
-        Logger.log(`Creating new todo: "${request.content}"...\n`)
-        const rawTodoResponse: JsonData = sendBasecampPostRequest(getCreateTodoUrl(todolistIdentifier), request);
-        const todoResponse: BasecampTodoResponse = rawTodoResponse as BasecampTodoResponse;
-        return todoResponse.id;
-    }
+export function createTodo(request: BasecampTodoRequest, todolistIdentifier: TodolistIdentifier): string {
+    Logger.log(`Creating new todo: "${request.content}"...\n`)
+    const rawTodoResponse: JsonData = sendBasecampPostRequest(getCreateTodoUrl(todolistIdentifier), request);
+    const todoResponse: BasecampTodoResponse = rawTodoResponse as BasecampTodoResponse;
+    return todoResponse.id;
 }
 
 /**
  * Updates a todo in Basecamp. This will fully replace the contents of the todo,
  * omitting any existing parameters will clear the existing todo's values.
  * 
- * @param todo payload to replace the existing todo
+ * @param request payload to replace the existing todo
  * @param todoIdentifier id of the existing todo to replace
  */
-export function updateTodo(request: BasecampTodoRequest | undefined, todoIdentifier: TodoIdentifier): void {
-
-    if(request == undefined) {
-        throw new BasecampRequestMissingError("Missing basecamp request!");
-    } else {
-        Logger.log(`Updating existing todo: "${request.content}"...\n`)
-        sendBasecampPutRequest(getUpdateTodoUrl(todoIdentifier), request);
-    }
+export function updateTodo(request: BasecampTodoRequest, todoIdentifier: TodoIdentifier): void {
+    Logger.log(`Updating existing todo: "${request.content}"...\n`)
+    sendBasecampPutRequest(getUpdateTodoUrl(todoIdentifier), request);
 }
 
 
@@ -144,18 +135,18 @@ export function deleteTodos(todoIds: string[]): void {
  * @returns a string array of obsolete roles that were deleted
  */
 export function deleteObsoleteTodos(roleRequestMap: RoleRequestMap, currentRoleTodoIdMap: RoleTodoIdMap): string[] {
-    Logger.log("Checking for obsolete roles...\n")
-    const obsoleteRoles: string[] = getRoles(roleRequestMap, currentRoleTodoIdMap, RoleStatus.OBSOLETE);
+    Logger.log("Checking for removed roles...\n")
+    const removedRoles: string[] = getRoles(roleRequestMap, currentRoleTodoIdMap, RoleStatus.REMOVED);
 
-    if(obsoleteRoles.length > 0) {
-        const obsoleteTodoIds: string[] = getObsoleteTodosIds(obsoleteRoles, currentRoleTodoIdMap);
+    if(removedRoles.length > 0) {
+        const obsoleteTodoIds: string[] = getObsoleteTodosIds(removedRoles, currentRoleTodoIdMap);
         deleteTodos(obsoleteTodoIds);
 
     } else {
-        Logger.log("No obsolete roles detected!\n");
+        Logger.log("No removed roles detected!\n");
     }
 
-    return obsoleteRoles;
+    return removedRoles;
 }
 
 /**
@@ -167,15 +158,15 @@ export function deleteObsoleteTodos(roleRequestMap: RoleRequestMap, currentRoleT
  */
 export function getObsoleteTodosIds(obsoleteRoles: string[], roleTodoIdMap: RoleTodoIdMap): string[] {
 
-    const obsoleteTodoIds = []
+    const obsoleteTodoIds = [];
     
     for(const role of obsoleteRoles) {
-        Logger.log(`Found obsolete role: ${role}!\n`)
+        Logger.log(`Found removed role: ${role}!\n`);
         let todoId = roleTodoIdMap[role];
         obsoleteTodoIds.push(todoId);
     }
 
-    return obsoleteTodoIds
+    return obsoleteTodoIds;
 }
 
 /**
@@ -186,26 +177,33 @@ export function getObsoleteTodosIds(obsoleteRoles: string[], roleTodoIdMap: Role
  * @param roleTodoIdMap a map associating an event's roles to existing todo ids that is currently saved in the document properties
  * @returns an object mapping surviving roles with their existing todo ids
  */
-export function updateTodosForSurvivingRoles(roleRequestMap: RoleRequestMap, roleTodoIdMap: RoleTodoIdMap): RoleTodoIdMap {
-    Logger.log("Updating todos for surviving roles...");
-    const survivingRoleTodoIdMap: RoleTodoIdMap = {};
-    const survivingRoles: string[] = getRoles(roleRequestMap, roleTodoIdMap, RoleStatus.SURVIVING);
+export function updateTodosForExistingRoles(roleRequestMap: RoleRequestMap, roleTodoIdMap: RoleTodoIdMap): RoleTodoIdMap {
+    Logger.log("Updating todos for existing roles...");
+    const existingRoleTodoIdMap: RoleTodoIdMap = {};
+    const existingRoles: string[] = getRoles(roleRequestMap, roleTodoIdMap, RoleStatus.EXISTING);
 
-    for(const role of survivingRoles) {
-        let survivingTodoId = roleTodoIdMap[role];
+    for(const role of existingRoles) {
+        let existingTodoId = roleTodoIdMap[role];
         let request = roleRequestMap[role];
 
+        if(request === undefined) {
+            throw new BasecampRequestMissingError("Missing basecamp request!");
+
+        } else if(existingTodoId === undefined) {
+            throw new TodoIdMissingError("Missing todo id!");
+        }
+        
         let todoIdentifier: TodoIdentifier = {
             projectId: PROJECT_ID,
-            todoId: survivingTodoId
-        }
+            todoId: existingTodoId
+        };
 
         updateTodo(request, todoIdentifier);
 
-        survivingRoleTodoIdMap[role] = survivingTodoId;
+        existingRoleTodoIdMap[role] = existingTodoId;
     }
 
-    return survivingRoleTodoIdMap;
+    return existingRoleTodoIdMap;
 }
 
 /**
@@ -222,15 +220,20 @@ export function createTodosForNewRoles(roleRequestMap: RoleRequestMap, roleTodoI
     const newRoleTodoIdMap: RoleTodoIdMap = {};
     
     if(newRoles.length > 0) {
-        Logger.log(`New role(s) detected: ${newRoles}\n`)
+        Logger.log(`New role(s) detected: ${newRoles}\n`);
         for(const role of newRoles) {
             let request = roleRequestMap[role];
+
+            if(request === undefined) {
+                throw new BasecampRequestMissingError("Missing basecamp request!");
+            }
+
             let newTodoId = createTodo(request, DEFAULT_TODOLIST_IDENTIFIER);
             newRoleTodoIdMap[role] = newTodoId;
         }
 
     } else {
-        Logger.log("No new roles detected!\n")
+        Logger.log("No new roles detected!\n");
     }
 
     return newRoleTodoIdMap;

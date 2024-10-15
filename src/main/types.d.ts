@@ -30,6 +30,7 @@ declare interface Row {
   readonly notes: Text
 }
 
+// The key string represents a role and the value represents a todoId
 type RoleTodoIdMap = { [key: string]: string };
 
 declare interface RowBasecampMapping {
@@ -93,6 +94,7 @@ declare interface Person extends JsonObject {
   name: string,
 }
 
-type DocumentProperties = { [key: string]: RowBasecampMapping };
+// The key string represents a rowId and the value represents a stringified Json object that has the row hash and a RoleRequestMap as properties
+type DocumentProperties = { [key: string]: string };
 
 type RoleRequestMap = { [key: string]: BasecampTodoRequest }
