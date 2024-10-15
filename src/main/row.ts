@@ -221,7 +221,7 @@ export function getBasecampTodoRequestsForRow(row: Row): RoleRequestMap {
     const leadsRoleRequestMap: RoleRequestMap = getBasecampTodoForLeads(row);
     const helperRoleRequestMap: RoleRequestMap = getBasecampTodosForHelpers(row);
 
-    const allRoleRequestMap = {...leadsRoleRequestMap, ...helperRoleRequestMap};
+    const allRoleRequestMap: RoleRequestMap = {...leadsRoleRequestMap, ...helperRoleRequestMap};
 
     return allRoleRequestMap;
 }
@@ -291,13 +291,24 @@ function getLeadsNames(row: Row): string[] {
  */
 function getBasecampTodoDescription(row: Row): string {
     const location: string = `WHERE: ${row.where.value ?? "N\\A"}`;
+
+    const locales: Intl.LocalesArgument = 'en-us';
+    const options: Intl.DateTimeFormatOptions = {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+    }
+    const startTime: string = row.startTime.toLocaleTimeString(locales, options);
+    const endTime: string = row.endTime.toLocaleTimeString(locales, options);
+
+    const time: string = `\n\nWHEN: ${startTime} - ${endTime}`;
     const inCharge: string = `\n\nIN CHARGE: ${row.inCharge.value ?? "N\\A"}`;
     const helpers: string = `\n\nHELPERS:\n${row.helpers.value ?? "N\\A"}`;
     const foodLead: string = `\n\nFOOD LEAD: ${row.foodLead.value ?? "N\\A"}`;
     const childcare: string = `\n\nCHILDCARE: ${row.childcare.value ?? "N\\A"}`;
     const notes: string = `\n\nNOTES: ${row.notes.value ?? "N\\A"}`;
 
-    return location + inCharge + helpers + foodLead + childcare + notes;
+    return location + time + inCharge + helpers + foodLead + childcare + notes;
 }
 
 /**
@@ -337,7 +348,7 @@ export function getBasecampTodosForHelpers(row: Row): RoleRequestMap {
         const basecampDueDate: string = getBasecampDueDate(row);
 
         if(assigneeIds.length > 0) {
-            const basecampTodoRequest = getBasecampTodoRequest(basecampTodoContent, basecampTodoDescription, assigneeIds, leadIds, false, basecampDueDate);
+            const basecampTodoRequest: BasecampTodoRequest = getBasecampTodoRequest(basecampTodoContent, basecampTodoDescription, assigneeIds, leadIds, false, basecampDueDate);
             helperRoleRequestMap[roleTitle] = basecampTodoRequest;
 
         } else {

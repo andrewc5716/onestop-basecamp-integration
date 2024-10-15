@@ -28,7 +28,6 @@ export function getDocumentProperty(key: string): string | null {
 /**
  * Retrieves a document property from the PropertiesService
  * 
- * @param key the key for the property
  * @returns the property or null if the key does not have a property
  */
 export function getAllDocumentProperties(): DocumentProperties {
