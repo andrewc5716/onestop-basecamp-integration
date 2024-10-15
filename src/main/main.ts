@@ -1,14 +1,7 @@
-import { PROJECT_ID } from "./basecamp";
-import { RowBasecampMappingMissingError } from "./error/rowBasecampMappingMissingError";
-import { getRoleTodoIdMap } from "./role";
-import { generateIdForRow, getBasecampTodoRequestsForRow, getId, getRowBasecampMapping, hasChanged, hasId, saveRow } from "./row";
+import { getRoleTodoIdMap } from "./row";
+import { generateIdForRow, getBasecampTodoRequestsForRow, getId, hasChanged, hasId, saveRow } from "./row";
 import { getEventRowsFromSpreadsheet } from "./scan";
-import { createNewTodos, createTodo, createTodosForNewRoles, deleteObsoleteTodos, deleteTodo, deleteTodos, TODOLIST_ID, updateTodo, updateTodosForSurvivingRoles } from "./todos";
-
-export const DEFAULT_TODOLIST_IDENTIFIER: TodolistIdentifier = {
-    projectId: PROJECT_ID,
-    todolistId: TODOLIST_ID
-};
+import { createNewTodos, createTodosForNewRoles, deleteObsoleteTodos, updateTodosForExistingRoles } from "./todos";
 
 /**
  * Main entry point for the Onestop to Basecamp Integration that contains the core logic for
@@ -59,9 +52,9 @@ function processExistingRow(row: Row): void {
         deleteObsoleteTodos(currentRoleRequestMap, currentRoleTodoIdMap);
 
         const newRoleTodoIdMap: RoleTodoIdMap = createTodosForNewRoles(currentRoleRequestMap, currentRoleTodoIdMap);
-        const survivingRoleTodoIdMap: RoleTodoIdMap = updateTodosForSurvivingRoles(currentRoleRequestMap, currentRoleTodoIdMap)
+        const existingRoleTodoIdMap: RoleTodoIdMap = updateTodosForExistingRoles(currentRoleRequestMap, currentRoleTodoIdMap)
 
-        const updatedRoleTodoIdMap: RoleTodoIdMap = {...survivingRoleTodoIdMap, ...newRoleTodoIdMap};
+        const updatedRoleTodoIdMap: RoleTodoIdMap = {...existingRoleTodoIdMap, ...newRoleTodoIdMap};
 
         saveRow(row, updatedRoleTodoIdMap);
     }

@@ -1,25 +1,7 @@
-import { RowBasecampMappingMissingError } from "./error/rowBasecampMappingMissingError";
-import { getRowBasecampMapping } from "./row";
-
 export enum RoleStatus {
-    OBSOLETE,
-    SURVIVING,
+    REMOVED,
+    EXISTING,
     NEW
-}
-
-/**
- * Gets the roleTodoIdMap object from the RowBasecampMapping object.
- * Used for downstream processing
- * 
- * @param row a list of all the current roles associated with the row including the lead role. This may be identical to the original roles
- * @returns a map that associates role titles with basecamp todo ids
- */
-export function getRoleTodoIdMap(row: Row) {
-    const savedRowBasecampMapping: RowBasecampMapping | null = getRowBasecampMapping(row);
-    if(savedRowBasecampMapping == null) {
-        throw new RowBasecampMappingMissingError("The rowBasecampMapping object is null! Unable to proceed with updating the todo!");
-    }
-    return savedRowBasecampMapping.roleTodoIdMap
 }
 
 /**
@@ -27,7 +9,7 @@ export function getRoleTodoIdMap(row: Row) {
  * 
  * @param roleTodoIdMap a map associating an event's roles with todo ids
  */
-export function getOriginalEventRoles(roleTodoIdMap: RoleTodoIdMap): string[] {
+function getOriginalEventRoles(roleTodoIdMap: RoleTodoIdMap): string[] {
     return Object.keys(roleTodoIdMap);
 }
 
@@ -36,7 +18,7 @@ export function getOriginalEventRoles(roleTodoIdMap: RoleTodoIdMap): string[] {
 
  * @param roleRequestMap a map associating role titles with BasecampTodoRequest objects
  */
-export function getCurrentEventRoles(currentRoleRequestMap: RoleRequestMap): string[] {
+function getCurrentEventRoles(currentRoleRequestMap: RoleRequestMap): string[] {
     return Object.keys(currentRoleRequestMap);
 }
 
@@ -52,10 +34,10 @@ export function getRoles(roleRequestMap: RoleRequestMap, currentRoleTodoIdMap: R
     const originalRoles: string[] = getOriginalEventRoles(currentRoleTodoIdMap);
 
     switch(roleStatus) {
-        case RoleStatus.OBSOLETE:
+        case RoleStatus.REMOVED:
             return originalRoles.filter(role => !currentRoles.includes(role));
 
-        case RoleStatus.SURVIVING:
+        case RoleStatus.EXISTING:
             return currentRoles.filter(role => originalRoles.includes(role));
         
         case RoleStatus.NEW:

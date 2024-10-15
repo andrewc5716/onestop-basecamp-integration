@@ -66,7 +66,7 @@ export function sendBasecampPutRequest(requestUrl: string, requestPayload: JsonO
         payload: JSON.stringify(requestPayload)
     });
 
-    const contentText = response.getContentText();
+    const contentText: string = response.getContentText();
 
     if (contentText) {
         return JSON.parse(contentText);
