@@ -1,4 +1,5 @@
 import { InvalidHashError } from "./error/invalidHashError";
+import { RowBasecampMappingMissingError } from "./error/rowBasecampMappingMissingError";
 import { RowMissingIdError } from "./error/rowMissingIdError";
 import { RowNotSavedError } from "./error/rowNotSavedError";
 import { getPersonId } from "./people";
@@ -13,6 +14,7 @@ const MONTH_LENGTH: number = 2;
 const DAY_LENGTH: number = 2;
 const NEW_LINE_DELIM = "\n";
 const COLON_DELIM = ":";
+const LEAD_ROLE_TITLE = "Lead";
 
 declare interface HelperGroup {
     readonly role?: string,
@@ -87,15 +89,16 @@ export function hasId(row: Row): boolean {
  * Saves a given row's contents to the PropertiesService
  * 
  * @param row the row's contents to write
+ * @param roleTodoIdMap a map that has role titles as the keys and todo ids as the values
  */
-export function saveRow(row: Row, basecampTodoIds: string[]): void {
+export function saveRow(row: Row, roleTodoIdMap: RoleTodoIdMap): void {
     if(!hasId(row)) {
         throw new RowMissingIdError(`Row does not have an id: ${toString(row)}`);
     }
 
     const rowId: string = getId(row);
     const rowHash: string = toHexString(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, toString(row)));
-    const rowBasecampMapping: RowBasecampMapping = {rowHash: rowHash, basecampTodoIds: basecampTodoIds};
+    const rowBasecampMapping: RowBasecampMapping = {rowHash: rowHash, roleTodoIdMap: roleTodoIdMap};
 
     setDocumentProperty(rowId, JSON.stringify(rowBasecampMapping));
 }
@@ -124,6 +127,7 @@ export function hasBeenSaved(row: Row): boolean {
  * @returns boolean representing whether the given row's contents has been changed or not
  */
 export function hasChanged(row: Row): boolean {
+    Logger.log("Checking if the row has changed...\n")
     if(!hasId(row)) {
         throw new RowMissingIdError(`Row does not have an id: ${toString(row)}`);
     }
@@ -166,7 +170,7 @@ function getSavedHash(row: Row): string | null {
  * @param row the row to retrieve the RowBasecampMapping object for
  * @returns the RowBasecampMapping object or null if the row cannot be found in the PropertiesService
  */
-function getRowBasecampMapping(row: Row): RowBasecampMapping | null {
+export function getRowBasecampMapping(row: Row): RowBasecampMapping | null {
     if(!hasId(row)) {
         throw new RowMissingIdError(`Row does not have an id: ${toString(row)}`);
     }
@@ -210,45 +214,40 @@ function toHexString(byteArray: number[]): string {
  * objects are constructed for both the leads and the helpers
  * 
  * @param row Row to construct and retrieve BasecampTodoRequest objects for
- * @returns array of BasecampTodoRequest objects
+ * @returns a map associating role titles with BasecampTodoRequest objects
  */
-export function getBasecampTodoRequestsForRow(row: Row): BasecampTodoRequest[] {
-    let basecampTodoRequests: BasecampTodoRequest[] = [];
-    const leadsBasecampTodoRequest: BasecampTodoRequest | undefined = getBasecampTodoForLeads(row);
+export function getBasecampTodoRequestsForRow(row: Row): RoleRequestMap {
 
-    if(leadsBasecampTodoRequest !== undefined) {
-        basecampTodoRequests.push(leadsBasecampTodoRequest);
-    }
+    const leadsRoleRequestMap: RoleRequestMap = getBasecampTodoForLeads(row);
+    const helperRoleRequestMap: RoleRequestMap = getBasecampTodosForHelpers(row);
 
-    const helpersBasecampTodoRequest: BasecampTodoRequest[] = getBasecampTodosForHelpers(row);
+    const allRoleRequestMap: RoleRequestMap = {...leadsRoleRequestMap, ...helperRoleRequestMap};
 
-    if(helpersBasecampTodoRequest.length > 0) {
-        basecampTodoRequests = basecampTodoRequests.concat(helpersBasecampTodoRequest);
-    }
-
-    return basecampTodoRequests;
+    return allRoleRequestMap;
 }
 
 /**
  * Constructs a BasecampTodoRequest object for the lead of a given row
  * 
  * @param row row to construct the BasecampTodoRequest for
- * @returns BasecampTodoRequest
+ * @param roleRequestMap the Map that associates the roleTitle with the request
  */
-export function getBasecampTodoForLeads(row: Row): BasecampTodoRequest | undefined {
-    const basecampTodoContent: string = `Lead: ${row.what.value}`;
+export function getBasecampTodoForLeads(row: Row): RoleRequestMap {
+    const leadsRoleRequestMap: RoleRequestMap = {};
+
+    const basecampTodoContent: string = `${LEAD_ROLE_TITLE}: ${row.what.value}`;
     const leadIds: string[] = getLeadsBasecampIds(row);
     const basecampTodoDescription: string = getBasecampTodoDescription(row);
     const basecampDueDate: string = getBasecampDueDate(row);
 
     if(leadIds.length > 0) {
-        return getBasecampTodoRequest(basecampTodoContent, basecampTodoDescription, leadIds, leadIds, 
-            false, basecampDueDate);
+        const leadsRequest: BasecampTodoRequest = getBasecampTodoRequest(basecampTodoContent, basecampTodoDescription, leadIds, leadIds, false, basecampDueDate);
+        leadsRoleRequestMap[LEAD_ROLE_TITLE] = leadsRequest;
     } else {
         Logger.log(`${getLeadsNames(row)} do not have any Basecamp ids. row: ${row}`);
-        
-        return undefined;
     }
+
+    return leadsRoleRequestMap;
 }
 
 /**
@@ -292,13 +291,24 @@ function getLeadsNames(row: Row): string[] {
  */
 function getBasecampTodoDescription(row: Row): string {
     const location: string = `WHERE: ${row.where.value ?? "N\\A"}`;
-    const inCharge: string = `\n\nIN CHARAGE: ${row.inCharge.value ?? "N\\A"}`;
-    const helpers: string = `\n\nHELPERS: ${row.helpers.value ?? "N\\A"}`;
+
+    const locales: Intl.LocalesArgument = 'en-us';
+    const options: Intl.DateTimeFormatOptions = {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+    }
+    const startTime: string = row.startTime.toLocaleTimeString(locales, options);
+    const endTime: string = row.endTime.toLocaleTimeString(locales, options);
+
+    const time: string = `\n\nWHEN: ${startTime} - ${endTime}`;
+    const inCharge: string = `\n\nIN CHARGE: ${row.inCharge.value ?? "N\\A"}`;
+    const helpers: string = `\n\nHELPERS:\n${row.helpers.value ?? "N\\A"}`;
     const foodLead: string = `\n\nFOOD LEAD: ${row.foodLead.value ?? "N\\A"}`;
     const childcare: string = `\n\nCHILDCARE: ${row.childcare.value ?? "N\\A"}`;
     const notes: string = `\n\nNOTES: ${row.notes.value ?? "N\\A"}`;
 
-    return location + inCharge + helpers + foodLead + childcare + notes;
+    return location + time + inCharge + helpers + foodLead + childcare + notes;
 }
 
 /**
@@ -321,10 +331,10 @@ function getBasecampDueDate(row: Row): string {
  * Constructs Basecamp Todo requests for helpers
  * 
  * @param row row to construct the Basecamp Todo request for
- * @returns array of BasecampTodoRequest objects; one for each group of helpers
+ * @returns a RoleRequestMap object that associates roles with their corresponding todos
  */
-export function getBasecampTodosForHelpers(row: Row): BasecampTodoRequest[] {
-    const basecampTodoRequests: BasecampTodoRequest[] = [];
+export function getBasecampTodosForHelpers(row: Row): RoleRequestMap {
+    const helperRoleRequestMap: RoleRequestMap = {};
 
     const helperGroups: HelperGroup[] = getHelperGroups(row);
     const leadIds: string[] = getLeadsBasecampIds(row);
@@ -338,14 +348,15 @@ export function getBasecampTodosForHelpers(row: Row): BasecampTodoRequest[] {
         const basecampDueDate: string = getBasecampDueDate(row);
 
         if(assigneeIds.length > 0) {
-            basecampTodoRequests.push(getBasecampTodoRequest(basecampTodoContent, basecampTodoDescription, 
-                assigneeIds, leadIds, false, basecampDueDate));
+            const basecampTodoRequest: BasecampTodoRequest = getBasecampTodoRequest(basecampTodoContent, basecampTodoDescription, assigneeIds, leadIds, false, basecampDueDate);
+            helperRoleRequestMap[roleTitle] = basecampTodoRequest;
+
         } else {
             Logger.log(`${row.helpers.value} do not have any Basecamp ids. row: ${row}`);
         }
     }
 
-    return basecampTodoRequests;
+    return helperRoleRequestMap;
 }
 
 /**
@@ -367,11 +378,11 @@ function getHelperGroups(row: Row): HelperGroup[] {
             const [role, helperNameList] = helperLine.split(COLON_DELIM);
             const trimmedHelperNameList: string = helperNameList.trim();
             helperGroups.push(getHelperGroupFromNameList(trimmedHelperNameList, role));
-        } else {
+            
+        } else if(helperLine !== "") {
             helperGroups.push(getHelperGroupFromNameList(helperLine, undefined));
         }
     }
-
     return helperGroups;
 }
 
@@ -408,4 +419,19 @@ function getHelperGroupFromNameList(helperNameList: string, role: string | undef
  */
 export function clearAllRowMetadata(): void {
     deleteAllDocumentProperties();
+}
+
+/**
+ * Gets the roleTodoIdMap object from the RowBasecampMapping object.
+ * Used for downstream processing
+ * 
+ * @param row a list of all the current roles associated with the row including the lead role. This may be identical to the original roles
+ * @returns a map that associates role titles with basecamp todo ids
+ */
+export function getRoleTodoIdMap(row: Row) {
+    const savedRowBasecampMapping: RowBasecampMapping | null = getRowBasecampMapping(row);
+    if(savedRowBasecampMapping === null) {
+        throw new RowBasecampMappingMissingError("The rowBasecampMapping object is null! Unable to proceed with updating the todo!");
+    }
+    return savedRowBasecampMapping.roleTodoIdMap;
 }

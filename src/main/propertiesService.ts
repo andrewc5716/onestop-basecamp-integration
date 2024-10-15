@@ -26,6 +26,22 @@ export function getDocumentProperty(key: string): string | null {
 }
 
 /**
+ * Retrieves a document property from the PropertiesService
+ * 
+ * @returns the property or null if the key does not have a property
+ */
+export function getAllDocumentProperties(): DocumentProperties {
+    const allProperties: { [key: string]: string } = documentProperties.getProperties();
+    const propertyStore: DocumentProperties = {};
+
+    for (const key in allProperties) {
+        propertyStore[key] = JSON.parse(allProperties[key]);
+    }
+
+    return propertyStore;
+}
+
+/**
  * Sets a document property in the PropertiesService
  * 
  * @param key the key to write
@@ -34,6 +50,7 @@ export function getDocumentProperty(key: string): string | null {
 export function setDocumentProperty(key: string, value: string): void {
     try {
         documentProperties.setProperty(key, value);
+        Logger.log(`New document property set:\n{${key}: ${value}}`)
     } catch (e: any) {
         const error: Error = e as Error;
         throw new PropertiesServiceWriteError(`Failed to save to document property PropertiesService: [key: ${key}, value: ${value}] ${error.message}`);
@@ -102,6 +119,19 @@ export function setScriptProperties(properties: {[key: string]: string}): void {
 }
 
 /**
+ * Deletes a document property
+ * @param rowId the id for the row to be deleted from the document property store
+ */
+export function deleteDocumentProperty(rowId: string): void {
+    try {
+        documentProperties.deleteProperty(rowId);
+    } catch (e: any) {
+        const error: Error = e as Error;
+        throw new PropertiesServiceDeleteError(`Failed to delete all document property [${rowId}]: ${error.message}`)
+    }
+}
+
+/**
  * Useful debugging function that will clear all document properties
  */
 export function deleteAllDocumentProperties(): void {
@@ -110,5 +140,24 @@ export function deleteAllDocumentProperties(): void {
     } catch (e: any) {
         const error: Error = e as Error;
         throw new PropertiesServiceDeleteError(`Failed to delete all document properties: ${error.message}`)
+    }
+}
+
+/**
+ * Logs all document properties of the current Google Sheets document.
+ *
+ * Retrieves and logs key-value pairs from the document properties using the 
+ * Apps Script Logger. Useful for debugging and auditing document metadata.
+ *
+ * @function logDocumentProperties
+ * @returns {void}
+ *
+ * @example
+ * logDocumentProperties();
+ */
+export function logDocumentProperties(): void {
+    const allProperties: {[key: string]: string} = documentProperties.getProperties();
+    for (const key in allProperties) {
+      Logger.log(key + ': ' + allProperties[key]);
     }
 }
