@@ -25,6 +25,21 @@ export function getDocumentProperty(key: string): string | null {
     return value;
 }
 
+/**
+ * Retrieves a document property from the PropertiesService
+ * 
+ * @returns the property or null if the key does not have a property
+ */
+export function getAllDocumentProperties(): DocumentProperties {
+    const allProperties: { [key: string]: string } = documentProperties.getProperties();
+    const propertyStore: DocumentProperties = {};
+
+    for (const key in allProperties) {
+        propertyStore[key] = JSON.parse(allProperties[key]);
+    }
+
+    return propertyStore;
+}
 
 /**
  * Sets a document property in the PropertiesService
@@ -104,6 +119,19 @@ export function setScriptProperties(properties: {[key: string]: string}): void {
 }
 
 /**
+ * Deletes a document property
+ * @param rowId the id for the row to be deleted from the document property store
+ */
+export function deleteDocumentProperty(rowId: string): void {
+    try {
+        documentProperties.deleteProperty(rowId);
+    } catch (e: any) {
+        const error: Error = e as Error;
+        throw new PropertiesServiceDeleteError(`Failed to delete all document property [${rowId}]: ${error.message}`)
+    }
+}
+
+/**
  * Useful debugging function that will clear all document properties
  */
 export function deleteAllDocumentProperties(): void {
@@ -128,7 +156,7 @@ export function deleteAllDocumentProperties(): void {
  * logDocumentProperties();
  */
 export function logDocumentProperties(): void {
-    const allProperties: DocumentProperties = documentProperties.getProperties();
+    const allProperties: {[key: string]: string} = documentProperties.getProperties();
     for (const key in allProperties) {
       Logger.log(key + ': ' + allProperties[key]);
     }

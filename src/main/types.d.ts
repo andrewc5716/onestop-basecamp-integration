@@ -94,7 +94,7 @@ declare interface Person extends JsonObject {
   name: string,
 }
 
-// The key string represents a rowId and the value represents a stringified Json object that has the row hash and a RoleRequestMap as properties
-type DocumentProperties = { [key: string]: string };
+// The key string represents a rowId and the value represents a RowBasecampMapping
+type DocumentProperties = { [key: string]: RowBasecampMapping };
 
 type RoleRequestMap = { [key: string]: BasecampTodoRequest }
