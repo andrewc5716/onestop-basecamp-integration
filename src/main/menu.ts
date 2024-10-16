@@ -6,10 +6,10 @@
  */
 
 export const onOpen = (e: OpenEvent) => {
-  Logger.log("Updating OneStop menu...")
+  Logger.log("Updating OneStop menu...");
   const tabSyncMenu: GoogleAppsScript.Base.Menu = SpreadsheetApp.getUi()
     .createMenu('Basecamp')
-    .addItem('Assign Basecamp Tasks', 'importOnestopToBasecamp')
+    .addItem('Assign Basecamp Tasks', 'importOnestopToBasecamp');
 
-  tabSyncMenu.addToUi()
+  tabSyncMenu.addToUi();
 }

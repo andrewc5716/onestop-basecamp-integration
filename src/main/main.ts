@@ -1,7 +1,8 @@
+import { deleteDocumentProperty, getAllDocumentProperties } from "./propertiesService";
 import { getRoleTodoIdMap } from "./row";
 import { generateIdForRow, getBasecampTodoRequestsForRow, getId, hasChanged, hasId, saveRow } from "./row";
 import { getEventRowsFromSpreadsheet } from "./scan";
-import { createNewTodos, createTodosForNewRoles, deleteObsoleteTodos, updateTodosForExistingRoles } from "./todos";
+import { createNewTodos, createTodosForNewRoles, deleteObsoleteTodos, deleteTodos, updateTodosForExistingRoles } from "./todos";
 
 /**
  * Main entry point for the Onestop to Basecamp Integration that contains the core logic for
