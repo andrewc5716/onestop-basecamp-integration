@@ -5,9 +5,12 @@
   "author": "andrew.chan@acts2.network",
   "scripts": {
     "clean": "rm -rf build",
-    "build": "webpack",
-    "predeploy": "npm run clean && npm run build",
-    "deploy": "clasp push"
+    "build:dev": "webpack --env ENVIRONMENT=development",
+    "build:prod": "webpack --env ENVIRONMENT=production",
+    "predeploy:dev": "npm run clean && npm run build:dev",
+    "predeploy:prod": "npm run clean && npm run build:prod",
+    "deploy:dev": "clasp push",
+    "deploy:prod": "clasp push"
   },
   "dependencies": {
     "core-js": "^3.38.0"
