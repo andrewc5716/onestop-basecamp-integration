@@ -1,7 +1,7 @@
 import { getBasecampProjectUrl, PROJECT_ID, sendBasecampPostRequest, sendBasecampPutRequest } from "./basecamp";
 import { BasecampRequestMissingError } from "./error/basecampRequestMissingError";
 import { TodoIdMissingError } from "./error/todoIdMissingError";
-import { getRoles, RoleStatus } from "./role";
+import { getExistingRoles, getNewRoles, getRemovedRoles } from "./role";
 
 const TODOLISTS_PATH: string = '/todolists/';
 const TODO_PATH: string = '/todos/';
@@ -130,16 +130,16 @@ export function deleteTodos(todoIds: string[]): void {
  * Deletes todos associated with helper groups that are no longer present on the event row.
  * The first line checks whether there are any rows present in the original roles that are not present in the current roles (indicating an obsolete role)
  * 
- * @param roleRequestMap a map associating an event's roles with api request bodies
- * @param currentRoleTodoIdMap a map associating an event's roles to existing todo ids, that is currently saved in the document properties
+ * @param currentRoleRequestMap a map associating an event's roles with api request bodies
+ * @param lastSavedRoleTodoIdMap a map associating an event's roles to existing todo ids, that is currently saved in the document properties
  * @returns a string array of obsolete roles that were deleted
  */
-export function deleteObsoleteTodos(roleRequestMap: RoleRequestMap, currentRoleTodoIdMap: RoleTodoIdMap): string[] {
+export function deleteObsoleteTodos(currentRoleRequestMap: RoleRequestMap, lastSavedRoleTodoIdMap: RoleTodoIdMap): string[] {
     Logger.log("Checking for removed roles...\n")
-    const removedRoles: string[] = getRoles(roleRequestMap, currentRoleTodoIdMap, RoleStatus.REMOVED);
+    const removedRoles: string[] = getRemovedRoles(currentRoleRequestMap, lastSavedRoleTodoIdMap);
 
     if(removedRoles.length > 0) {
-        const obsoleteTodoIds: string[] = getObsoleteTodosIds(removedRoles, currentRoleTodoIdMap);
+        const obsoleteTodoIds: string[] = getObsoleteTodosIds(removedRoles, lastSavedRoleTodoIdMap);
         deleteTodos(obsoleteTodoIds);
 
     } else {
@@ -153,16 +153,16 @@ export function deleteObsoleteTodos(roleRequestMap: RoleRequestMap, currentRoleT
  * Gets a list of obsolete todo ids based off of the obsolete roels roles by comparing the original and current roles together
  * 
  * @param obsoleteRoles an array of obsolete roles
- * @param roleTodoIdMap a map associating an event's roles with todo ids
+ * @param lastSavedRoleTodoIdMap a map associating an event's roles with todo ids
  * @returns an array of obsolete roles
  */
-export function getObsoleteTodosIds(obsoleteRoles: string[], roleTodoIdMap: RoleTodoIdMap): string[] {
+export function getObsoleteTodosIds(obsoleteRoles: string[], lastSavedRoleTodoIdMap: RoleTodoIdMap): string[] {
 
     const obsoleteTodoIds: string[] = [];
     
     for(const role of obsoleteRoles) {
         Logger.log(`Found removed role: ${role}!\n`);
-        let todoId: string = roleTodoIdMap[role];
+        let todoId: string = lastSavedRoleTodoIdMap[role];
         obsoleteTodoIds.push(todoId);
     }
 
@@ -173,18 +173,18 @@ export function getObsoleteTodosIds(obsoleteRoles: string[], roleTodoIdMap: Role
  * Updates todos for existing roles. Gets the request body from the roleRequestMap map
  * Gets the existing todo id from the roleTodoIdMap object
  * 
- * @param roleRequestMap a map associating role titles with BasecampTodoRequest objects
- * @param roleTodoIdMap a map associating an event's roles to existing todo ids that is currently saved in the document properties
+ * @param currentRoleRequestMap a map associating role titles with BasecampTodoRequest objects
+ * @param lastSavedRoleTodoIdMap a map associating an event's roles to existing todo ids that is currently saved in the document properties
  * @returns an object mapping surviving roles with their existing todo ids
  */
-export function updateTodosForExistingRoles(roleRequestMap: RoleRequestMap, roleTodoIdMap: RoleTodoIdMap): RoleTodoIdMap {
+export function updateTodosForExistingRoles(currentRoleRequestMap: RoleRequestMap, lastSavedRoleTodoIdMap: RoleTodoIdMap): RoleTodoIdMap {
     Logger.log("Updating todos for existing roles...");
     const existingRoleTodoIdMap: RoleTodoIdMap = {};
-    const existingRoles: string[] = getRoles(roleRequestMap, roleTodoIdMap, RoleStatus.EXISTING);
+    const existingRoles: string[] = getExistingRoles(currentRoleRequestMap, lastSavedRoleTodoIdMap);
 
     for(const role of existingRoles) {
-        let existingTodoId: string = roleTodoIdMap[role];
-        let request: BasecampTodoRequest = roleRequestMap[role];
+        let existingTodoId: string = lastSavedRoleTodoIdMap[role];
+        let request: BasecampTodoRequest = currentRoleRequestMap[role];
 
         if(request === undefined) {
             throw new BasecampRequestMissingError("Missing basecamp request!");
@@ -209,20 +209,20 @@ export function updateTodosForExistingRoles(roleRequestMap: RoleRequestMap, role
 /**
  * Create todos for new roles. Gets the request body from the roleRequestMap map
  * 
- * @param roleRequestMap a map associating an event's roles with api request bodies
- * @param roleTodoIdMap a map associating an event's roles to existing todo ids that is currently saved in the document properties
+ * @param currentRoleRequestMap a map associating an event's roles with api request bodies
+ * @param lastSavedRoleTodoIdMap a map associating an event's roles to existing todo ids that is currently saved in the document properties
  * @returns an object mapping new roles with their newly created todo ids
  */
-export function createTodosForNewRoles(roleRequestMap: RoleRequestMap, roleTodoIdMap: RoleTodoIdMap): RoleTodoIdMap {
+export function createTodosForNewRoles(currentRoleRequestMap: RoleRequestMap, lastSavedRoleTodoIdMap: RoleTodoIdMap): RoleTodoIdMap {
     Logger.log("Checking for new roles...\n");
 
-    const newRoles: string[] = getRoles(roleRequestMap, roleTodoIdMap, RoleStatus.NEW);
+    const newRoles: string[] = getNewRoles(currentRoleRequestMap, lastSavedRoleTodoIdMap);
     const newRoleTodoIdMap: RoleTodoIdMap = {};
     
     if(newRoles.length > 0) {
         Logger.log(`New role(s) detected: ${newRoles}\n`);
         for(const role of newRoles) {
-            let request: BasecampTodoRequest = roleRequestMap[role];
+            let request: BasecampTodoRequest = currentRoleRequestMap[role];
 
             if(request === undefined) {
                 throw new BasecampRequestMissingError("Missing basecamp request!");

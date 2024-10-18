@@ -47,12 +47,12 @@ function processExistingRow(row: Row): void {
     if(hasChanged(row)) {
 
         const currentRoleRequestMap: RoleRequestMap = getBasecampTodoRequestsForRow(row);
-        const currentRoleTodoIdMap: RoleTodoIdMap  = getRoleTodoIdMap(row);
+        const lastSavedRoleTodoIdMap: RoleTodoIdMap  = getRoleTodoIdMap(row);
 
-        deleteObsoleteTodos(currentRoleRequestMap, currentRoleTodoIdMap);
+        deleteObsoleteTodos(currentRoleRequestMap, lastSavedRoleTodoIdMap);
 
-        const newRoleTodoIdMap: RoleTodoIdMap = createTodosForNewRoles(currentRoleRequestMap, currentRoleTodoIdMap);
-        const existingRoleTodoIdMap: RoleTodoIdMap = updateTodosForExistingRoles(currentRoleRequestMap, currentRoleTodoIdMap)
+        const newRoleTodoIdMap: RoleTodoIdMap = createTodosForNewRoles(currentRoleRequestMap, lastSavedRoleTodoIdMap);
+        const existingRoleTodoIdMap: RoleTodoIdMap = updateTodosForExistingRoles(currentRoleRequestMap, lastSavedRoleTodoIdMap);
 
         const updatedRoleTodoIdMap: RoleTodoIdMap = {...existingRoleTodoIdMap, ...newRoleTodoIdMap};
 
