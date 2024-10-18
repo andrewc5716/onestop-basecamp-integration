@@ -50,7 +50,7 @@ export function getAllDocumentProperties(): DocumentProperties {
 export function setDocumentProperty(key: string, value: string): void {
     try {
         documentProperties.setProperty(key, value);
-        Logger.log(`New document property set:\n{${key}: ${value}}`)
+        Logger.log(`New document property set:\n{${key}: ${value}}`);
     } catch (e: any) {
         const error: Error = e as Error;
         throw new PropertiesServiceWriteError(`Failed to save to document property PropertiesService: [key: ${key}, value: ${value}] ${error.message}`);
@@ -127,7 +127,7 @@ export function deleteDocumentProperty(rowId: string): void {
         documentProperties.deleteProperty(rowId);
     } catch (e: any) {
         const error: Error = e as Error;
-        throw new PropertiesServiceDeleteError(`Failed to delete all document property [${rowId}]: ${error.message}`)
+        throw new PropertiesServiceDeleteError(`Failed to delete all document property [${rowId}]: ${error.message}`);
     }
 }
 

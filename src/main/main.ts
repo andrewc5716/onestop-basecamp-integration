@@ -1,7 +1,8 @@
+import { deleteDocumentProperty, getAllDocumentProperties } from "./propertiesService";
 import { getRoleTodoIdMap } from "./row";
 import { generateIdForRow, getBasecampTodoRequestsForRow, getId, hasChanged, hasId, saveRow } from "./row";
 import { getEventRowsFromSpreadsheet } from "./scan";
-import { createNewTodos, createTodosForNewRoles, deleteObsoleteTodos, updateTodosForExistingRoles } from "./todos";
+import { createNewTodos, createTodosForNewRoles, deleteObsoleteTodos, deleteTodos, updateTodosForExistingRoles } from "./todos";
 
 /**
  * Main entry point for the Onestop to Basecamp Integration that contains the core logic for
@@ -78,5 +79,17 @@ function processNewRow(row: Row): void {
 }
 
 function deleteOldRows(processedRowIds: string[]): void {
-    // Will be implemented as part of https://3.basecamp.com/4474129/buckets/38736474/todos/7762398829
+    const propertyStore: DocumentProperties = getAllDocumentProperties();
+
+    for(const rowId in propertyStore) {
+        if(!processedRowIds.includes(rowId)) {
+
+            const rowBasecampMapping: RowBasecampMapping = propertyStore[rowId];
+            const roleTodoIdMap: RoleTodoIdMap = rowBasecampMapping.roleTodoIdMap;
+            const todoIds: string[] = Object.values(roleTodoIdMap);
+
+            deleteTodos(todoIds);
+            deleteDocumentProperty(rowId);
+        }
+    }
 }
