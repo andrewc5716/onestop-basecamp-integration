@@ -84,9 +84,9 @@ function deleteOldRows(processedRowIds: string[]): void {
     for(const rowId in propertyStore) {
         if(!processedRowIds.includes(rowId)) {
 
-            let rowBasecampMapping = propertyStore[rowId];
-            let roleTodoIdMap = rowBasecampMapping.roleTodoIdMap;
-            let todoIds = Object.values(roleTodoIdMap);
+            const rowBasecampMapping: RowBasecampMapping = propertyStore[rowId];
+            const roleTodoIdMap: RoleTodoIdMap = rowBasecampMapping.roleTodoIdMap;
+            const todoIds: string[] = Object.values(roleTodoIdMap);
 
             deleteTodos(todoIds);
             deleteDocumentProperty(rowId);
