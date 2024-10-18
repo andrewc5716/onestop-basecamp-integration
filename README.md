@@ -29,11 +29,12 @@ Takes events from the Onestop's daily tabs and populates Basecamp with appropria
 - For OAuth2 redirect URI, fill in the URI with the following, and replace `YOUR_SCRIPT_ID` with your Google Apps Scripts ID from the earlier section: `https://script.google.com/macros/d/YOUR_SCRIPT_ID/usercallback`. 
 16. Click "Register this app"
 17. Open your app and copy your Client ID and Client Secret for the following step.
-19. Create a new file `environmentVariables.ts` inside the [config](./config/) folder, with the following contents:
+19. Create a new file `development.ts` inside the [config](./config/) folder, with the following contents:
 ```js
-export const BASECAMP_CLIENT_ID = 'REPLACE_WITH_YOUR_BASECAMP_CLIENT_ID';
-export const BASECAMP_CLIENT_SECRET = 'REPLACE_WITH_YOUR_BASECAMP_CLIENT_SECRET';
+export const DEV_BASECAMP_CLIENT_ID = 'REPLACE_WITH_YOUR_BASECAMP_CLIENT_ID';
+export const DEV_BASECAMP_CLIENT_SECRET = 'REPLACE_WITH_YOUR_BASECAMP_CLIENT_SECRET';
 ```
+20. Update `environmentVariables.ts` to make sure your Basecamp client id and secret are properly set and exported
 
 ## Development
 ### Making changes
@@ -43,8 +44,8 @@ To allow functions to be run from the Google Apps Scripts, the function must hav
 
 ### Testing changes
 ```shell
-npm run build
-npm run deploy
+npm run build:dev
+npm run deploy:dev
 ```
 This will deploy your code to your personal onestop sheet and app script, and use your personal Basecamp integration app.
 
