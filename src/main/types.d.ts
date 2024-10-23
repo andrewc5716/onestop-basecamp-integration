@@ -16,18 +16,18 @@ declare interface Text {
 }
 
 declare interface Row {
-  readonly metadata: Metadata,
-  readonly startTime: Date,
-  readonly endTime: Date,
-  readonly who: string,
-  readonly numAttendees: number,
-  readonly what: Text,
-  readonly where: Text,
-  readonly inCharge: Text,
-  readonly helpers: Text,
-  readonly foodLead: Text,
-  readonly childcare: Text,
-  readonly notes: Text
+  metadata: Metadata,
+  startTime: Date,
+  endTime: Date,
+  who: string,
+  numAttendees: number,
+  what: Text,
+  where: Text,
+  inCharge: Text,
+  helpers: Text,
+  foodLead: Text,
+  childcare: Text,
+  notes: Text
 }
 
 // The key string represents a role and the value represents a todoId
