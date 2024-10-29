@@ -3,7 +3,7 @@
 import { PropertiesService } from 'gasmask';
 global.PropertiesService = PropertiesService;
 
-import { generateIdForRow, getId, getMetadata } from "../src/main/row";
+import { generateIdForRow, getId, getMetadata, hasId } from "../src/main/row";
 import { RowMissingIdError } from '../src/main/error/rowMissingIdError';
 import { getRandomlyGeneratedMetadata, getRandomlyGeneratedRange, getRandomlyGeneratedRow, Mock } from './testUtils';
 
@@ -99,7 +99,45 @@ describe("generateIdForRow", () => {
 });
 
 describe("hasId", () => {
+    it("should return true when the row has already been assigned an id", () => {
+        const uuid: string = "51ab21eb-0e29-4173-8f37-b3e1f9d65c71";
+        const getValueMock = jest.fn(() => uuid);
+        const metataMock: Metadata = getRandomlyGeneratedMetadata();
+        metataMock.getValue = getValueMock;
+        const row: Row = getRandomlyGeneratedRow();
+        row.metadata = metataMock;
 
+        const rowHasId: boolean = hasId(row);
+
+        expect(getValueMock).toHaveBeenCalledTimes(1);
+        expect(rowHasId).toBe(true);
+    });
+
+    it("should return false when the metadata value is null", () => {
+        const getValueMock = jest.fn(() => null);
+        const metataMock: Metadata = getRandomlyGeneratedMetadata();
+        metataMock.getValue = getValueMock;
+        const row: Row = getRandomlyGeneratedRow();
+        row.metadata = metataMock;
+
+        const rowHasId: boolean = hasId(row);
+
+        expect(getValueMock).toHaveBeenCalledTimes(1);
+        expect(rowHasId).toBe(false);
+    });
+    
+    it("should return false when the metadata value is string", () => {
+        const getValueMock = jest.fn(() => "");
+        const metataMock: Metadata = getRandomlyGeneratedMetadata();
+        metataMock.getValue = getValueMock;
+        const row: Row = getRandomlyGeneratedRow();
+        row.metadata = metataMock;
+
+        const rowHasId: boolean = hasId(row);
+
+        expect(getValueMock).toHaveBeenCalledTimes(1);
+        expect(rowHasId).toBe(false);
+    })
 });
 
 describe("saveRow", () => {
