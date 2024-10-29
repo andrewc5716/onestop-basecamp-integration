@@ -3,9 +3,9 @@
 import { PropertiesService } from 'gasmask';
 global.PropertiesService = PropertiesService;
 
-import { getId, getMetadata } from "../src/main/row";
+import { generateIdForRow, getId, getMetadata } from "../src/main/row";
 import { RowMissingIdError } from '../src/main/error/rowMissingIdError';
-import { getRandomlyGeneratedMetadata, getRandomlyGeneratedRange, getRandomlyGeneratedRow } from './testUtils';
+import { getRandomlyGeneratedMetadata, getRandomlyGeneratedRange, getRandomlyGeneratedRow, Mock } from './testUtils';
 
 describe("getMetadata", () => {
     it("should return the Metadata object when a single Metadata object is present", () => {
@@ -33,7 +33,7 @@ describe("getMetadata", () => {
     it("should generate and return a Metadata object when Metadata is not present", () => {
         const metadataMock: Metadata = getRandomlyGeneratedMetadata();
         const rangeMock: Range = getRandomlyGeneratedRange();
-        const addDeveloperMetadataMock: jest.Mock = jest.fn();
+        const addDeveloperMetadataMock: Mock = jest.fn();
         rangeMock.addDeveloperMetadata = addDeveloperMetadataMock;
         // First call should not return a Metadata object and the second one should
         rangeMock.getDeveloperMetadata = jest.fn()
@@ -70,17 +70,32 @@ describe("getId", () => {
     });
 
   it("should throw RowMissingIdError when id is empty", () => {
-    const metadataMock: Metadata = getRandomlyGeneratedMetadata();
-    metadataMock.getValue = jest.fn(() => "");
-    const row: Row = getRandomlyGeneratedRow();
-    row.metadata = metadataMock;
+        const metadataMock: Metadata = getRandomlyGeneratedMetadata();
+        metadataMock.getValue = jest.fn(() => "");
+        const row: Row = getRandomlyGeneratedRow();
+        row.metadata = metadataMock;
 
         expect(() => getId(row)).toThrow(RowMissingIdError);
     });
 });
 
 describe("generateIdForRow", () => {
+    it("should generate and assign a new UUID for the row when called", () => {
+        const newUUID: string = "aeb39e2f-04f6-42ca-b87b-514f4371b708";
+        const getUuidMock: Mock = jest.fn(() => newUUID);
+        // Overide the global Google Apps Script Utilities object
+        global.Utilities = {getUuid: getUuidMock}
+        const metadataMock: Metadata = getRandomlyGeneratedMetadata();
+        const setValueMock: Mock = jest.fn();
+        metadataMock.setValue = setValueMock;
+        const row: Row = getRandomlyGeneratedRow();
+        row.metadata = metadataMock;
 
+        generateIdForRow(row);
+
+        expect(getUuidMock).toHaveBeenCalledTimes(1);
+        expect(setValueMock).toHaveBeenCalledWith(newUUID);
+    });
 });
 
 describe("hasId", () => {

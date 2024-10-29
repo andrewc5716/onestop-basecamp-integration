@@ -2,6 +2,8 @@ import randomstring from "randomstring";
 
 const BOOLEAN_UPPERBOUND: number = 2;
 
+export type Mock = jest.Mock;
+
 export function getRandomlyGeneratedMetadata(): Metadata {
     return {
         getId: jest.fn(),
