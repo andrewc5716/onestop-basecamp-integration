@@ -98,3 +98,17 @@ declare interface Person extends JsonObject {
 type DocumentProperties = { [key: string]: RowBasecampMapping };
 
 type RoleRequestMap = { [key: string]: BasecampTodoRequest }
+
+declare interface Member {
+  name: string,
+  gender: string,
+  parent: boolean,
+  spouse?: string
+  class: number
+}
+
+// Maps a members name to their Member object containing their properties
+type MemberMap = { [key: string]: Member };
+
+// Maps an alias to an array of member names that the alias corresponds to
+type AliasMap = { [key: string]: string[] };
