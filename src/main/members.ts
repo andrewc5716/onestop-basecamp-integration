@@ -24,8 +24,7 @@ export const ALIASES_MAP: AliasMap = loadMapFromScriptProperties(ALIASES_MAP_KEY
 export function loadMembersFromOnestopIntoScriptProperties(): void {
     const { memberMap: memberMap, alternateNamesMap: alternateNamesMap } = loadMembersFromOnestop();
     const coupleAliases: AliasMap = loadCouplesFromOnestop();
-    // Assumes there will never be overlap between alternate names and couple aliases (there shouldn't be)
-    const combinedAliases: AliasMap = { ...alternateNamesMap, ...coupleAliases };
+    const combinedAliases: AliasMap = mergeAliasMaps(alternateNamesMap, coupleAliases);
 
     setScriptProperty(MEMBER_MAP_KEY, JSON.stringify(memberMap));
     setScriptProperty(ALIASES_MAP_KEY, JSON.stringify(combinedAliases));
@@ -104,6 +103,21 @@ function loadCouplesFromOnestop(): AliasMap {
     }
 
     return aliasMap;
+}
+
+function mergeAliasMaps(firstAliasMap: AliasMap, secondAliasMap: AliasMap): AliasMap {
+    const finalAliasMap: AliasMap = firstAliasMap;
+
+    const aliases: string[] = Object.keys(secondAliasMap);
+    for(const alias of aliases) {
+        if(finalAliasMap.hasOwnProperty(alias)) {
+            finalAliasMap[alias].concat(secondAliasMap[alias]);
+        } else {
+            finalAliasMap[alias] = secondAliasMap[alias];
+        }
+    }
+
+    return finalAliasMap;
 }
 
 function loadMapFromScriptProperties(key: string): Object {
