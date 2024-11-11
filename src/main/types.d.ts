@@ -103,7 +103,7 @@ declare interface Member {
   name: string,
   gender: string,
   parent: boolean,
-  spouse?: string
+  married: boolean,
   class: number
 }
 

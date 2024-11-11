@@ -6,8 +6,8 @@ const MEMBERS_TAB_NAME: string = "Members";
 const COUPLES_TAB_NAME: string = "Couples";
 const NAME_COLUMN_INDEX: number = 0;
 const GENDER_COLUMN_INDEX: number = 1;
-const PARENT_COLUMN_INDEX: number = 2;
-const SPOUSE_COLUMN_INDEX: number = 3;
+const MARRIED_COLUMN_INDEX: number = 2;
+const PARENT_COLUMN_INDEX: number = 3;
 const CLASS_COLUMN_INDEX: number = 4;
 const ALTERNATE_NAMES_COLUMN_INDEX: number = 5;
 const HUSBAND_COLUMN_INDEX: number = 0;
@@ -76,7 +76,7 @@ function constructMember(rowValues: any): Member {
         name: rowValues[NAME_COLUMN_INDEX],
         gender: rowValues[GENDER_COLUMN_INDEX],
         parent: rowValues[PARENT_COLUMN_INDEX],
-        spouse: rowValues[SPOUSE_COLUMN_INDEX] !== "" ? rowValues[SPOUSE_COLUMN_INDEX] : undefined,
+        married: rowValues[MARRIED_COLUMN_INDEX],
         class: rowValues[CLASS_COLUMN_INDEX]
     };
 }
