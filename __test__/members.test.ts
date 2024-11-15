@@ -1,5 +1,6 @@
 // Mock PropertiesService and SpreadsheetApp must be imported and set before imported modules require these global objects
-import { PropertiesService, SpreadsheetApp } from 'gasmask';
+import { Logger, PropertiesService, SpreadsheetApp } from 'gasmask';
+global.Logger = Logger;
 global.PropertiesService = PropertiesService;
 global.SpreadsheetApp = SpreadsheetApp;
 
@@ -74,16 +75,16 @@ describe("loadMembersFromOnestopIntoScriptProperties", () => {
         membersTableSheetMock.getName = jest.fn(() => "Members");
         membersTableSheetMock.getDataRange = jest.fn(() => membersDataRangeMock);
 
-        membersDataValuesMock[1][NAME_COLUMN_INDEX] = "memberName1";
-        membersDataValuesMock[1][ALTERNATE_NAMES_COLUMN_INDEX] = "alias1,alias2";
-        membersDataValuesMock[2][NAME_COLUMN_INDEX] = "memberName2";
-        membersDataValuesMock[2][ALTERNATE_NAMES_COLUMN_INDEX] = "alias3,alias4";
-        membersDataValuesMock[3][NAME_COLUMN_INDEX] = "memberName3";
-        membersDataValuesMock[3][ALTERNATE_NAMES_COLUMN_INDEX] = "alias5,alias6";
-        membersDataValuesMock[4][NAME_COLUMN_INDEX] = "memberName4";
-        membersDataValuesMock[4][ALTERNATE_NAMES_COLUMN_INDEX] = "alias7,alias8";
-        membersDataValuesMock[5][NAME_COLUMN_INDEX] = "memberName5";
-        membersDataValuesMock[5][ALTERNATE_NAMES_COLUMN_INDEX] = "alias9,alias10";
+        membersDataValuesMock[1][NAME_COLUMN_INDEX] = "John Doe";
+        membersDataValuesMock[1][ALTERNATE_NAMES_COLUMN_INDEX] = "John,John D";
+        membersDataValuesMock[2][NAME_COLUMN_INDEX] = "James Brown";
+        membersDataValuesMock[2][ALTERNATE_NAMES_COLUMN_INDEX] = "James,James B";
+        membersDataValuesMock[3][NAME_COLUMN_INDEX] = "Mary Brown";
+        membersDataValuesMock[3][ALTERNATE_NAMES_COLUMN_INDEX] = "Mary,Mary B";
+        membersDataValuesMock[4][NAME_COLUMN_INDEX] = "Robert White";
+        membersDataValuesMock[4][ALTERNATE_NAMES_COLUMN_INDEX] = "Robert,Robert W";
+        membersDataValuesMock[5][NAME_COLUMN_INDEX] = "Emily White";
+        membersDataValuesMock[5][ALTERNATE_NAMES_COLUMN_INDEX] = "Emily,Emily W";
         
         const couplesDataValuesMock: any[][] = getRandomlyGeneratedAliasTable(2);
         const couplesDataRangeMock: Range = getRandomlyGeneratedRange();
@@ -92,8 +93,8 @@ describe("loadMembersFromOnestopIntoScriptProperties", () => {
         couplesTableSheetMock.getName = jest.fn(() => "Couples");
         couplesTableSheetMock.getDataRange = jest.fn(() => couplesDataRangeMock);
 
-        couplesDataValuesMock[1] = ["memberName2", "memberName3", "coupleAlias1,coupleAlias2"];
-        couplesDataValuesMock[2] = ["memberName4", "memberName5", "coupleAlias3,coupleAlias4"];
+        couplesDataValuesMock[1] = ["James Brown", "Mary Brown", "James/Mary,Browns"];
+        couplesDataValuesMock[2] = ["Robert White", "Emily White", "Robert/Emily,Whites"];
 
         const sheetsMock: Sheet[] = Array.from({length: 10}, getRandomlyGeneratedSheet);
         sheetsMock.push(membersTableSheetMock);
@@ -112,28 +113,28 @@ describe("loadMembersFromOnestopIntoScriptProperties", () => {
         loadMembersFromOnestopIntoScriptProperties();
 
         const expectedMemberMap: MemberMap = {
-            memberName1: {name: "memberName1", gender: membersDataValuesMock[1][GENDER_COLUMN_INDEX], married: membersDataValuesMock[1][MARRIED_COLUMN_INDEX], parent: membersDataValuesMock[1][PARENT_COLUMN_INDEX], class: membersDataValuesMock[1][CLASS_COLUMN_INDEX]},
-            memberName2: {name: "memberName2", gender: membersDataValuesMock[2][GENDER_COLUMN_INDEX], married: membersDataValuesMock[2][MARRIED_COLUMN_INDEX], parent: membersDataValuesMock[2][PARENT_COLUMN_INDEX], class: membersDataValuesMock[2][CLASS_COLUMN_INDEX]},
-            memberName3: {name: "memberName3", gender: membersDataValuesMock[3][GENDER_COLUMN_INDEX], married: membersDataValuesMock[3][MARRIED_COLUMN_INDEX], parent: membersDataValuesMock[3][PARENT_COLUMN_INDEX], class: membersDataValuesMock[3][CLASS_COLUMN_INDEX]},
-            memberName4: {name: "memberName4", gender: membersDataValuesMock[4][GENDER_COLUMN_INDEX], married: membersDataValuesMock[4][MARRIED_COLUMN_INDEX], parent: membersDataValuesMock[4][PARENT_COLUMN_INDEX], class: membersDataValuesMock[4][CLASS_COLUMN_INDEX]},
-            memberName5: {name: "memberName5", gender: membersDataValuesMock[5][GENDER_COLUMN_INDEX], married: membersDataValuesMock[5][MARRIED_COLUMN_INDEX], parent: membersDataValuesMock[5][PARENT_COLUMN_INDEX], class: membersDataValuesMock[5][CLASS_COLUMN_INDEX]},
+            "John Doe": {name: "John Doe", gender: membersDataValuesMock[1][GENDER_COLUMN_INDEX], married: membersDataValuesMock[1][MARRIED_COLUMN_INDEX], parent: membersDataValuesMock[1][PARENT_COLUMN_INDEX], class: membersDataValuesMock[1][CLASS_COLUMN_INDEX]},
+            "James Brown": {name: "James Brown", gender: membersDataValuesMock[2][GENDER_COLUMN_INDEX], married: membersDataValuesMock[2][MARRIED_COLUMN_INDEX], parent: membersDataValuesMock[2][PARENT_COLUMN_INDEX], class: membersDataValuesMock[2][CLASS_COLUMN_INDEX]},
+            "Mary Brown": {name: "Mary Brown", gender: membersDataValuesMock[3][GENDER_COLUMN_INDEX], married: membersDataValuesMock[3][MARRIED_COLUMN_INDEX], parent: membersDataValuesMock[3][PARENT_COLUMN_INDEX], class: membersDataValuesMock[3][CLASS_COLUMN_INDEX]},
+            "Robert White": {name: "Robert White", gender: membersDataValuesMock[4][GENDER_COLUMN_INDEX], married: membersDataValuesMock[4][MARRIED_COLUMN_INDEX], parent: membersDataValuesMock[4][PARENT_COLUMN_INDEX], class: membersDataValuesMock[4][CLASS_COLUMN_INDEX]},
+            "Emily White": {name: "Emily White", gender: membersDataValuesMock[5][GENDER_COLUMN_INDEX], married: membersDataValuesMock[5][MARRIED_COLUMN_INDEX], parent: membersDataValuesMock[5][PARENT_COLUMN_INDEX], class: membersDataValuesMock[5][CLASS_COLUMN_INDEX]},
         };
 
         const expectedAliasMap: AliasMap = {
-            alias1: ["memberName1"],
-            alias2: ["memberName1"],
-            alias3: ["memberName2"],
-            alias4: ["memberName2"],
-            alias5: ["memberName3"],
-            alias6: ["memberName3"],
-            alias7: ["memberName4"],
-            alias8: ["memberName4"],
-            alias9: ["memberName5"],
-            alias10: ["memberName5"],
-            coupleAlias1: ["memberName2", "memberName3"],
-            coupleAlias2: ["memberName2", "memberName3"],
-            coupleAlias3: ["memberName4", "memberName5"],
-            coupleAlias4: ["memberName4", "memberName5"],
+            "John": ["John Doe"],
+            "John D": ["John Doe"],
+            "James": ["James Brown"],
+            "James B": ["James Brown"],
+            "Mary": ["Mary Brown"],
+            "Mary B": ["Mary Brown"],
+            "Robert": ["Robert White"],
+            "Robert W": ["Robert White"],
+            "Emily": ["Emily White"],
+            "Emily W": ["Emily White"],
+            "James/Mary": ["James Brown", "Mary Brown"],
+            "Browns": ["James Brown", "Mary Brown"],
+            "Robert/Emily": ["Robert White", "Emily White"],
+            "Whites": ["Robert White", "Emily White"],
         };
 
         expect(setScriptPropertyMock).toHaveBeenCalledTimes(2);
@@ -212,10 +213,10 @@ describe("loadMembersFromOnestopIntoScriptProperties", () => {
         membersTableSheetMock.getName = jest.fn(() => "Members");
         membersTableSheetMock.getDataRange = jest.fn(() => membersDataRangeMock);
 
-        membersDataValuesMock[1][NAME_COLUMN_INDEX] = "name1";
-        membersDataValuesMock[1][ALTERNATE_NAMES_COLUMN_INDEX] = "alias1,alias2";
-        membersDataValuesMock[2][NAME_COLUMN_INDEX] = "name2";
-        membersDataValuesMock[2][ALTERNATE_NAMES_COLUMN_INDEX] = "alias3,alias4";
+        membersDataValuesMock[1][NAME_COLUMN_INDEX] = "John Doe";
+        membersDataValuesMock[1][ALTERNATE_NAMES_COLUMN_INDEX] = "John,John D";
+        membersDataValuesMock[2][NAME_COLUMN_INDEX] = "James Brown";
+        membersDataValuesMock[2][ALTERNATE_NAMES_COLUMN_INDEX] = "James,James B";
 
         const couplesDataValuesMock: any[][] = getRandomlyGeneratedAliasTable(0);
         const couplesDataRangeMock: Range = getRandomlyGeneratedRange();
@@ -241,10 +242,10 @@ describe("loadMembersFromOnestopIntoScriptProperties", () => {
         loadMembersFromOnestopIntoScriptProperties();
 
         const expected: AliasMap = {
-            alias1: ["name1"],
-            alias2: ["name1"],
-            alias3: ["name2"],
-            alias4: ["name2"],
+            "John": ["John Doe"],
+            "John D": ["John Doe"],
+            "James": ["James Brown"],
+            "James B": ["James Brown"],
         };
         expect(setScriptPropertyMock).toHaveBeenCalledWith("ALIASES_MAP", JSON.stringify(expected));
     });
@@ -257,10 +258,10 @@ describe("loadMembersFromOnestopIntoScriptProperties", () => {
         membersTableSheetMock.getName = jest.fn(() => "Members");
         membersTableSheetMock.getDataRange = jest.fn(() => membersDataRangeMock);
 
-        membersDataValuesMock[1][NAME_COLUMN_INDEX] = "name1";
-        membersDataValuesMock[1][ALTERNATE_NAMES_COLUMN_INDEX] = "alias1,alias2";
-        membersDataValuesMock[2][NAME_COLUMN_INDEX] = "name2";
-        membersDataValuesMock[2][ALTERNATE_NAMES_COLUMN_INDEX] = "alias2,alias3";
+        membersDataValuesMock[1][NAME_COLUMN_INDEX] = "John Doe";
+        membersDataValuesMock[1][ALTERNATE_NAMES_COLUMN_INDEX] = "John,John D";
+        membersDataValuesMock[2][NAME_COLUMN_INDEX] = "John Brown";
+        membersDataValuesMock[2][ALTERNATE_NAMES_COLUMN_INDEX] = "John,John B";
 
         const couplesDataValuesMock: any[][] = getRandomlyGeneratedAliasTable(0);
         const couplesDataRangeMock: Range = getRandomlyGeneratedRange();
@@ -286,9 +287,9 @@ describe("loadMembersFromOnestopIntoScriptProperties", () => {
         loadMembersFromOnestopIntoScriptProperties();
 
         const expected: AliasMap = {
-            alias1: ["name1"],
-            alias2: ["name1", "name2"],
-            alias3: ["name2"],
+            "John": ["John Doe", "John Brown"],
+            "John D": ["John Doe"],
+            "John B": ["John Brown"],
         };
         expect(setScriptPropertyMock).toHaveBeenCalledWith("ALIASES_MAP", JSON.stringify(expected));
     });
@@ -301,12 +302,12 @@ describe("loadMembersFromOnestopIntoScriptProperties", () => {
         membersTableSheetMock.getName = jest.fn(() => "Members");
         membersTableSheetMock.getDataRange = jest.fn(() => membersDataRangeMock);
 
-        membersDataValuesMock[1][NAME_COLUMN_INDEX] = "memberName";
-        membersDataValuesMock[1][ALTERNATE_NAMES_COLUMN_INDEX] = "alias1,alias2";
-        membersDataValuesMock[2][NAME_COLUMN_INDEX] = "husbandName";
-        membersDataValuesMock[2][ALTERNATE_NAMES_COLUMN_INDEX] = "alias3,alias4";
-        membersDataValuesMock[3][NAME_COLUMN_INDEX] = "wifeName";
-        membersDataValuesMock[3][ALTERNATE_NAMES_COLUMN_INDEX] = "alias5,alias6";
+        membersDataValuesMock[1][NAME_COLUMN_INDEX] = "John Miller";
+        membersDataValuesMock[1][ALTERNATE_NAMES_COLUMN_INDEX] = "John,John M, JM";
+        membersDataValuesMock[2][NAME_COLUMN_INDEX] = "James Brown";
+        membersDataValuesMock[2][ALTERNATE_NAMES_COLUMN_INDEX] = "James,James B";
+        membersDataValuesMock[3][NAME_COLUMN_INDEX] = "Mary Brown";
+        membersDataValuesMock[3][ALTERNATE_NAMES_COLUMN_INDEX] = "Mary,Mary B";
         
         const couplesDataValuesMock: any[][] = getRandomlyGeneratedAliasTable(1);
         const couplesDataRangeMock: Range = getRandomlyGeneratedRange();
@@ -315,7 +316,7 @@ describe("loadMembersFromOnestopIntoScriptProperties", () => {
         couplesTableSheetMock.getName = jest.fn(() => "Couples");
         couplesTableSheetMock.getDataRange = jest.fn(() => couplesDataRangeMock);
 
-        couplesDataValuesMock[1] = ["husbandName", "wifeName", "alias1"];
+        couplesDataValuesMock[1] = ["James Brown", "Mary Brown", "JM"];
 
         const sheetsMock: Sheet[] = Array.from({length: 10}, getRandomlyGeneratedSheet);
         sheetsMock.push(membersTableSheetMock);
@@ -334,12 +335,13 @@ describe("loadMembersFromOnestopIntoScriptProperties", () => {
         loadMembersFromOnestopIntoScriptProperties();
 
         const expected: AliasMap = {
-            alias1: ["memberName", "husbandName", "wifeName"],
-            alias2: ["memberName"],
-            alias3: ["husbandName"],
-            alias4: ["husbandName"],
-            alias5: ["wifeName"],
-            alias6: ["wifeName"],
+            "John": ["John Miller"],
+            "John M": ["John Miller"],
+            "JM": ["John Miller", "James Brown", "Mary Brown"],
+            "James": ["James Brown"],
+            "James B": ["James Brown"],
+            "Mary": ["Mary Brown"],
+            "Mary B": ["Mary Brown"]
         };
         expect(setScriptPropertyMock).toHaveBeenCalledWith("ALIASES_MAP", JSON.stringify(expected));
     });

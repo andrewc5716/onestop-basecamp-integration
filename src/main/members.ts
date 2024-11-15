@@ -21,6 +21,9 @@ const ALIASES_MAP_KEY: string = "ALIASES_MAP";
 export const MEMBER_MAP: MemberMap = loadMapFromScriptProperties(MEMBER_MAP_KEY) as MemberMap;
 export const ALIASES_MAP: AliasMap = loadMapFromScriptProperties(ALIASES_MAP_KEY) as AliasMap;
 
+/**
+ * Loads data from the Members and Couples tables on the Onestop into the script properties
+ */
 export function loadMembersFromOnestopIntoScriptProperties(): void {
     const { memberMap: memberMap, alternateNamesMap: alternateNamesMap } = loadMembersFromOnestop();
     const coupleAliases: AliasMap = loadCouplesFromOnestop();
@@ -48,7 +51,7 @@ function loadMembersFromOnestop(): { memberMap: MemberMap, alternateNamesMap: Al
     const cellValues: any[][] = dataRange.getValues();
 
     const memberMap: MemberMap = {};
-    const alternateNamesMap: AliasMap = {};
+    let alternateNamesMap: AliasMap = {};
 
     // Start at row 1 to skip the table header row
     for(let i = 1; i < cellValues.length; i++) {
@@ -57,14 +60,7 @@ function loadMembersFromOnestop(): { memberMap: MemberMap, alternateNamesMap: Al
         memberMap[currentMember.name] = currentMember;
 
         const alternateNames: string[] = getAliasList(rowValues, ALTERNATE_NAMES_COLUMN_INDEX);
-        // Maps a person's alternate name to their actual name
-        alternateNames.forEach(alternateName => {
-            if(alternateNamesMap.hasOwnProperty(alternateName)) {
-                alternateNamesMap[alternateName].push(currentMember.name);
-            } else {
-                alternateNamesMap[alternateName] = [currentMember.name];
-            }
-        });
+        alternateNamesMap = addAlternateNamesToMap(alternateNamesMap, alternateNames, currentMember);
     }
 
     return { memberMap: memberMap, alternateNamesMap: alternateNamesMap };
@@ -83,6 +79,20 @@ function constructMember(rowValues: any): Member {
 function getAliasList(rowValues: any, index: number): string[] {
     const aliasList: string = rowValues[index];
     return aliasList.split(COMMA_DELIMITER).map(alias => alias.trim());
+}
+
+function addAlternateNamesToMap(alternateNamesMap: AliasMap, alternateNames: string[], currentMember: Member): AliasMap {
+    // Maps a person's alternate name to their actual name
+    for(const alternateName of alternateNames) {
+        if(alternateNamesMap.hasOwnProperty(alternateName)) {
+            Logger.log(`Warning: Multiple members have the alternate name ${alternateName}`)
+            alternateNamesMap[alternateName].push(currentMember.name);
+        } else {
+            alternateNamesMap[alternateName] = [currentMember.name];
+        }
+    }
+
+    return alternateNamesMap;
 }
 
 function loadCouplesFromOnestop(): AliasMap {
@@ -111,6 +121,7 @@ function mergeAliasMaps(firstAliasMap: AliasMap, secondAliasMap: AliasMap): Alia
     const aliases: string[] = Object.keys(secondAliasMap);
     for(const alias of aliases) {
         if(finalAliasMap.hasOwnProperty(alias)) {
+            Logger.log(`Warning: ${alias} is being used as both an alternate name and a couples' alias`);
             finalAliasMap[alias] = finalAliasMap[alias].concat(secondAliasMap[alias]);
         } else {
             finalAliasMap[alias] = secondAliasMap[alias];
