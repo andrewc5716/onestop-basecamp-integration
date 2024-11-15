@@ -74,8 +74,8 @@ function constructMember(rowValues: any): Member {
     return {
         name: rowValues[NAME_COLUMN_INDEX],
         gender: rowValues[GENDER_COLUMN_INDEX],
-        parent: rowValues[PARENT_COLUMN_INDEX],
         married: rowValues[MARRIED_COLUMN_INDEX],
+        parent: rowValues[PARENT_COLUMN_INDEX],
         class: rowValues[CLASS_COLUMN_INDEX]
     };
 }
@@ -111,7 +111,7 @@ function mergeAliasMaps(firstAliasMap: AliasMap, secondAliasMap: AliasMap): Alia
     const aliases: string[] = Object.keys(secondAliasMap);
     for(const alias of aliases) {
         if(finalAliasMap.hasOwnProperty(alias)) {
-            finalAliasMap[alias].concat(secondAliasMap[alias]);
+            finalAliasMap[alias] = finalAliasMap[alias].concat(secondAliasMap[alias]);
         } else {
             finalAliasMap[alias] = secondAliasMap[alias];
         }

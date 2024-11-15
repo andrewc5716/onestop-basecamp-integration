@@ -102,8 +102,8 @@ type RoleRequestMap = { [key: string]: BasecampTodoRequest }
 declare interface Member {
   name: string,
   gender: string,
-  parent: boolean,
   married: boolean,
+  parent: boolean,
   class: number
 }
 
