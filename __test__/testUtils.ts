@@ -218,6 +218,191 @@ export function getRandomlyGeneratedRange(): Range {
     };
 }
 
+export function getRandomlyGeneratedMember(): Member {
+    return {
+        name: randomstring.generate(),
+        gender: randomstring.generate(),
+        married: getRandomBoolean(),
+        parent: getRandomBoolean(),
+        class: getRandomNumber(),
+    };
+}
+
+export function getRandomlyGeneratedMemberMap(numMembers: number = 10): MemberMap {
+    const memberMap: MemberMap = {};
+    for(let i = 0; i < numMembers; i++) {
+        const member: Member = getRandomlyGeneratedMember();
+        memberMap[member.name] = member;
+    }
+
+    return memberMap;
+}
+
+function getRandomlyGeneratedMemberRow(numAlternateNames: number = 3): any[] {
+    return [randomstring.generate(), randomstring.generate(), getRandomBoolean(), getRandomBoolean(), getRandomNumber(), Array.from({length: numAlternateNames}, () => randomstring.generate()).join(",")];
+}
+
+export function getRandomlyGeneratedMemberTable(numMembers: number = 10, numAlternateNames: number = 3): any[][] {
+    const memberTable: any[][] = [["Name", "Gender", "Married", "Parent", "Class", "Alertnate Names (comma separated)"]];
+    for(let i = 0; i < numMembers; i++) {
+        memberTable.push(getRandomlyGeneratedMemberRow(numAlternateNames));
+    }
+
+    return memberTable;
+}
+
+export function getRandomlyGeneratedAliasMap(numAliases: number = 10): AliasMap {
+    const aliasMap: AliasMap = {};
+    for(let i = 0; i < numAliases; i++) {
+        const members: string[] = Array.from({length: numAliases}, () => randomstring.generate());
+        aliasMap[randomstring.generate()] = members;
+    }
+    
+    return aliasMap;
+}
+
+function getRandomlyGeneratedAliasRow(numAliases: number = 3): any[] {
+    return [randomstring.generate(), randomstring.generate(), Array.from({length: numAliases}, () => randomstring.generate()).join(",")];
+}
+
+export function getRandomlyGeneratedAliasTable(numCoupleAliases: number = 10): any[][] {
+    const aliasTable: any[][] = [["Husband", "Wife", "Couple Aliases"]];
+    for(let i = 0; i < numCoupleAliases; i++) {
+        aliasTable.push(getRandomlyGeneratedAliasRow());
+    }
+
+    return aliasTable;
+}
+
+export function getRandomlyGeneratedSheet(): Sheet {
+    return {
+        activate: jest.fn().mockReturnThis(),
+        addDeveloperMetadata: jest.fn().mockReturnThis(),
+        appendRow: jest.fn().mockReturnThis(),
+        asDataSourceSheet: jest.fn().mockReturnValue(null),
+        autoResizeColumn: jest.fn().mockReturnThis(),
+        autoResizeColumns: jest.fn().mockReturnThis(),
+        autoResizeRows: jest.fn().mockReturnThis(),
+        clear: jest.fn().mockReturnThis(),
+        clearConditionalFormatRules: jest.fn(),
+        clearContents: jest.fn().mockReturnThis(),
+        clearFormats: jest.fn().mockReturnThis(),
+        clearNotes: jest.fn().mockReturnThis(),
+        collapseAllColumnGroups: jest.fn().mockReturnThis(),
+        collapseAllRowGroups: jest.fn().mockReturnThis(),
+        copyTo: jest.fn().mockReturnThis(),
+        createDeveloperMetadataFinder: jest.fn(),
+        createTextFinder: jest.fn(),
+        deleteColumn: jest.fn().mockReturnThis(),
+        deleteColumns: jest.fn(),
+        deleteRow: jest.fn().mockReturnThis(),
+        deleteRows: jest.fn(),
+        expandAllColumnGroups: jest.fn().mockReturnThis(),
+        expandAllRowGroups: jest.fn().mockReturnThis(),
+        expandColumnGroupsUpToDepth: jest.fn().mockReturnThis(),
+        expandRowGroupsUpToDepth: jest.fn().mockReturnThis(),
+        getActiveCell: jest.fn(),
+        getActiveRange: jest.fn(),
+        getActiveRangeList: jest.fn(),
+        getBandings: jest.fn().mockReturnValue([]),
+        getCharts: jest.fn().mockReturnValue([]),
+        getColumnGroup: jest.fn(),
+        getColumnGroupControlPosition: jest.fn(),
+        getColumnGroupDepth: jest.fn().mockReturnValue(0),
+        getColumnWidth: jest.fn().mockReturnValue(0),
+        getConditionalFormatRules: jest.fn().mockReturnValue([]),
+        getCurrentCell: jest.fn(),
+        getDataRange: jest.fn(),
+        getDataSourceTables: jest.fn().mockReturnValue([]),
+        getDeveloperMetadata: jest.fn().mockReturnValue([]),
+        getDrawings: jest.fn().mockReturnValue([]),
+        getFilter: jest.fn(),
+        getFormUrl: jest.fn(),
+        getFrozenColumns: jest.fn().mockReturnValue(0),
+        getFrozenRows: jest.fn().mockReturnValue(0),
+        getImages: jest.fn().mockReturnValue([]),
+        getIndex: jest.fn().mockReturnValue(0),
+        getLastColumn: jest.fn().mockReturnValue(0),
+        getLastRow: jest.fn().mockReturnValue(0),
+        getMaxColumns: jest.fn().mockReturnValue(0),
+        getMaxRows: jest.fn().mockReturnValue(0),
+        getName: jest.fn().mockReturnValue(randomstring.generate()),
+        getNamedRanges: jest.fn().mockReturnValue([]),
+        getParent: jest.fn(),
+        getPivotTables: jest.fn().mockReturnValue([]),
+        getProtections: jest.fn().mockReturnValue([]),
+        getRange: jest.fn(),
+        getRangeList: jest.fn(),
+        getRowGroup: jest.fn(),
+        getRowGroupControlPosition: jest.fn(),
+        getRowGroupDepth: jest.fn().mockReturnValue(0),
+        getRowHeight: jest.fn().mockReturnValue(0),
+        getSelection: jest.fn(),
+        getSheetId: jest.fn().mockReturnValue(0),
+        getSheetName: jest.fn().mockReturnValue(randomstring.generate()),
+        getSheetValues: jest.fn().mockReturnValue([]),
+        getSlicers: jest.fn().mockReturnValue([]),
+        getTabColor: jest.fn(),
+        getType: jest.fn(),
+        hasHiddenGridlines: jest.fn().mockReturnValue(getRandomBoolean()),
+        hideColumn: jest.fn(),
+        hideColumns: jest.fn(),
+        hideRow: jest.fn(),
+        hideRows: jest.fn(),
+        hideSheet: jest.fn().mockReturnThis(),
+        insertChart: jest.fn(),
+        insertColumnAfter: jest.fn().mockReturnThis(),
+        insertColumnBefore: jest.fn().mockReturnThis(),
+        insertColumns: jest.fn(),
+        insertColumnsAfter: jest.fn().mockReturnThis(),
+        insertColumnsBefore: jest.fn().mockReturnThis(),
+        insertImage: jest.fn(),
+        insertRowAfter: jest.fn().mockReturnThis(),
+        insertRowBefore: jest.fn().mockReturnThis(),
+        insertRows: jest.fn(),
+        insertRowsAfter: jest.fn().mockReturnThis(),
+        insertRowsBefore: jest.fn().mockReturnThis(),
+        insertSlicer: jest.fn(),
+        isColumnHiddenByUser: jest.fn().mockReturnValue(getRandomBoolean()),
+        isRightToLeft: jest.fn().mockReturnValue(getRandomBoolean()),
+        isRowHiddenByFilter: jest.fn().mockReturnValue(getRandomBoolean()),
+        isRowHiddenByUser: jest.fn().mockReturnValue(getRandomBoolean()),
+        isSheetHidden: jest.fn().mockReturnValue(getRandomBoolean()),
+        moveColumns: jest.fn(),
+        moveRows: jest.fn(),
+        newChart: jest.fn(),
+        protect: jest.fn(),
+        removeChart: jest.fn(),
+        setActiveRange: jest.fn(),
+        setActiveRangeList: jest.fn(),
+        setActiveSelection: jest.fn(),
+        setColumnGroupControlPosition: jest.fn(),
+        setColumnWidth: jest.fn().mockReturnThis(),
+        setColumnWidths: jest.fn().mockReturnThis(),
+        setConditionalFormatRules: jest.fn(),
+        setCurrentCell: jest.fn(),
+        setFrozenColumns: jest.fn(),
+        setFrozenRows: jest.fn(),
+        setHiddenGridlines: jest.fn(),
+        setName: jest.fn(),
+        setRightToLeft: jest.fn(),
+        setRowGroupControlPosition: jest.fn(),
+        setRowHeight: jest.fn().mockReturnThis(),
+        setRowHeights: jest.fn().mockReturnThis(),
+        setRowHeightsForced: jest.fn().mockReturnThis(),
+        setTabColor: jest.fn(),
+        showColumns: jest.fn(),
+        showRows: jest.fn(),
+        showSheet: jest.fn().mockReturnThis(),
+        sort: jest.fn().mockReturnThis(),
+        unhideColumn: jest.fn(),
+        unhideRow: jest.fn(),
+        updateChart: jest.fn(),
+        getSheetProtection: jest.fn(),
+        setSheetProtection: jest.fn(),
+    };
+}
+
 function getRandomlyGeneratedText(): Text {
     return {
         value: randomstring.generate(),
