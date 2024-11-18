@@ -1,6 +1,5 @@
-import { TabNotFoundError } from "./error/tabNotFoundError";
 import { loadMapFromScriptProperties, setScriptProperty } from "./propertiesService";
-import { getAllSpreadsheetTabs } from "./scan";
+import { getTab } from "./scan";
 
 const MEMBERS_TAB_NAME: string = "Members";
 const COUPLES_TAB_NAME: string = "Couples";
@@ -31,18 +30,6 @@ export function loadMembersFromOnestopIntoScriptProperties(): void {
 
     setScriptProperty(MEMBER_MAP_KEY, JSON.stringify(memberMap));
     setScriptProperty(ALIASES_MAP_KEY, JSON.stringify(combinedAliases));
-}
-
-function getTab(tabName: string): Sheet {
-    const tabs: Sheet[] = getAllSpreadsheetTabs();
-    for(const tab of tabs) {
-        const currentTabName: string = tab.getName();
-        if(currentTabName === tabName) {
-            return tab;
-        }
-    }
-
-    throw new TabNotFoundError(`No ${tabName} tab found`);
 }
 
 function loadMembersFromOnestop(): { memberMap: MemberMap, alternateNamesMap: AliasMap } {

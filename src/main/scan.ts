@@ -1,3 +1,4 @@
+import { TabNotFoundError } from "./error/tabNotFoundError";
 import { getMetadata } from "./row";
 
 type TextStyle = GoogleAppsScript.Spreadsheet.TextStyle;
@@ -297,4 +298,22 @@ function constructDate(currentDate: Date, currentTime: Date): Date {
  */
 function getUTCHoursOffset(date: Date): number {
     return date.getTimezoneOffset() / MIN_IN_HOUR;
+}
+
+/**
+ * Retrieves a tab by name from the spreadsheet. Throws a TabNotFoundError if the tab cannot be found
+ * 
+ * @param tabName the name of tab to fetch
+ * @returns Sheet object representing the tab to retrieve
+ */
+export function getTab(tabName: string): Sheet {
+    const tabs: Sheet[] = getAllSpreadsheetTabs();
+    for(const tab of tabs) {
+        const currentTabName: string = tab.getName();
+        if(currentTabName === tabName) {
+            return tab;
+        }
+    }
+
+    throw new TabNotFoundError(`No ${tabName} tab found`);
 }
