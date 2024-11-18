@@ -1,5 +1,5 @@
 import { TabNotFoundError } from "./error/tabNotFoundError";
-import { getScriptProperty, setScriptProperty } from "./propertiesService";
+import { loadMapFromScriptProperties, setScriptProperty } from "./propertiesService";
 import { getAllSpreadsheetTabs } from "./scan";
 
 const MEMBERS_TAB_NAME: string = "Members";
@@ -129,9 +129,4 @@ function mergeAliasMaps(firstAliasMap: AliasMap, secondAliasMap: AliasMap): Alia
     }
 
     return finalAliasMap;
-}
-
-function loadMapFromScriptProperties(key: string): Object {
-    const map: string | null = getScriptProperty(key);
-    return map ? JSON.parse(map) : {};
 }

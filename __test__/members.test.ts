@@ -18,8 +18,8 @@ describe("MEMBER_MAP", () => {
     it("should return the member map from the script properties when it is present", () => {
         const memberMapMock: MemberMap = getRandomlyGeneratedMemberMap();
 
-        jest.doMock("../src/main/propertiesService", () => ({
-            getScriptProperty: jest.fn(() => JSON.stringify(memberMapMock)),
+        jest.mock("../src/main/propertiesService", () => ({
+            loadMapFromScriptProperties: jest.fn(() => memberMapMock),
         }));
         
         // Import the MEMBER_MAP with the mocked propertiesService
@@ -29,8 +29,8 @@ describe("MEMBER_MAP", () => {
     });
 
     it("should return an empty map when there is no member map present in the script properties", () => {
-        jest.doMock("../src/main/propertiesService", () => ({
-            getScriptProperty: jest.fn(() => null),
+        jest.mock("../src/main/propertiesService", () => ({
+            loadMapFromScriptProperties: jest.fn(() => ({})),
         }));
 
         // Import the MEMBER_MAP with the mocked propertiesService
@@ -44,8 +44,8 @@ describe("ALIASES_MAP", () => {
     it("should return the aliases map from the script properties when it is present", () => {
         const aliasesMapMock: AliasMap = getRandomlyGeneratedAliasMap();
 
-        jest.doMock("../src/main/propertiesService", () => ({
-            getScriptProperty: jest.fn(() => JSON.stringify(aliasesMapMock)),
+        jest.mock("../src/main/propertiesService", () => ({
+            loadMapFromScriptProperties: jest.fn(() => aliasesMapMock),
         }));
         
         // Import the MEMBER_MAP with the mocked propertiesService
@@ -55,8 +55,8 @@ describe("ALIASES_MAP", () => {
     });
 
     it("should return an empty map when there is no aliases map present in the script properties", () => {
-        jest.doMock("../src/main/propertiesService", () => ({
-            getScriptProperty: jest.fn(() => null),
+        jest.mock("../src/main/propertiesService", () => ({
+            loadMapFromScriptProperties: jest.fn(() => ({})),
         }));
 
         // Import the MEMBER_MAP with the mocked propertiesService
@@ -105,7 +105,7 @@ describe("loadMembersFromOnestopIntoScriptProperties", () => {
 
         const setScriptPropertyMock: Mock = jest.fn();
         jest.mock("../src/main/propertiesService", () => ({
-            getScriptProperty: jest.fn(),
+            loadMapFromScriptProperties: jest.fn(),
             setScriptProperty: setScriptPropertyMock,
         }));
 
@@ -195,7 +195,7 @@ describe("loadMembersFromOnestopIntoScriptProperties", () => {
 
         const setScriptPropertyMock: Mock = jest.fn();
         jest.mock("../src/main/propertiesService", () => ({
-            getScriptProperty: jest.fn(),
+            loadMapFromScriptProperties: jest.fn(),
             setScriptProperty: setScriptPropertyMock,
         }));
 
@@ -234,7 +234,7 @@ describe("loadMembersFromOnestopIntoScriptProperties", () => {
 
         const setScriptPropertyMock: Mock = jest.fn();
         jest.mock("../src/main/propertiesService", () => ({
-            getScriptProperty: jest.fn(),
+            loadMapFromScriptProperties: jest.fn(),
             setScriptProperty: setScriptPropertyMock,
         }));
 
@@ -279,7 +279,7 @@ describe("loadMembersFromOnestopIntoScriptProperties", () => {
 
         const setScriptPropertyMock: Mock = jest.fn();
         jest.mock("../src/main/propertiesService", () => ({
-            getScriptProperty: jest.fn(),
+            loadMapFromScriptProperties: jest.fn(),
             setScriptProperty: setScriptPropertyMock,
         }));
 
@@ -327,7 +327,7 @@ describe("loadMembersFromOnestopIntoScriptProperties", () => {
 
         const setScriptPropertyMock: Mock = jest.fn();
         jest.mock("../src/main/propertiesService", () => ({
-            getScriptProperty: jest.fn(),
+            loadMapFromScriptProperties: jest.fn(),
             setScriptProperty: setScriptPropertyMock,
         }));
 

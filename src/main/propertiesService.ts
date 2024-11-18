@@ -161,3 +161,15 @@ export function logDocumentProperties(): void {
       Logger.log(key + ': ' + allProperties[key]);
     }
 }
+
+/**
+ * Loads and parses a map stored in the script properties. The reutned object can be cast to its corresponding
+ * type.
+ * 
+ * @param key key that the map is stored under within the script properties
+ * @returns the map object from the script properties
+ */
+export function loadMapFromScriptProperties(key: string): Object {
+    const map: string | null = getScriptProperty(key);
+    return map ? JSON.parse(map) : {};
+}
