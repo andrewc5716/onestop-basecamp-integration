@@ -306,7 +306,7 @@ function getUTCHoursOffset(date: Date): number {
  * @param tabName the name of tab to fetch
  * @returns Sheet object representing the tab to retrieve
  */
-export function getTab(tabName: string): Sheet {
+function getTab(tabName: string): Sheet {
     const tabs: Sheet[] = getAllSpreadsheetTabs();
     for(const tab of tabs) {
         const currentTabName: string = tab.getName();
@@ -316,4 +316,18 @@ export function getTab(tabName: string): Sheet {
     }
 
     throw new TabNotFoundError(`No ${tabName} tab found`);
+}
+
+/**
+ * Returns the cell values for a given Google Sheets tab
+ * 
+ * @param tabName the name of the tab
+ * @returns values for the cells that contain data for the given sheet
+ */
+export function getCellValues(tabName: string): any[][] {
+    const groupsTab: Sheet = getTab(tabName);
+    const dataRange: Range = groupsTab.getDataRange();
+    const cellValues: any[][] = dataRange.getValues();
+
+    return cellValues;
 }
