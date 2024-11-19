@@ -144,29 +144,39 @@ function loadGroupMemberNames(supergroup: Supergroup, loadedGroups: GroupsMap, l
 
 function reprocessSupergroups(missingDependentSubgroups: Supergroup[], loadedGroups: GroupsMap, loadedSupergroups: GroupsMap): { loadedSupergroups: GroupsMap, unableToLoad: Supergroup[] } {
     let reprocessQueue: Supergroup[] = missingDependentSubgroups;
-    const reprocessedSupergroups: GroupsMap = {};
-
     let reprocessQueueStartLength: number;
+    let allReprocessedSupergroups: GroupsMap = {};
     let allLoadedSupergroups: GroupsMap = {...loadedSupergroups};
+
     do {
         reprocessQueueStartLength = reprocessQueue.length;
-        allLoadedSupergroups = {...allLoadedSupergroups, ...reprocessedSupergroups};
+
+        const { reprocessedSupergroups: reprocessedSupergroups, needsToBeReprocessed: needToBeReprocessed } = handleReprocessQueue(reprocessQueue, allLoadedSupergroups, allReprocessedSupergroups, loadedGroups);
+        allReprocessedSupergroups = {...allReprocessedSupergroups, ...reprocessedSupergroups};
         
-        const needToBeReprocessed: Supergroup[] = [];
-        // Go through reprocess queue
-        for(let i = 0; i < reprocessQueue.length; i++) {
-            const currentSupergroup: Supergroup = reprocessQueue[i];
-            if(allSubgroupsHaveBeenLoaded(currentSupergroup, loadedGroups, allLoadedSupergroups)) {
-                reprocessedSupergroups[currentSupergroup.name] = loadGroupMemberNames(currentSupergroup, loadedGroups, allLoadedSupergroups);
-            } else {
-                needToBeReprocessed.push(currentSupergroup);
-            }
-        }
         reprocessQueue = needToBeReprocessed;
 
     } while(reprocessQueue.length > 0 && reprocessQueue.length < reprocessQueueStartLength);
 
-    return { loadedSupergroups: reprocessedSupergroups, unableToLoad: reprocessQueue };
+    return { loadedSupergroups: allReprocessedSupergroups, unableToLoad: reprocessQueue };
+}
+
+function handleReprocessQueue(reprocessQueue: Supergroup[], previouslyLoadedSupergroups: GroupsMap, previouslyReprocessedSupergroups: GroupsMap, loadedGroups: GroupsMap): { reprocessedSupergroups: GroupsMap, needsToBeReprocessed: Supergroup[] }  {
+    const loadedSupergroups: GroupsMap = {...previouslyLoadedSupergroups, ...previouslyReprocessedSupergroups};
+    const reprocessedSupergroups: GroupsMap = {};
+        
+    const needToBeReprocessed: Supergroup[] = [];
+    // Go through reprocess queue
+    for(let i = 0; i < reprocessQueue.length; i++) {
+        const currentSupergroup: Supergroup = reprocessQueue[i];
+        if(allSubgroupsHaveBeenLoaded(currentSupergroup, loadedGroups, loadedSupergroups)) {
+            reprocessedSupergroups[currentSupergroup.name] = loadGroupMemberNames(currentSupergroup, loadedGroups, loadedSupergroups);
+        } else {
+            needToBeReprocessed.push(currentSupergroup);
+        }
+    }
+
+    return { reprocessedSupergroups: reprocessedSupergroups, needsToBeReprocessed: needToBeReprocessed };
 }
 
 function mergeGroupsMaps(firstGroupsMap: GroupsMap, secondGroupsMap: GroupsMap): GroupsMap {
