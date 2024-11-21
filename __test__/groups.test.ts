@@ -203,7 +203,7 @@ describe("loadGroupsFromOnestopIntoScriptProperties", () => {
         expect(setScriptPropertyMock).toHaveBeenCalledWith("GROUPS_MAP", JSON.stringify(expectedMap));
     });
 
-    it("should skip loading a Supergroup when its dependent subgroups have not all been loaded", () => {
+    it("should skip loading a subgroup when the subgroup has not been defined", () => {
         const groupsDataValuesMock: any[][] = getRandomlyGeneratedGroupsTable(2);
         const supergroupsDataValuesMock: any[][] = getRandomlyGeneratedSupergroupsTable(2);
 
@@ -235,6 +235,7 @@ describe("loadGroupsFromOnestopIntoScriptProperties", () => {
         const expectedMap: GroupsMap = {
             HG1: ["John Doe", "Jane Smith"],
             A2K: ["Frank Miller", "Grace Wilson"],
+            UCSD: ["John Doe", "Jane Smith"],
             Community: ["Frank Miller", "Grace Wilson"],
         };
 

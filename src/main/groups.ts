@@ -61,52 +61,71 @@ function getGroupMemberNames(rowValues: any[]): string[] {
     return groupMemberNameList.split(COMMA_DELIMITER).map((name) => name.trim()).filter((name) => name !== "");
 }
 
+type SupergroupMap = { [key: string]: Supergroup };
+
 function loadSupergroupsFromOnestop(loadedGroups: GroupsMap): GroupsMap {
     const cellValues: any[][] = getCellValues(SUPERGROUPS_TAB_NAME);
 
-    const { loadedSupergroups: loadedSupergroups, missingDependentSubgroups: missingDependentSubgroups } = parseAndLoadSupergroups(cellValues, loadedGroups);
-
-    if(missingDependentSubgroups.length === cellValues.length - 1) {
-        Logger.log("Warning: None of the supergroups were loaded");
-
-        return loadedSupergroups;
-    }
-
-    const { loadedSupergroups: reprocessedSupergroups, unableToLoad: unableToLoad } = reprocessSupergroups(missingDependentSubgroups, loadedGroups, loadedSupergroups);
-
-    if(unableToLoad.length > 0) {
-        Logger.log(`Warning: Unable to load the following ${unableToLoad.length} Supergroups because all of their dependent subgroups have not been loaded ${unableToLoad.map((supergroup) => `${supergroup.name}: ${supergroup.subgroups}`)}`);
-    }
-
-    const allLoadedSupergroups: GroupsMap = mergeGroupsMaps(loadedSupergroups, reprocessedSupergroups);
-
-    return allLoadedSupergroups;
-}
-
-function parseAndLoadSupergroups(cellValues: any[][], loadedGroups: GroupsMap, ): { loadedSupergroups: GroupsMap, missingDependentSubgroups: Supergroup[] } {
+    const allSupergroups: SupergroupMap = {};
     const loadedSupergroups: GroupsMap = {};
-    const missingDependentSubgroups: Supergroup[] = [];
 
     // Start at row 1 to skip the table header row
     for(let i = 1; i < cellValues.length; i++) {
         const rowValues: any[] = cellValues[i];
-        const supergroup: Supergroup = constructSupergroup(rowValues);
+        const currentSupergroup: Supergroup = constructSupergroup(rowValues);
 
-        if(supergroup.name === "") {
+        if(currentSupergroup.name === "") {
             // Skip empty entries
             continue;
         }
 
-        if(allSubgroupsHaveBeenLoaded(supergroup, loadedGroups, loadedSupergroups)) {
-            // Load all member names of the Supergroup
-            loadedSupergroups[supergroup.name] = loadGroupMemberNames(supergroup, loadedGroups, loadedSupergroups);
-        } else {
-            // Add to the reprocess queued to be reprocessed once its' dependencies have been loaded
-            missingDependentSubgroups.push(supergroup);
+        allSupergroups[currentSupergroup.name] = currentSupergroup;
+    }
+
+    for(const supergroupName of Object.keys(allSupergroups)) {
+        if(!loadedSupergroups.hasOwnProperty(supergroupName)) {
+            const loadedMembers: string[] = loadGroupByName(supergroupName, allSupergroups, loadedGroups, loadedSupergroups);
+            loadedSupergroups[supergroupName] = loadedMembers;
         }
     }
 
-    return { loadedSupergroups: loadedSupergroups, missingDependentSubgroups: missingDependentSubgroups };
+    return loadedSupergroups;
+}
+
+function loadGroupByName(groupName: string, allSupergroups: SupergroupMap, loadedGroups: GroupsMap, loadedSupergroups: GroupsMap): string[] {
+    if(!isValidGroup(groupName, allSupergroups, loadedGroups)) {
+        return [];
+    } else if(!isSuperGroup(groupName, allSupergroups)) {
+        // Is a regular group
+        return loadedGroups[groupName];
+    } else {
+        const supergroup: Supergroup = allSupergroups[groupName];
+        const subgroups: string[] = supergroup.subgroups;
+        if(allSubgroupsHaveBeenLoaded(supergroup, loadedGroups, loadedSupergroups)) {
+            let members: string[] = [];
+            for(const subgroup of subgroups) {
+                const membersToLoad: string[] = loadedGroups.hasOwnProperty(subgroup) ? loadedGroups[subgroup] : loadedSupergroups[subgroup];
+                members = members.concat(membersToLoad);
+            }
+            loadedSupergroups[groupName] = members;
+            return members;
+        } else {
+            let members: string[] = [];
+            for(const subgroup of subgroups) {
+                members = members.concat(loadGroupByName(subgroup, allSupergroups, loadedGroups, loadedSupergroups));
+            }
+            loadedSupergroups[groupName] = members;
+            return members;
+        }
+    }
+}
+
+function isValidGroup(groupName: string, allSupergroups: SupergroupMap, loadedGroups: GroupsMap): boolean {
+    return allSupergroups.hasOwnProperty(groupName) || loadedGroups.hasOwnProperty(groupName);
+}
+
+function isSuperGroup(groupName: string, allSupergroups: SupergroupMap): boolean {
+    return allSupergroups.hasOwnProperty(groupName);
 }
 
 function constructSupergroup(rowValues: any[]): Supergroup {
@@ -133,57 +152,6 @@ function allSubgroupsHaveBeenLoaded(supergroup: Supergroup, loadedGroups: Groups
     }
 
     return true;
-}
-
-function loadGroupMemberNames(supergroup: Supergroup, loadedGroups: GroupsMap, loadedSupergroups: GroupsMap): string[] {
-    let groupMembers: string[] = [];
-    const subgroups: string[] = supergroup.subgroups;
-    for(const subgroup of subgroups) {
-        if(loadedGroups.hasOwnProperty(subgroup)) {
-            groupMembers = groupMembers.concat(loadedGroups[subgroup]);
-        } else if(loadedSupergroups.hasOwnProperty(subgroup)) {
-            groupMembers = groupMembers.concat(loadedSupergroups[subgroup]);
-        } else {
-            Logger.log(`Cannot find group members for Supergroup ${supergroup.name} and subgroup ${subgroup}`);
-        }
-    }
-
-    return groupMembers;
-}
-
-function reprocessSupergroups(missingDependentSubgroups: Supergroup[], loadedGroups: GroupsMap, loadedSupergroups: GroupsMap): { loadedSupergroups: GroupsMap, unableToLoad: Supergroup[] } {
-    let reprocessQueue: Supergroup[] = missingDependentSubgroups;
-    let numProcessedLastIteration: number = Number.MAX_SAFE_INTEGER;
-    let allReprocessedSupergroups: GroupsMap = {};
-    let allLoadedSupergroups: GroupsMap = {...loadedSupergroups};
-
-    while(reprocessQueue.length > 0 && numProcessedLastIteration > 0) {
-        const { reprocessedSupergroups: reprocessedSupergroups, needsToBeReprocessed: needToBeReprocessed } = handleReprocessQueue(reprocessQueue, allLoadedSupergroups, allReprocessedSupergroups, loadedGroups);
-        numProcessedLastIteration = Object.keys(reprocessedSupergroups).length;
-        allReprocessedSupergroups = {...allReprocessedSupergroups, ...reprocessedSupergroups};
-        
-        reprocessQueue = needToBeReprocessed;
-    };
-
-    return { loadedSupergroups: allReprocessedSupergroups, unableToLoad: reprocessQueue };
-}
-
-function handleReprocessQueue(reprocessQueue: Supergroup[], previouslyLoadedSupergroups: GroupsMap, previouslyReprocessedSupergroups: GroupsMap, loadedGroups: GroupsMap): { reprocessedSupergroups: GroupsMap, needsToBeReprocessed: Supergroup[] }  {
-    const loadedSupergroups: GroupsMap = {...previouslyLoadedSupergroups, ...previouslyReprocessedSupergroups};
-    const reprocessedSupergroups: GroupsMap = {};
-        
-    const needToBeReprocessed: Supergroup[] = [];
-    // Go through reprocess queue
-    for(let i = 0; i < reprocessQueue.length; i++) {
-        const currentSupergroup: Supergroup = reprocessQueue[i];
-        if(allSubgroupsHaveBeenLoaded(currentSupergroup, loadedGroups, loadedSupergroups)) {
-            reprocessedSupergroups[currentSupergroup.name] = loadGroupMemberNames(currentSupergroup, loadedGroups, loadedSupergroups);
-        } else {
-            needToBeReprocessed.push(currentSupergroup);
-        }
-    }
-
-    return { reprocessedSupergroups: reprocessedSupergroups, needsToBeReprocessed: needToBeReprocessed };
 }
 
 function mergeGroupsMaps(firstGroupsMap: GroupsMap, secondGroupsMap: GroupsMap): GroupsMap {
