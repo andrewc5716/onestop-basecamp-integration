@@ -5,7 +5,7 @@ global.SpreadsheetApp = SpreadsheetApp;
 import Spreadsheet from "gasmask/dist/SpreadsheetApp/Spreadsheet";
 import { TabNotFoundError } from "../src/main/error/tabNotFoundError";
 import Sheet from "gasmask/dist/SpreadsheetApp/Sheet";
-import { getRandomlyGeneratedCellValues, getRandomlyGeneratedRange } from "./testUtils";
+import { getRandomlyGeneratedCellValues } from "./testUtils";
 import { Range as GasMaskRange } from "gasmask/dist/SpreadsheetApp";
 import Range from "gasmask/dist/SpreadsheetApp/Range";
 
