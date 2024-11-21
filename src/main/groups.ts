@@ -153,19 +153,17 @@ function loadGroupMemberNames(supergroup: Supergroup, loadedGroups: GroupsMap, l
 
 function reprocessSupergroups(missingDependentSubgroups: Supergroup[], loadedGroups: GroupsMap, loadedSupergroups: GroupsMap): { loadedSupergroups: GroupsMap, unableToLoad: Supergroup[] } {
     let reprocessQueue: Supergroup[] = missingDependentSubgroups;
-    let reprocessQueueStartLength: number;
+    let numProcessedLastIteration: number = Number.MAX_SAFE_INTEGER;
     let allReprocessedSupergroups: GroupsMap = {};
     let allLoadedSupergroups: GroupsMap = {...loadedSupergroups};
 
-    do {
-        reprocessQueueStartLength = reprocessQueue.length;
-
+    while(reprocessQueue.length > 0 && numProcessedLastIteration > 0) {
         const { reprocessedSupergroups: reprocessedSupergroups, needsToBeReprocessed: needToBeReprocessed } = handleReprocessQueue(reprocessQueue, allLoadedSupergroups, allReprocessedSupergroups, loadedGroups);
+        numProcessedLastIteration = Object.keys(reprocessedSupergroups).length;
         allReprocessedSupergroups = {...allReprocessedSupergroups, ...reprocessedSupergroups};
         
         reprocessQueue = needToBeReprocessed;
-
-    } while(reprocessQueue.length > 0 && reprocessQueue.length < reprocessQueueStartLength);
+    };
 
     return { loadedSupergroups: allReprocessedSupergroups, unableToLoad: reprocessQueue };
 }
