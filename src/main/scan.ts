@@ -325,8 +325,8 @@ function getTab(tabName: string): Sheet {
  * @returns values for the cells that contain data for the given sheet
  */
 export function getCellValues(tabName: string): any[][] {
-    const groupsTab: Sheet = getTab(tabName);
-    const dataRange: Range = groupsTab.getDataRange();
+    const tab: Sheet = getTab(tabName);
+    const dataRange: Range = tab.getDataRange();
     const cellValues: any[][] = dataRange.getValues();
 
     return cellValues;

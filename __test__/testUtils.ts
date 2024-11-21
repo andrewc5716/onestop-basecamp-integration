@@ -309,6 +309,12 @@ export function getRandomlyGeneratedSupergroupsTable(numGroups: number = 10): an
     return aliasTable;
 }
 
+export function getRandomlyGeneratedCellValues(numRows: number = 5, numColumns: number = 5): any[][] {
+    return Array.from({ length: numRows }, () =>
+        Array.from({ length: numColumns }, () => randomstring.generate())
+    );
+}
+
 function getRandomlyGeneratedText(): Text {
     return {
         value: randomstring.generate(),
