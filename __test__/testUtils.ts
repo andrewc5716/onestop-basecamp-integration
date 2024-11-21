@@ -274,133 +274,39 @@ export function getRandomlyGeneratedAliasTable(numCoupleAliases: number = 10): a
     return aliasTable;
 }
 
-export function getRandomlyGeneratedSheet(): Sheet {
-    return {
-        activate: jest.fn().mockReturnThis(),
-        addDeveloperMetadata: jest.fn().mockReturnThis(),
-        appendRow: jest.fn().mockReturnThis(),
-        asDataSourceSheet: jest.fn().mockReturnValue(null),
-        autoResizeColumn: jest.fn().mockReturnThis(),
-        autoResizeColumns: jest.fn().mockReturnThis(),
-        autoResizeRows: jest.fn().mockReturnThis(),
-        clear: jest.fn().mockReturnThis(),
-        clearConditionalFormatRules: jest.fn(),
-        clearContents: jest.fn().mockReturnThis(),
-        clearFormats: jest.fn().mockReturnThis(),
-        clearNotes: jest.fn().mockReturnThis(),
-        collapseAllColumnGroups: jest.fn().mockReturnThis(),
-        collapseAllRowGroups: jest.fn().mockReturnThis(),
-        copyTo: jest.fn().mockReturnThis(),
-        createDeveloperMetadataFinder: jest.fn(),
-        createTextFinder: jest.fn(),
-        deleteColumn: jest.fn().mockReturnThis(),
-        deleteColumns: jest.fn(),
-        deleteRow: jest.fn().mockReturnThis(),
-        deleteRows: jest.fn(),
-        expandAllColumnGroups: jest.fn().mockReturnThis(),
-        expandAllRowGroups: jest.fn().mockReturnThis(),
-        expandColumnGroupsUpToDepth: jest.fn().mockReturnThis(),
-        expandRowGroupsUpToDepth: jest.fn().mockReturnThis(),
-        getActiveCell: jest.fn(),
-        getActiveRange: jest.fn(),
-        getActiveRangeList: jest.fn(),
-        getBandings: jest.fn().mockReturnValue([]),
-        getCharts: jest.fn().mockReturnValue([]),
-        getColumnGroup: jest.fn(),
-        getColumnGroupControlPosition: jest.fn(),
-        getColumnGroupDepth: jest.fn().mockReturnValue(0),
-        getColumnWidth: jest.fn().mockReturnValue(0),
-        getConditionalFormatRules: jest.fn().mockReturnValue([]),
-        getCurrentCell: jest.fn(),
-        getDataRange: jest.fn(),
-        getDataSourceTables: jest.fn().mockReturnValue([]),
-        getDeveloperMetadata: jest.fn().mockReturnValue([]),
-        getDrawings: jest.fn().mockReturnValue([]),
-        getFilter: jest.fn(),
-        getFormUrl: jest.fn(),
-        getFrozenColumns: jest.fn().mockReturnValue(0),
-        getFrozenRows: jest.fn().mockReturnValue(0),
-        getImages: jest.fn().mockReturnValue([]),
-        getIndex: jest.fn().mockReturnValue(0),
-        getLastColumn: jest.fn().mockReturnValue(0),
-        getLastRow: jest.fn().mockReturnValue(0),
-        getMaxColumns: jest.fn().mockReturnValue(0),
-        getMaxRows: jest.fn().mockReturnValue(0),
-        getName: jest.fn().mockReturnValue(randomstring.generate()),
-        getNamedRanges: jest.fn().mockReturnValue([]),
-        getParent: jest.fn(),
-        getPivotTables: jest.fn().mockReturnValue([]),
-        getProtections: jest.fn().mockReturnValue([]),
-        getRange: jest.fn(),
-        getRangeList: jest.fn(),
-        getRowGroup: jest.fn(),
-        getRowGroupControlPosition: jest.fn(),
-        getRowGroupDepth: jest.fn().mockReturnValue(0),
-        getRowHeight: jest.fn().mockReturnValue(0),
-        getSelection: jest.fn(),
-        getSheetId: jest.fn().mockReturnValue(0),
-        getSheetName: jest.fn().mockReturnValue(randomstring.generate()),
-        getSheetValues: jest.fn().mockReturnValue([]),
-        getSlicers: jest.fn().mockReturnValue([]),
-        getTabColor: jest.fn(),
-        getType: jest.fn(),
-        hasHiddenGridlines: jest.fn().mockReturnValue(getRandomBoolean()),
-        hideColumn: jest.fn(),
-        hideColumns: jest.fn(),
-        hideRow: jest.fn(),
-        hideRows: jest.fn(),
-        hideSheet: jest.fn().mockReturnThis(),
-        insertChart: jest.fn(),
-        insertColumnAfter: jest.fn().mockReturnThis(),
-        insertColumnBefore: jest.fn().mockReturnThis(),
-        insertColumns: jest.fn(),
-        insertColumnsAfter: jest.fn().mockReturnThis(),
-        insertColumnsBefore: jest.fn().mockReturnThis(),
-        insertImage: jest.fn(),
-        insertRowAfter: jest.fn().mockReturnThis(),
-        insertRowBefore: jest.fn().mockReturnThis(),
-        insertRows: jest.fn(),
-        insertRowsAfter: jest.fn().mockReturnThis(),
-        insertRowsBefore: jest.fn().mockReturnThis(),
-        insertSlicer: jest.fn(),
-        isColumnHiddenByUser: jest.fn().mockReturnValue(getRandomBoolean()),
-        isRightToLeft: jest.fn().mockReturnValue(getRandomBoolean()),
-        isRowHiddenByFilter: jest.fn().mockReturnValue(getRandomBoolean()),
-        isRowHiddenByUser: jest.fn().mockReturnValue(getRandomBoolean()),
-        isSheetHidden: jest.fn().mockReturnValue(getRandomBoolean()),
-        moveColumns: jest.fn(),
-        moveRows: jest.fn(),
-        newChart: jest.fn(),
-        protect: jest.fn(),
-        removeChart: jest.fn(),
-        setActiveRange: jest.fn(),
-        setActiveRangeList: jest.fn(),
-        setActiveSelection: jest.fn(),
-        setColumnGroupControlPosition: jest.fn(),
-        setColumnWidth: jest.fn().mockReturnThis(),
-        setColumnWidths: jest.fn().mockReturnThis(),
-        setConditionalFormatRules: jest.fn(),
-        setCurrentCell: jest.fn(),
-        setFrozenColumns: jest.fn(),
-        setFrozenRows: jest.fn(),
-        setHiddenGridlines: jest.fn(),
-        setName: jest.fn(),
-        setRightToLeft: jest.fn(),
-        setRowGroupControlPosition: jest.fn(),
-        setRowHeight: jest.fn().mockReturnThis(),
-        setRowHeights: jest.fn().mockReturnThis(),
-        setRowHeightsForced: jest.fn().mockReturnThis(),
-        setTabColor: jest.fn(),
-        showColumns: jest.fn(),
-        showRows: jest.fn(),
-        showSheet: jest.fn().mockReturnThis(),
-        sort: jest.fn().mockReturnThis(),
-        unhideColumn: jest.fn(),
-        unhideRow: jest.fn(),
-        updateChart: jest.fn(),
-        getSheetProtection: jest.fn(),
-        setSheetProtection: jest.fn(),
-    };
+export function getRandomlyGeneratedGroupsMap(numGroups: number = 10, numGroupMembers: number = 10): GroupsMap {
+    const groupsMap: GroupsMap = {};
+    for(let i = 0; i < numGroups; i++) {
+        groupsMap[randomstring.generate()] = Array.from({length: numGroupMembers}, () => randomstring.generate());
+    }
+
+    return groupsMap;
+}
+
+function getRandomlyGeneratedGroupRow(numGroupMembers: number = 3): any[] {
+    return [randomstring.generate(), randomstring.generate(), Array.from({length: numGroupMembers}, () => randomstring.generate()).join(",")];
+}
+
+export function getRandomlyGeneratedGroupsTable(numGroups: number = 10): any[][] {
+    const aliasTable: any[][] = [["Name", "Group Members"]];
+    for(let i = 0; i < numGroups; i++) {
+        aliasTable.push(getRandomlyGeneratedGroupRow());
+    }
+
+    return aliasTable;
+}
+
+function getRandomlyGeneratedSupergroupRow(numSubgroups: number = 3): any[] {
+    return [randomstring.generate(), randomstring.generate(), Array.from({length: numSubgroups}, () => randomstring.generate()).join(",")];
+}
+
+export function getRandomlyGeneratedSupergroupsTable(numGroups: number = 10): any[][] {
+    const aliasTable: any[][] = [["Name", "Subgroups"]];
+    for(let i = 0; i < numGroups; i++) {
+        aliasTable.push(getRandomlyGeneratedSupergroupRow());
+    }
+
+    return aliasTable;
 }
 
 function getRandomlyGeneratedText(): Text {

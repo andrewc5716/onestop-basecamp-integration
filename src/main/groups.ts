@@ -27,7 +27,6 @@ export function loadGroupsFromOnestopIntoScriptProperties(): void {
     const combinedGroupsMaps: GroupsMap = mergeGroupsMaps(groupsMap, supergroupsMap);
     const duplicateFreeGroupsMap: GroupsMap = removeDuplicatesFromGroupMaps(combinedGroupsMaps);
 
-    Logger.log(JSON.stringify(duplicateFreeGroupsMap));
     setScriptProperty(GROUPS_MAP_KEY, JSON.stringify(duplicateFreeGroupsMap));
 }
 
@@ -41,7 +40,17 @@ function loadGroupsFromOnestop(): GroupsMap {
         const groupName: string = rowValues[GROUP_NAME_COLUMN_INDEX];
         const groupMemberNames: string[] = getGroupMemberNames(rowValues);
 
-        groupsMap[groupName] = groupMemberNames;
+        if(groupName === "") {
+            // Skip empty entries
+            continue;
+        }
+
+        if(groupsMap.hasOwnProperty(groupName)) {
+            Logger.log(`Group ${groupName} has already been defined in the Groups table. Combining the two lists of members`);
+            groupsMap[groupName] = groupsMap[groupName].concat(groupMemberNames);
+        } else {
+            groupsMap[groupName] = groupMemberNames;
+        }
     }
 
     return groupsMap;
@@ -112,7 +121,7 @@ function constructSupergroup(rowValues: any[]): Supergroup {
 
 function getSubgroupNames(rowValues: any[]): string[] {
     const subgroupNameList: string = rowValues[SUBGROUP_COLUMN_INDEX];
-    return subgroupNameList.split(COMMA_DELIMITER).map((name) => name.trim());
+    return subgroupNameList.split(COMMA_DELIMITER).map((name) => name.trim()).filter((name) => name !== "");
 }
 
 function allSubgroupsHaveBeenLoaded(supergroup: Supergroup, loadedGroups: GroupsMap, loadedSupergroups: GroupsMap): boolean {

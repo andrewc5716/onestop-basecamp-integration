@@ -4,7 +4,7 @@ global.Logger = Logger;
 global.PropertiesService = PropertiesService;
 global.SpreadsheetApp = SpreadsheetApp;
 
-import { getRandomlyGeneratedAliasMap, getRandomlyGeneratedAliasTable, getRandomlyGeneratedMemberMap, getRandomlyGeneratedMemberTable, getRandomlyGeneratedRange, getRandomlyGeneratedSheet, Mock } from './testUtils';
+import { getRandomlyGeneratedAliasMap, getRandomlyGeneratedAliasTable, getRandomlyGeneratedMemberMap, getRandomlyGeneratedMemberTable, Mock } from './testUtils';
 
 const NAME_COLUMN_INDEX: number = 0;
 const GENDER_COLUMN_INDEX: number = 1;
