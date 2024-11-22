@@ -16,6 +16,10 @@ declare interface Supergroup {
     subgroups: string[],
 };
 
+// Maps a Supergroup name to its corresponding Supergroup object
+// Only used internally within this module for loading
+type SupergroupMap = { [key: string]: Supergroup };
+
 export const GROUPS_MAP: GroupsMap = loadMapFromScriptProperties(GROUPS_MAP_KEY) as GroupsMap;
 
 /**
@@ -61,13 +65,25 @@ function getGroupMemberNames(rowValues: any[]): string[] {
     return groupMemberNameList.split(COMMA_DELIMITER).map((name) => name.trim()).filter((name) => name !== "");
 }
 
-type SupergroupMap = { [key: string]: Supergroup };
-
 function loadSupergroupsFromOnestop(loadedGroups: GroupsMap): GroupsMap {
     const cellValues: any[][] = getCellValues(SUPERGROUPS_TAB_NAME);
 
+    let loadedSupergroups: GroupsMap = {};
+    const allSupergroups: SupergroupMap = parseSupergroups(cellValues);
+
+    for(const supergroupName of Object.keys(allSupergroups)) {
+        if(!loadedSupergroups.hasOwnProperty(supergroupName)) {
+            const { loadedMembers: loadedMembers, loadedSupergroups: newLoadedSupergroups} = loadGroupByName(supergroupName, allSupergroups, loadedGroups, loadedSupergroups);
+            loadedSupergroups[supergroupName] = loadedMembers;
+            loadedSupergroups = mergeGroupsMaps(loadedSupergroups, newLoadedSupergroups);
+        }
+    }
+
+    return loadedSupergroups;
+}
+
+function parseSupergroups(cellValues: any[][]): SupergroupMap {
     const allSupergroups: SupergroupMap = {};
-    const loadedSupergroups: GroupsMap = {};
 
     // Start at row 1 to skip the table header row
     for(let i = 1; i < cellValues.length; i++) {
@@ -82,42 +98,40 @@ function loadSupergroupsFromOnestop(loadedGroups: GroupsMap): GroupsMap {
         allSupergroups[currentSupergroup.name] = currentSupergroup;
     }
 
-    for(const supergroupName of Object.keys(allSupergroups)) {
-        if(!loadedSupergroups.hasOwnProperty(supergroupName)) {
-            const loadedMembers: string[] = loadGroupByName(supergroupName, allSupergroups, loadedGroups, loadedSupergroups);
-            loadedSupergroups[supergroupName] = loadedMembers;
-        }
-    }
-
-    return loadedSupergroups;
+    return allSupergroups;
 }
 
-function loadGroupByName(groupName: string, allSupergroups: SupergroupMap, loadedGroups: GroupsMap, loadedSupergroups: GroupsMap): string[] {
+function loadGroupByName(groupName: string, allSupergroups: SupergroupMap, loadedGroups: GroupsMap, loadedSupergroups: GroupsMap): { loadedMembers: string[], loadedSupergroups: GroupsMap } {
     if(!isValidGroup(groupName, allSupergroups, loadedGroups)) {
-        return [];
+        return { loadedMembers: [], loadedSupergroups: {} };
     } else if(!isSuperGroup(groupName, allSupergroups)) {
         // Is a regular group
-        return loadedGroups[groupName];
+        return { loadedMembers: loadedGroups[groupName], loadedSupergroups: {} };
     } else {
         const supergroup: Supergroup = allSupergroups[groupName];
         const subgroups: string[] = supergroup.subgroups;
+
         if(allSubgroupsHaveBeenLoaded(supergroup, loadedGroups, loadedSupergroups)) {
-            let members: string[] = [];
-            for(const subgroup of subgroups) {
-                const membersToLoad: string[] = loadedGroups.hasOwnProperty(subgroup) ? loadedGroups[subgroup] : loadedSupergroups[subgroup];
-                members = members.concat(membersToLoad);
-            }
-            loadedSupergroups[groupName] = members;
-            return members;
+            const subgroupMembers: string[] = getAllMembersFromSubgroups(subgroups, loadedGroups, loadedSupergroups);
+            return { loadedMembers: subgroupMembers, loadedSupergroups: {} };
         } else {
-            let members: string[] = [];
-            for(const subgroup of subgroups) {
-                members = members.concat(loadGroupByName(subgroup, allSupergroups, loadedGroups, loadedSupergroups));
-            }
-            loadedSupergroups[groupName] = members;
-            return members;
+            const { loadedMembers: loadedMembers, loadedSupergroups: newLoadedSupergroups} = loadAllSubgroups(subgroups, allSupergroups, loadedGroups, loadedSupergroups);
+            newLoadedSupergroups[supergroup.name] = loadedMembers;
+            return { loadedMembers: loadedMembers, loadedSupergroups: newLoadedSupergroups};
         }
     }
+}
+
+function loadAllSubgroups(subgroups: string[], allSupergroups: SupergroupMap, loadedGroups: GroupsMap, loadedSupergroups: GroupsMap): { loadedMembers: string[], loadedSupergroups: GroupsMap } {
+    let members: string[] = [];
+    let newLoadedSupergroups: GroupsMap = {};
+    for(const subgroup of subgroups) {
+        const { loadedMembers: newMembers, loadedSupergroups: newlyLoadedSupergroups } = loadGroupByName(subgroup, allSupergroups, loadedGroups, loadedSupergroups);
+        members = members.concat(newMembers);
+        newLoadedSupergroups = mergeGroupsMaps(newLoadedSupergroups, newlyLoadedSupergroups);
+    }
+
+    return { loadedMembers: members, loadedSupergroups: newLoadedSupergroups};
 }
 
 function isValidGroup(groupName: string, allSupergroups: SupergroupMap, loadedGroups: GroupsMap): boolean {
@@ -152,6 +166,20 @@ function allSubgroupsHaveBeenLoaded(supergroup: Supergroup, loadedGroups: Groups
     }
 
     return true;
+}
+
+function getAllMembersFromSubgroups(subgroups: string[], loadedGroups: GroupsMap, loadedSupergroups: GroupsMap): string[] {
+    let members: string[] = [];
+
+    for(const subgroup of subgroups) {
+        if(loadedGroups.hasOwnProperty(subgroup)) {
+            members = members.concat(loadedGroups[subgroup]);
+        } else if(loadedSupergroups.hasOwnProperty(subgroup)) {
+            members = members.concat(loadedSupergroups[subgroup]);
+        } 
+    }
+
+    return members;
 }
 
 function mergeGroupsMaps(firstGroupsMap: GroupsMap, secondGroupsMap: GroupsMap): GroupsMap {

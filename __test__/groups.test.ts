@@ -329,8 +329,8 @@ describe("loadGroupsFromOnestopIntoScriptProperties", () => {
             SDSU: ["Charlie Davis", "Emily Clark"],
             A2K: ["Frank Miller", "Grace Wilson"],
             Community: ["Frank Miller", "Grace Wilson"],
-            UCSD: ["John Doe", "Jane Smith", "Alice Johnson", "Bob Brown"],
             College: ["John Doe", "Jane Smith", "Alice Johnson", "Bob Brown", "Charlie Davis", "Emily Clark"],
+            UCSD: ["John Doe", "Jane Smith", "Alice Johnson", "Bob Brown"],
         };
 
         expect(setScriptPropertyMock).toHaveBeenCalledWith("GROUPS_MAP", JSON.stringify(expectedMap));
@@ -376,8 +376,8 @@ describe("loadGroupsFromOnestopIntoScriptProperties", () => {
             HG2: ["Alice Johnson", "Bob Brown"],
             SDSU: ["Charlie Davis", "Emily Clark"],
             A2K: ["Frank Miller", "Grace Wilson", "Charlie Davis", "Emily Clark"],
-            UCSD: ["John Doe", "Jane Smith", "Alice Johnson", "Bob Brown"],
             College: ["John Doe", "Jane Smith", "Alice Johnson", "Bob Brown", "Charlie Davis", "Emily Clark"],
+            UCSD: ["John Doe", "Jane Smith", "Alice Johnson", "Bob Brown"],
         };
 
         expect(setScriptPropertyMock).toHaveBeenCalledWith("GROUPS_MAP", JSON.stringify(expectedMap));
@@ -472,8 +472,8 @@ describe("loadGroupsFromOnestopIntoScriptProperties", () => {
             IUSM: ["Charlie Davis", "Emily Clark"],
             IGSM: ["Frank Miller", "Grace Wilson"],
             UCSD: ["John Doe", "Jane Smith", "Charlie Davis", "Alice Johnson", "Bob Brown"],
-            International: ["Charlie Davis", "Emily Clark", "Frank Miller", "Grace Wilson"],
             Everyone: ["John Doe", "Jane Smith", "Charlie Davis", "Alice Johnson", "Bob Brown", "Emily Clark", "Frank Miller", "Grace Wilson"],
+            International: ["Charlie Davis", "Emily Clark", "Frank Miller", "Grace Wilson"],
         };
 
         expect(setScriptPropertyMock).toHaveBeenCalledWith("GROUPS_MAP", JSON.stringify(expectedMap));
