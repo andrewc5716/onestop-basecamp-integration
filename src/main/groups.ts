@@ -70,12 +70,37 @@ function loadSupergroupsFromOnestop(loadedGroups: GroupsMap): GroupsMap {
 
     let loadedSupergroups: GroupsMap = {};
     const allSupergroups: SupergroupMap = parseSupergroups(cellValues);
+    const supergroupStack: string[] = Object.keys(allSupergroups);
 
-    for(const supergroupName of Object.keys(allSupergroups)) {
-        if(!loadedSupergroups.hasOwnProperty(supergroupName)) {
-            const { loadedMembers: loadedMembers, loadedSupergroups: newLoadedSupergroups} = loadGroupByName(supergroupName, allSupergroups, loadedGroups, loadedSupergroups);
-            loadedSupergroups[supergroupName] = loadedMembers;
-            loadedSupergroups = mergeGroupsMaps(loadedSupergroups, newLoadedSupergroups);
+    // Loads alls Supergroups and their dependencies using DFS
+    while(supergroupStack.length > 0) {
+        const currentSupergroupName: string = supergroupStack.pop()!;
+        const currentSupergroup: Supergroup = allSupergroups[currentSupergroupName];
+
+        // Skips already loaded Supergroups
+        if(loadedSupergroups.hasOwnProperty(currentSupergroupName)) {
+            continue;
+        }
+
+        if(allSubgroupsHaveBeenLoaded(currentSupergroup, loadedGroups, loadedSupergroups, allSupergroups)) {
+            // Loads a Supergroup if all its dependent subgroups have already been loaded
+            const subgroupMembers: string[] = getAllMembersFromSubgroups(currentSupergroup.subgroups, loadedGroups, loadedSupergroups);
+            loadedSupergroups[currentSupergroup.name] = subgroupMembers;
+        } else {
+            // Push the current Supergoup as it needs to be reprocessed after all of its dependencies have been loaded
+            supergroupStack.push(currentSupergroupName);
+
+            // Push all dependencis that are Supergroups to the stack
+            const subgroups: string[] = currentSupergroup.subgroups;
+            for(const subgroup of subgroups) {
+                if(!isValidGroup(subgroup, allSupergroups, loadedGroups)) {
+                    // Skip invalid groups
+                    continue;
+                } else if(isSuperGroup(subgroup, allSupergroups) && !loadedSupergroups.hasOwnProperty(currentSupergroupName)) {
+                    // Add subgroups that are Supergroups that have not yet been loaded
+                    supergroupStack.push(subgroup);
+                }
+            }
         }
     }
 
@@ -101,39 +126,6 @@ function parseSupergroups(cellValues: any[][]): SupergroupMap {
     return allSupergroups;
 }
 
-function loadGroupByName(groupName: string, allSupergroups: SupergroupMap, loadedGroups: GroupsMap, loadedSupergroups: GroupsMap): { loadedMembers: string[], loadedSupergroups: GroupsMap } {
-    if(!isValidGroup(groupName, allSupergroups, loadedGroups)) {
-        return { loadedMembers: [], loadedSupergroups: {} };
-    } else if(!isSuperGroup(groupName, allSupergroups)) {
-        // Is a regular group
-        return { loadedMembers: loadedGroups[groupName], loadedSupergroups: {} };
-    } else {
-        const supergroup: Supergroup = allSupergroups[groupName];
-        const subgroups: string[] = supergroup.subgroups;
-
-        if(allSubgroupsHaveBeenLoaded(supergroup, loadedGroups, loadedSupergroups)) {
-            const subgroupMembers: string[] = getAllMembersFromSubgroups(subgroups, loadedGroups, loadedSupergroups);
-            return { loadedMembers: subgroupMembers, loadedSupergroups: {} };
-        } else {
-            const { loadedMembers: loadedMembers, loadedSupergroups: newLoadedSupergroups} = loadAllSubgroups(subgroups, allSupergroups, loadedGroups, loadedSupergroups);
-            newLoadedSupergroups[supergroup.name] = loadedMembers;
-            return { loadedMembers: loadedMembers, loadedSupergroups: newLoadedSupergroups};
-        }
-    }
-}
-
-function loadAllSubgroups(subgroups: string[], allSupergroups: SupergroupMap, loadedGroups: GroupsMap, loadedSupergroups: GroupsMap): { loadedMembers: string[], loadedSupergroups: GroupsMap } {
-    let members: string[] = [];
-    let newLoadedSupergroups: GroupsMap = {};
-    for(const subgroup of subgroups) {
-        const { loadedMembers: newMembers, loadedSupergroups: newlyLoadedSupergroups } = loadGroupByName(subgroup, allSupergroups, loadedGroups, loadedSupergroups);
-        members = members.concat(newMembers);
-        newLoadedSupergroups = mergeGroupsMaps(newLoadedSupergroups, newlyLoadedSupergroups);
-    }
-
-    return { loadedMembers: members, loadedSupergroups: newLoadedSupergroups};
-}
-
 function isValidGroup(groupName: string, allSupergroups: SupergroupMap, loadedGroups: GroupsMap): boolean {
     return allSupergroups.hasOwnProperty(groupName) || loadedGroups.hasOwnProperty(groupName);
 }
@@ -157,10 +149,11 @@ function getSubgroupNames(rowValues: any[]): string[] {
     return subgroupNameList.split(COMMA_DELIMITER).map((name) => name.trim()).filter((name) => name !== "");
 }
 
-function allSubgroupsHaveBeenLoaded(supergroup: Supergroup, loadedGroups: GroupsMap, loadedSupergroups: GroupsMap): boolean {
+function allSubgroupsHaveBeenLoaded(supergroup: Supergroup, loadedGroups: GroupsMap, loadedSupergroups: GroupsMap, allSupergroups: SupergroupMap): boolean {
     const subgroupNames: string[] = supergroup.subgroups;
     for(const subgroupName of subgroupNames) {
-        if(!loadedGroups.hasOwnProperty(subgroupName) && !loadedSupergroups.hasOwnProperty(subgroupName)) {
+        // Checks if the current subgroup is valid and has not been loaded
+        if(isValidGroup(subgroupName, allSupergroups, loadedGroups) && !loadedGroups.hasOwnProperty(subgroupName) && !loadedSupergroups.hasOwnProperty(subgroupName)) {
             return false;
         }
     }
