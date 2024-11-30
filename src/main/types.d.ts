@@ -115,3 +115,6 @@ type AliasMap = { [key: string]: string[] };
 
 // Maps a group name to an array of group member names
 type GroupsMap = { [key: string]: string[] }
+
+// function used to filter groups of members; meant to be used with the array filter() function
+type FilterFunction = (memberName: string) => boolean;
