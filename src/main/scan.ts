@@ -11,13 +11,13 @@ const DATE_ROW_INDEX: number = 0;
 const DATE_COL_INDEX: number = 0;
 const START_TIME_COL_INDEX: number = 0;
 const END_TIME_COL_INDEX: number = 1;
-const WHO_COL_INDEX: number = 2;
-const NUM_ATTENDEES_COL_INDEX: number = 3;
-const WHAT_COL_INDEX: number = 4;
-const WHERE_COL_INDEX: number = 5;
-const IN_CHARGE_COL_INDEX: number = 6;
-const HELPERS_COL_INDEX: number = 7;
-const FOOD_LEAD_COL_INDEX: number = 8;
+const DOMAIN_COL_INDEX: number = 2;
+const WHO_COL_INDEX: number = 3;
+const NUM_ATTENDEES_COL_INDEX: number = 4;
+const WHAT_COL_INDEX: number = 5;
+const WHERE_COL_INDEX: number = 6;
+const IN_CHARGE_COL_INDEX: number = 7;
+const HELPERS_COL_INDEX: number = 8;
 const CHILDCARE_COL_INDEX: number = 9;
 const NOTES_COL_INDEX: number = 10;
 
@@ -251,13 +251,13 @@ function constructRow(rowRange: Range, rowData: CellData[], currentDate: Date): 
         metadata: getMetadata(rowRange),
         startTime: constructDate(currentDate, startTime),
         endTime: constructDate(currentDate, endTime),
+        domain: rowData[DOMAIN_COL_INDEX].value,
         who: rowData[WHO_COL_INDEX].value,
         numAttendees: rowData[NUM_ATTENDEES_COL_INDEX].value,
         what: {value: rowData[WHAT_COL_INDEX].value, hyperlink: rowData[WHAT_COL_INDEX].linkUrl},
         where: {value: rowData[WHERE_COL_INDEX].value, hyperlink: rowData[WHERE_COL_INDEX].linkUrl},
         inCharge: {value: rowData[IN_CHARGE_COL_INDEX].value, hyperlink: rowData[IN_CHARGE_COL_INDEX].linkUrl},
         helpers: {value: rowData[HELPERS_COL_INDEX].value, hyperlink: rowData[HELPERS_COL_INDEX].linkUrl},
-        foodLead: {value: rowData[FOOD_LEAD_COL_INDEX].value, hyperlink: rowData[FOOD_LEAD_COL_INDEX].linkUrl},
         childcare: {value: rowData[CHILDCARE_COL_INDEX].value, hyperlink: rowData[CHILDCARE_COL_INDEX].linkUrl},
         notes: {value: rowData[NOTES_COL_INDEX].value, hyperlink: rowData[NOTES_COL_INDEX].linkUrl}
     };
