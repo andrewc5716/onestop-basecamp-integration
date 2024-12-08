@@ -17,6 +17,8 @@ const FILTER_MAP: FilterMap = {
     Parents: parentsFilter,
     Moms: momsFilter,
     Dads: dadsFilter,
+    "Minus Moms": minusMomsFilter,
+    "Minus Dads": minusDadsFilter,
 };
 
 /**
@@ -81,4 +83,12 @@ function dadsFilter(memberName: string): boolean {
 function momsFilter(memberName: string): boolean {
     const member: Member = MEMBER_MAP[memberName];
     return member.gender === SIS_GENDER && member.parent;
+}
+
+function minusMomsFilter(memberName: string): boolean {
+    return !momsFilter(memberName);
+}
+
+function minusDadsFilter(memberName: string): boolean {
+    return !dadsFilter(memberName);
 }

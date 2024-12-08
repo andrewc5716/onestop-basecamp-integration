@@ -267,7 +267,67 @@ describe("filterMembers", () => {
 
         const expectedFilteredMembers: string[] = ["Jane Smith"];
         expect(filtertedMembers).toStrictEqual(expectedFilteredMembers);
-    })
+    });
+
+    it("should filter out moms when the Minus Moms filter is specified", () => {
+        const groupMembersMock: string[] = ["John Doe", "Jane Smith", "Alice Johnson", "Bob Brown"];
+        const filterListMock: string = "Minus Moms";
+
+        const memberMapMock: MemberMap = {};
+        memberMapMock["John Doe"] = getRandomlyGeneratedMember();
+        memberMapMock["John Doe"].gender = "Male";
+        memberMapMock["John Doe"].parent = true;
+        memberMapMock["Jane Smith"] = getRandomlyGeneratedMember();
+        memberMapMock["Jane Smith"].gender = "Female";
+        memberMapMock["Jane Smith"].parent = true;
+        memberMapMock["Alice Johnson"] = getRandomlyGeneratedMember();
+        memberMapMock["Alice Johnson"].gender = "Female";
+        memberMapMock["Alice Johnson"].parent = false;
+        memberMapMock["Bob Brown"] = getRandomlyGeneratedMember();
+        memberMapMock["Bob Brown"].gender = "Male";
+        memberMapMock["Bob Brown"].parent = false;
+
+        jest.mock("../src/main/members", () => ({
+            MEMBER_MAP: memberMapMock,
+        }));
+
+        const { filterMembers } = require("../src/main/filter");
+
+        const filtertedMembers: string[] = filterMembers(groupMembersMock, filterListMock);
+
+        const expectedFilteredMembers: string[] = ["John Doe", "Alice Johnson", "Bob Brown"];
+        expect(filtertedMembers).toStrictEqual(expectedFilteredMembers);
+    });
+
+    it("should filter out non-dads when the Dads filter is specified", () => {
+        const groupMembersMock: string[] = ["John Doe", "Jane Smith", "Alice Johnson", "Bob Brown"];
+        const filterListMock: string = "Minus Dads";
+
+        const memberMapMock: MemberMap = {};
+        memberMapMock["John Doe"] = getRandomlyGeneratedMember();
+        memberMapMock["John Doe"].gender = "Male";
+        memberMapMock["John Doe"].parent = true;
+        memberMapMock["Jane Smith"] = getRandomlyGeneratedMember();
+        memberMapMock["Jane Smith"].gender = "Female";
+        memberMapMock["Jane Smith"].parent = true;
+        memberMapMock["Alice Johnson"] = getRandomlyGeneratedMember();
+        memberMapMock["Alice Johnson"].gender = "Female";
+        memberMapMock["Alice Johnson"].parent = false;
+        memberMapMock["Bob Brown"] = getRandomlyGeneratedMember();
+        memberMapMock["Bob Brown"].gender = "Male";
+        memberMapMock["Bob Brown"].parent = false;
+
+        jest.mock("../src/main/members", () => ({
+            MEMBER_MAP: memberMapMock,
+        }));
+
+        const { filterMembers } = require("../src/main/filter");
+
+        const filtertedMembers: string[] = filterMembers(groupMembersMock, filterListMock);
+
+        const expectedFilteredMembers: string[] = ["Jane Smith", "Alice Johnson", "Bob Brown"];
+        expect(filtertedMembers).toStrictEqual(expectedFilteredMembers);
+    });
 
     it("should apply multiple filters to the group members list when there are multiple filters in the filter list", () => {
         const groupMembersMock: string[] = ["John Doe", "Jane Smith", "Alice Johnson", "Bob Brown"];
