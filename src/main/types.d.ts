@@ -112,3 +112,6 @@ type MemberMap = { [key: string]: Member };
 
 // Maps an alias to an array of member names that the alias corresponds to
 type AliasMap = { [key: string]: string[] };
+
+// Maps a group name to an array of group member names
+type GroupsMap = { [key: string]: string[] }
