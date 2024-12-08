@@ -19,13 +19,13 @@ declare interface Row {
   metadata: Metadata,
   startTime: Date,
   endTime: Date,
+  domain: string,
   who: string,
   numAttendees: number,
   what: Text,
   where: Text,
   inCharge: Text,
   helpers: Text,
-  foodLead: Text,
   childcare: Text,
   notes: Text
 }
