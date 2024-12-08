@@ -50,7 +50,7 @@ function loadGroupsFromOnestop(): GroupsMap {
         }
 
         if(groupsMap.hasOwnProperty(groupName)) {
-            Logger.log(`Group ${groupName} has already been defined in the Groups table. Combining the two lists of members`);
+            Logger.log(`WARN: Group ${groupName} has already been defined in the Groups table. Combining the two lists of members`);
             groupsMap[groupName] = groupsMap[groupName].concat(groupMemberNames);
         } else {
             groupsMap[groupName] = groupMemberNames;
