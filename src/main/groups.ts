@@ -70,7 +70,7 @@ function loadSupergroupsFromOnestop(loadedGroups: GroupsMap): GroupsMap {
 
     let loadedSupergroups: GroupsMap = {};
     const allSupergroups: SupergroupMap = parseSupergroups(cellValues);
-    const supergroupStack: string[] = Object.keys(allSupergroups);
+    let supergroupStack: string[] = Object.keys(allSupergroups);
 
     // Loads alls Supergroups and their dependencies using DFS
     while(supergroupStack.length > 0) {
@@ -87,20 +87,8 @@ function loadSupergroupsFromOnestop(loadedGroups: GroupsMap): GroupsMap {
             const subgroupMembers: string[] = getAllMembersFromSubgroups(currentSupergroup.subgroups, loadedGroups, loadedSupergroups);
             loadedSupergroups[currentSupergroup.name] = subgroupMembers;
         } else {
-            // Push the current Supergoup as it needs to be reprocessed after all of its dependencies have been loaded
-            supergroupStack.push(currentSupergroupName);
-
-            // Push all dependencis that are Supergroups to the stack
-            const subgroups: string[] = currentSupergroup.subgroups;
-            for(const subgroup of subgroups) {
-                if(!isValidGroup(subgroup, allSupergroups, loadedGroups)) {
-                    // Skip invalid groups
-                    continue;
-                } else if(isSuperGroup(subgroup, allSupergroups) && !loadedSupergroups.hasOwnProperty(currentSupergroupName)) {
-                    // Add subgroups that are Supergroups that have not yet been loaded
-                    supergroupStack.push(subgroup);
-                }
-            }
+            const toPushToStack: string[] = processSupergroup(currentSupergroup, allSupergroups, loadedGroups, loadedSupergroups);
+            supergroupStack = supergroupStack.concat(toPushToStack);
         }
     }
 
@@ -173,6 +161,28 @@ function getAllMembersFromSubgroups(subgroups: string[], loadedGroups: GroupsMap
     }
 
     return members;
+}
+
+function processSupergroup(supergroup: Supergroup, allSupergroups: SupergroupMap, loadedGroups: GroupsMap, loadedSupergroups: GroupsMap): string[] {
+    const supergroupStack: string[] = [];
+    const currentSupergroupName: string = supergroup.name;
+
+    // Push the current Supergoup as it needs to be reprocessed after all of its dependencies have been loaded
+    supergroupStack.push(currentSupergroupName);
+
+    // Push all dependencis that are Supergroups to the stack
+    const subgroups: string[] = supergroup.subgroups;
+    for(const subgroup of subgroups) {
+        if(!isValidGroup(subgroup, allSupergroups, loadedGroups)) {
+            // Skip invalid groups
+            continue;
+        } else if(isSuperGroup(subgroup, allSupergroups) && !loadedSupergroups.hasOwnProperty(currentSupergroupName)) {
+            // Add subgroups that are Supergroups that have not yet been loaded
+            supergroupStack.push(subgroup);
+        }
+    }
+
+    return supergroupStack;
 }
 
 function mergeGroupsMaps(firstGroupsMap: GroupsMap, secondGroupsMap: GroupsMap): GroupsMap {
