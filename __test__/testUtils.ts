@@ -27,13 +27,13 @@ export function getRandomlyGeneratedRow(): Row {
         metadata: getRandomlyGeneratedMetadata(),
         startTime: new Date(),
         endTime: new Date(),
+        domain: randomstring.generate(),
         who: randomstring.generate(),
         numAttendees: getRandomNumber(),
         what: getRandomlyGeneratedText(),
         where: getRandomlyGeneratedText(),
         inCharge: getRandomlyGeneratedText(),
         helpers: getRandomlyGeneratedText(),
-        foodLead: getRandomlyGeneratedText(),
         childcare: getRandomlyGeneratedText(),
         notes: getRandomlyGeneratedText()
     }
