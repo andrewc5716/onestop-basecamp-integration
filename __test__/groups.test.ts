@@ -2,6 +2,7 @@ import { Logger } from "gasmask";
 global.Logger = Logger;
 
 import { getRandomlyGeneratedGroupsMap, getRandomlyGeneratedGroupsTable, getRandomlyGeneratedSupergroupsTable, Mock } from "./testUtils";
+import { getMembersFromGroups } from "../src/main/groups";
 
 const GROUP_NAME_COLUMN_INDEX: number = 0;
 const GROUP_MEMBERS_COLUMN_INDEX: number = 1;
