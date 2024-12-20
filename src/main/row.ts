@@ -306,8 +306,8 @@ function getBasecampTodoDescription(row: Row): string {
     const helpers: string = `\n\nHELPERS:\n${row.helpers.value ?? "N\\A"}`;
     const childcare: string = `\n\nCHILDCARE: ${row.childcare.value ?? "N\\A"}`;
     const notes: string = `\n\nNOTES: ${row.notes.value ?? "N\\A"}`;
-
-    return location + time + inCharge + helpers + childcare + notes;
+    const disclaimer: string = `\n\n----------------------------------------------------------\n\nDISCLAIMER: Assignment changes made in Basecamp WILL NOT be reflected in the OneStop. Please update the OneStop row to update assignments:\n[Onestop link]`
+    return location + time + inCharge + helpers + childcare + notes + disclaimer;
 }
 
 /**
