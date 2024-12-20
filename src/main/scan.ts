@@ -13,14 +13,15 @@ const DATE_COL_INDEX: number = 0;
 const START_TIME_COL_INDEX: number = 0;
 const END_TIME_COL_INDEX: number = 1;
 const DOMAIN_COL_INDEX: number = 2;
-const WHO_COL_INDEX: number = 3;
-const NUM_ATTENDEES_COL_INDEX: number = 4;
-const WHAT_COL_INDEX: number = 5;
-const WHERE_COL_INDEX: number = 6;
-const IN_CHARGE_COL_INDEX: number = 7;
-const HELPERS_COL_INDEX: number = 8;
-const CHILDCARE_COL_INDEX: number = 9;
-const NOTES_COL_INDEX: number = 10;
+const MINISTRY_COL_INDEX: number = 3;
+const WHO_COL_INDEX: number = 4;
+const NUM_ATTENDEES_COL_INDEX: number = 5;
+const WHAT_COL_INDEX: number = 6;
+const WHERE_COL_INDEX: number = 7;
+const IN_CHARGE_COL_INDEX: number = 8;
+const HELPERS_COL_INDEX: number = 9;
+const CHILDCARE_COL_INDEX: number = 10;
+const NOTES_COL_INDEX: number = 11;
 
 // Number of minutes in an hour
 const MIN_IN_HOUR: number = 60;
@@ -253,6 +254,7 @@ function constructRow(rowRange: Range, rowData: CellData[], currentDate: Date): 
         startTime: constructDate(currentDate, startTime),
         endTime: constructDate(currentDate, endTime),
         domain: rowData[DOMAIN_COL_INDEX].value,
+        ministry: rowData[MINISTRY_COL_INDEX].value,
         who: rowData[WHO_COL_INDEX].value,
         numAttendees: rowData[NUM_ATTENDEES_COL_INDEX].value,
         what: {value: rowData[WHAT_COL_INDEX].value, hyperlink: rowData[WHAT_COL_INDEX].linkUrl},
