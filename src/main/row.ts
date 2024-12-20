@@ -1,7 +1,10 @@
+import { DomainMissingError } from "./error/domainMissingError";
 import { InvalidHashError } from "./error/invalidHashError";
 import { RowBasecampMappingMissingError } from "./error/rowBasecampMappingMissingError";
 import { RowMissingIdError } from "./error/rowMissingIdError";
 import { RowNotSavedError } from "./error/rowNotSavedError";
+import { FILTER_NAMES, filterMembers, getFilterNames } from "./filter";
+import { getMembersFromGroups, GROUP_NAMES } from "./groups";
 import { getPersonId } from "./people";
 import { deleteAllDocumentProperties, getDocumentProperty, setDocumentProperty } from "./propertiesService";
 import { getBasecampTodoRequest } from "./todos";
@@ -412,6 +415,129 @@ function getHelperGroupFromNameList(helperNameList: string, role: string | undef
         helperIds: helperIds
     };
 }
+
+/**
+ * Retrieves an array of domain names from a row
+ * 
+ * @param row row to retrieve domain names from
+ * @returns array of domain names
+ */
+function getDomainNames(row: Row): string[] {
+    return row.domain.split(COMMA_FORWARD_SLASH_DELIM_REGEX)
+    .map(value => value.trim()).filter(value => GROUP_NAMES.includes(value));
+}
+
+/**
+ * Retrieves an array of domain filters from a row
+ * 
+ * @param row row to retrieve domain filters from
+ * @returns array of domain filters
+ */
+function getDomainFilters(row: Row): string[] {
+    return row.domain.split(COMMA_FORWARD_SLASH_DELIM_REGEX)
+    .map(value => value.trim()).filter(value => FILTER_NAMES.includes(value));
+}
+
+/**
+ * Retrieves an array of ministry names from a row
+ * 
+ * @param row row to retrieve ministry names from
+ * @returns array of ministry group names
+ */
+function getMinistryNames(row: Row): string[] {
+    return row.who.split(COMMA_FORWARD_SLASH_DELIM_REGEX)
+    .map(name => name.trim()).filter(value => GROUP_NAMES.includes(value));
+}
+
+/**
+ * Retrieves an array of ministry filters from a row
+ * 
+ * @param row row to retrieve ministry filters from
+ * @returns array of ministry filters
+ */
+function getMinistryFilters(row: Row): string[] {
+    return row.who.split(COMMA_FORWARD_SLASH_DELIM_REGEX)
+    .map(name => name.trim()).filter(value => FILTER_NAMES.includes(value));;
+}
+
+/**
+ * Retrieves an array of Person objects from a row.
+ * 
+ * @param row - Row to retrieve the different attendees from.
+ * @returns Array of Person.
+ */
+function getAttendeesFromRow(row: Row): string[] {
+    const attendees: string[] = [];
+
+    // Step 1: Extract Ministry Names and Filters
+    const ministryNames = getMinistryNames(row);
+    const ministryFilters = getMinistryFilters(row);
+
+    // Step 2: Process Ministry Attendees
+    if (ministryNames.length > 0) {
+        const ministryAttendees = filterMinistryAttendees(ministryNames, ministryFilters);
+        attendees.push(...ministryAttendees);
+
+    } else {
+        // Step 3: Extract Domain Names and Filters
+        const domainNames = getDomainNames(row);
+        const domainFilters = getDomainFilters(row);
+
+        // Step 4: Process Domain Attendees
+        if (domainNames.length > 0) {
+            const domainAttendees = filterDomainAttendees(domainNames, domainFilters);
+            attendees.push(...domainAttendees);
+        } else {
+            // Step 5: Handle Missing Data
+            handleMissingData(domainNames, ministryNames);
+        }
+    }
+
+    return attendees;
+}
+
+/**
+ * Process attendees for ministry groups.
+ * 
+ * @param ministryNames - Names of ministry groups.
+ * @param ministryFilters - Filters to apply to the ministry members.
+ * @returns Array of filtered members.
+ */
+function filterMinistryAttendees(ministryNames: string[], ministryFilters: string[]): string[] {
+    const members = getMembersFromGroups(ministryNames);
+    return filterMembers(members, ministryFilters.join(','));
+}
+
+/**
+ * Process attendees for domains.
+ * 
+ * @param domainNames - Names of domains.
+ * @param domainFilters - Filters to apply to the domain members.
+ * @returns Array of filtered members.
+ */
+function filterDomainAttendees(domainNames: string[], domainFilters: string[]): string[] {
+    if (domainNames[0] === "Rotation") {
+        return getRotationMembers(); // TODO: Josh will implement this.
+    } else {
+        const members = getMembersFromGroups(domainNames);
+        return filterMembers(members, domainFilters.join(','));
+    }
+}
+
+/**
+ * Handle missing data by throwing an error if both ministry groups and domains are missing.
+ * 
+ * @param domainNames - Names of domains.
+ * @param ministryNames - Names of ministry groups.
+ */
+function handleMissingData(domainNames: string[], ministryNames: string[]): void {
+    if (domainNames.length === 0 && ministryNames.length === 0) {
+        throw new DomainMissingError(
+            "The OneStop row was missing both ministry groups and domains."
+        );
+    }
+}
+
 
 /**
  * Helpful debugging function which clears all row metadata
