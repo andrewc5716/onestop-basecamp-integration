@@ -3,7 +3,7 @@ import { InvalidHashError } from "./error/invalidHashError";
 import { RowBasecampMappingMissingError } from "./error/rowBasecampMappingMissingError";
 import { RowMissingIdError } from "./error/rowMissingIdError";
 import { RowNotSavedError } from "./error/rowNotSavedError";
-import { FILTER_NAMES, filterMembers, getFilterNames } from "./filter";
+import { FILTER_NAMES, filterMembers } from "./filter";
 import { getMembersFromGroups, GROUP_NAMES } from "./groups";
 import { getPersonId } from "./people";
 import { deleteAllDocumentProperties, getDocumentProperty, setDocumentProperty } from "./propertiesService";
@@ -517,7 +517,7 @@ function filterMinistryAttendees(ministryNames: string[], ministryFilters: strin
  */
 function filterDomainAttendees(domainNames: string[], domainFilters: string[]): string[] {
     if (domainNames[0] === "Rotation") {
-        return getRotationMembers(); // TODO: Josh will implement this.
+        return []; // TODO: Josh will implement this.
     } else {
         const members = getMembersFromGroups(domainNames);
         return filterMembers(members, domainFilters.join(','));
