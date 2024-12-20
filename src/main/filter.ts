@@ -11,15 +11,25 @@ const BROS_GENDER: string = "Male";
 const SIS_GENDER: string = "Female";
 // Maps a filter's name on the Onestop to its corresponding filter function
 const FILTER_MAP: FilterMap = {
-    Bros: brosFilter, 
-    Sis: sisFilter,
-    Married: marriedFilter,
-    Parents: parentsFilter,
-    Moms: momsFilter,
-    Dads: dadsFilter,
-    "Minus Moms": minusMomsFilter,
-    "Minus Dads": minusDadsFilter,
+    bros: brosFilter, 
+    sis: sisFilter,
+    married: marriedFilter,
+    parents: parentsFilter,
+    moms: momsFilter,
+    dads: dadsFilter,
+    "minus moms": minusMomsFilter,
+    "minus dads": minusDadsFilter,
 };
+
+/**
+ * Determines if a given string has a corresponding filter
+ * 
+ * @param potentialFilter the potential filter string
+ * @returns boolean representing whether the given string has a corresponding filter
+ */
+export function isFilter(potentialFilter: string): boolean {
+    return FILTER_MAP.hasOwnProperty(potentialFilter.toLowerCase());
+}
 
 /**
  * Filters an array of group members based on the given list of filters from the Onestop
@@ -28,7 +38,7 @@ const FILTER_MAP: FilterMap = {
  * @param filterList comma separated list of filters from the Onestop
  * @returns array of group members that meet all of the filters criteria
  */
-export function filterMembers(groupMembers: string[], filterList: string): string[] {
+export function filterMembers(groupMembers: string[], filterList: string[]): string[] {
     return groupMembers.filter(getCombinedFilter(filterList));
 }
 
@@ -37,13 +47,13 @@ export function filterMembers(groupMembers: string[], filterList: string): strin
  * in the given list from the Onestop. The returned filtering function should only return true if a group member meets the criteria for
  * every filter in the list
  * 
- * @param filterList comma separated list of filters from the Onestop
+ * @param filterList list of filters from the Onestop
  * @returns singular filtering function that is composed of all of the filters from the filter list
  */
-function getCombinedFilter(filterList: string): FilterFunction {
-    const filterNames: string[] = parseFilterNames(filterList);
+function getCombinedFilter(filterList: string[]): FilterFunction {
+    const filterNames: string[] = getFilters(filterList);
     // Gets all filter function pointers using the FILTER_MAP
-    const filterFunctions: FilterFunction[] = filterNames.map((filterName) => FILTER_MAP[filterName]).filter((filter) => filter != undefined);
+    const filterFunctions: FilterFunction[] = filterNames.map((filterName) => FILTER_MAP[filterName.toLowerCase()]).filter((filter) => filter != undefined);
     // Adds the valid member filter to the beginning. The first filter always applied will be to check if the member is valid
     filterFunctions.unshift(validMemberFilter);
 
@@ -51,8 +61,8 @@ function getCombinedFilter(filterList: string): FilterFunction {
     return (memberName: string) => filterFunctions.every((filterFunction) => filterFunction(memberName));
 }
 
-function parseFilterNames(filterList: string): string[] {
-    return filterList.split(COMMA_DELIMITER).map(filterName => filterName.trim()).filter(filterName => filterName !== "");
+function getFilters(filterList: string[]): string[] {
+    return filterList.map(filterName => filterName.trim()).filter(filterName => filterName !== "");
 }
 
 function validMemberFilter(memberName: string): boolean {

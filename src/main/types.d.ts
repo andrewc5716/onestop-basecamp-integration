@@ -118,3 +118,8 @@ type GroupsMap = { [key: string]: string[] }
 
 // function used to filter groups of members; meant to be used with the array filter() function
 type FilterFunction = (memberName: string) => boolean;
+
+declare interface HelperGroup {
+  role?: string,
+  helperIds: string[],
+}

@@ -5,7 +5,7 @@ global.PropertiesService = PropertiesService;
 
 import { generateIdForRow, getId, getMetadata, hasId } from "../src/main/row";
 import { RowMissingIdError } from '../src/main/error/rowMissingIdError';
-import { getRandomlyGeneratedMetadata, getRandomlyGeneratedRange, getRandomlyGeneratedRow, Mock } from './testUtils';
+import { getRandomlyGeneratedMember, getRandomlyGeneratedMetadata, getRandomlyGeneratedRange, getRandomlyGeneratedRow, Mock } from './testUtils';
 
 describe("getMetadata", () => {
     it("should return the Metadata object when a single Metadata object is present", () => {
@@ -170,6 +170,284 @@ describe("getBasecampTodosForLeads", () => {
 
 describe("getBasecampTodosForHelpers", () => {
 
+});
+
+describe("getHelperGroups", () => {
+    it("should return an empty array when the row has not helpers value specified", () => {
+        const rowMock: Row = getRandomlyGeneratedRow();
+        const helpersValueMock: string = "";
+        rowMock.helpers = { value: helpersValueMock, hyperlink: null };
+
+        const { getHelperGroups } = require("../src/main/row");
+
+        const helperGroups: HelperGroup[] = getHelperGroups(rowMock);
+
+        expect(helperGroups).toStrictEqual([]);
+    });
+
+    it("should return a HelperGroup corresponding to each role when there are multiple roles", () => {
+
+    });
+
+    it("should apply filters to all members of a HelperGroup when a filter is included in the list of helpers", () => {
+        const rowMock: Row = getRandomlyGeneratedRow();
+        const helpersValueMock: string = "Food: John Doe, Jane Smith, Alice Johnson, Bob Brown, Bros";
+        rowMock.helpers = { value: helpersValueMock, hyperlink: null };
+
+        const memberMapMock: MemberMap = {};
+        memberMapMock["John Doe"] = getRandomlyGeneratedMember();
+        memberMapMock["John Doe"].gender = "Male";
+        memberMapMock["Jane Smith"] = getRandomlyGeneratedMember();
+        memberMapMock["Jane Smith"].gender = "Female";
+        memberMapMock["Alice Johnson"] = getRandomlyGeneratedMember();
+        memberMapMock["Alice Johnson"].gender = "Female";
+        memberMapMock["Bob Brown"] = getRandomlyGeneratedMember();
+        memberMapMock["Bob Brown"].gender = "Male";
+
+        jest.mock("../src/main/members", () => ({
+            MEMBER_MAP: memberMapMock,
+            ALIASES_MAP: {},
+        }));
+
+        jest.mock("../src/main/groups", () => ({
+            GROUPS_MAP: {},
+        }));
+
+        jest.mock("../src/main/people", () => ({
+            getPersonId: jest.fn((personName) => {
+                switch(personName) {
+                    case "John Doe": 
+                        return "1000000000";
+                    case "Jane Smith":
+                        return "1000000001";
+                    case "Alice Johnson":
+                        return "1000000002";
+                    case "Bob Brown":
+                        return "1000000003";
+                    default:
+                        return "1000000004";
+                }
+            }),
+        }));
+
+        const expectedHelperGroups: HelperGroup[] = [
+            { role: "Food", helperIds: ["1000000000", "1000000003"] }
+        ];
+
+        const { getHelperGroups } = require("../src/main/row");
+
+        const helperGroups: HelperGroup[] = getHelperGroups(rowMock);
+
+        expect(helperGroups).toStrictEqual(expectedHelperGroups);
+    });
+
+    it("should expand groups into their members when a group is included in the list of helpers", () => {
+        const rowMock: Row = getRandomlyGeneratedRow();
+        const helpersValueMock: string = "Food: Jane Smith, Alice Johnson, UCSD";
+        rowMock.helpers = { value: helpersValueMock, hyperlink: null };
+
+        const memberMapMock: MemberMap = {};
+        memberMapMock["John Doe"] = getRandomlyGeneratedMember();
+        memberMapMock["John Doe"].gender = "Male";
+        memberMapMock["Jane Smith"] = getRandomlyGeneratedMember();
+        memberMapMock["Jane Smith"].gender = "Female";
+        memberMapMock["Alice Johnson"] = getRandomlyGeneratedMember();
+        memberMapMock["Alice Johnson"].gender = "Female";
+        memberMapMock["Bob Brown"] = getRandomlyGeneratedMember();
+        memberMapMock["Bob Brown"].gender = "Male";
+
+        jest.mock("../src/main/members", () => ({
+            MEMBER_MAP: memberMapMock,
+            ALIASES_MAP: {},
+        }));
+
+        jest.mock("../src/main/groups", () => ({
+            GROUPS_MAP: { "UCSD": ["John Doe", "Bob Brown"] },
+        }));
+
+        jest.mock("../src/main/people", () => ({
+            getPersonId: jest.fn((personName) => {
+                switch(personName) {
+                    case "John Doe": 
+                        return "1000000000";
+                    case "Jane Smith":
+                        return "1000000001";
+                    case "Alice Johnson":
+                        return "1000000002";
+                    case "Bob Brown":
+                        return "1000000003";
+                    default:
+                        return "1000000004";
+                }
+            }),
+        }));
+
+        const expectedHelperGroups: HelperGroup[] = [
+            { role: "Food", helperIds: ["1000000001", "1000000002", "1000000000", "1000000003"] }
+        ];
+
+        const { getHelperGroups } = require("../src/main/row");
+
+        const helperGroups: HelperGroup[] = getHelperGroups(rowMock);
+
+        expect(helperGroups).toStrictEqual(expectedHelperGroups);
+    });
+
+    it("should expand aliases into their members when an alias is included in the list of helpers", () => {
+        const rowMock: Row = getRandomlyGeneratedRow();
+        const helpersValueMock: string = "Food: John/Jane, Alice Johnson, Bob Brown";
+        rowMock.helpers = { value: helpersValueMock, hyperlink: null };
+
+        const memberMapMock: MemberMap = {};
+        memberMapMock["John Doe"] = getRandomlyGeneratedMember();
+        memberMapMock["John Doe"].gender = "Male";
+        memberMapMock["Jane Smith"] = getRandomlyGeneratedMember();
+        memberMapMock["Jane Smith"].gender = "Female";
+        memberMapMock["Alice Johnson"] = getRandomlyGeneratedMember();
+        memberMapMock["Alice Johnson"].gender = "Female";
+        memberMapMock["Bob Brown"] = getRandomlyGeneratedMember();
+        memberMapMock["Bob Brown"].gender = "Male";
+
+        jest.mock("../src/main/members", () => ({
+            MEMBER_MAP: memberMapMock,
+            ALIASES_MAP: { "John/Jane": ["John Doe", "Jane Smith"] },
+        }));
+
+        jest.mock("../src/main/groups", () => ({
+            GROUPS_MAP: { "UCSD": ["John Doe", "Bob Brown"] },
+        }));
+
+        jest.mock("../src/main/people", () => ({
+            getPersonId: jest.fn((personName) => {
+                switch(personName) {
+                    case "John Doe": 
+                        return "1000000000";
+                    case "Jane Smith":
+                        return "1000000001";
+                    case "Alice Johnson":
+                        return "1000000002";
+                    case "Bob Brown":
+                        return "1000000003";
+                    default:
+                        return "1000000004";
+                }
+            }),
+        }));
+
+        const expectedHelperGroups: HelperGroup[] = [
+            { role: "Food", helperIds: ["1000000000", "1000000001", "1000000002", "1000000003"] }
+        ];
+
+        const { getHelperGroups } = require("../src/main/row");
+
+        const helperGroups: HelperGroup[] = getHelperGroups(rowMock);
+
+        expect(helperGroups).toStrictEqual(expectedHelperGroups);
+    });
+
+    it("should expand groups and apply filters to these members when both a group and a filter are included in the list of helpers", () => {
+        const rowMock: Row = getRandomlyGeneratedRow();
+        const helpersValueMock: string = "Food: Bob Brown, Bros, Alice Johnson, UCSD";
+        rowMock.helpers = { value: helpersValueMock, hyperlink: null };
+
+        const memberMapMock: MemberMap = {};
+        memberMapMock["John Doe"] = getRandomlyGeneratedMember();
+        memberMapMock["John Doe"].gender = "Male";
+        memberMapMock["Jane Smith"] = getRandomlyGeneratedMember();
+        memberMapMock["Jane Smith"].gender = "Female";
+        memberMapMock["Alice Johnson"] = getRandomlyGeneratedMember();
+        memberMapMock["Alice Johnson"].gender = "Female";
+        memberMapMock["Bob Brown"] = getRandomlyGeneratedMember();
+        memberMapMock["Bob Brown"].gender = "Male";
+
+        jest.mock("../src/main/members", () => ({
+            MEMBER_MAP: memberMapMock,
+            ALIASES_MAP: {},
+        }));
+
+        jest.mock("../src/main/groups", () => ({
+            GROUPS_MAP: { "UCSD": ["John Doe", "Jane Smith"] },
+        }));
+
+        jest.mock("../src/main/people", () => ({
+            getPersonId: jest.fn((personName) => {
+                switch(personName) {
+                    case "John Doe": 
+                        return "1000000000";
+                    case "Jane Smith":
+                        return "1000000001";
+                    case "Alice Johnson":
+                        return "1000000002";
+                    case "Bob Brown":
+                        return "1000000003";
+                    default:
+                        return "1000000004";
+                }
+            }),
+        }));
+
+        const expectedHelperGroups: HelperGroup[] = [
+            { role: "Food", helperIds: ["1000000003", "1000000000"] }
+        ];
+
+        const { getHelperGroups } = require("../src/main/row");
+
+        const helperGroups: HelperGroup[] = getHelperGroups(rowMock);
+
+        expect(helperGroups).toStrictEqual(expectedHelperGroups);
+    });
+
+    it("should expand aliases and apply filters to these members when both an alias and a filter are included in the list of helpers", () => {
+        const rowMock: Row = getRandomlyGeneratedRow();
+        const helpersValueMock: string = "Food: John/Jane, Alice Johnson, Bros, Bob Brown";
+        rowMock.helpers = { value: helpersValueMock, hyperlink: null };
+
+        const memberMapMock: MemberMap = {};
+        memberMapMock["John Doe"] = getRandomlyGeneratedMember();
+        memberMapMock["John Doe"].gender = "Male";
+        memberMapMock["Jane Smith"] = getRandomlyGeneratedMember();
+        memberMapMock["Jane Smith"].gender = "Female";
+        memberMapMock["Alice Johnson"] = getRandomlyGeneratedMember();
+        memberMapMock["Alice Johnson"].gender = "Female";
+        memberMapMock["Bob Brown"] = getRandomlyGeneratedMember();
+        memberMapMock["Bob Brown"].gender = "Male";
+
+        jest.mock("../src/main/members", () => ({
+            MEMBER_MAP: memberMapMock,
+            ALIASES_MAP: { "John/Jane": ["John Doe", "Jane Smith"] },
+        }));
+
+        jest.mock("../src/main/groups", () => ({
+            GROUPS_MAP: { "UCSD": ["John Doe", "Bob Brown"] },
+        }));
+
+        jest.mock("../src/main/people", () => ({
+            getPersonId: jest.fn((personName) => {
+                switch(personName) {
+                    case "John Doe": 
+                        return "1000000000";
+                    case "Jane Smith":
+                        return "1000000001";
+                    case "Alice Johnson":
+                        return "1000000002";
+                    case "Bob Brown":
+                        return "1000000003";
+                    default:
+                        return "1000000004";
+                }
+            }),
+        }));
+
+        const expectedHelperGroups: HelperGroup[] = [
+            { role: "Food", helperIds: ["1000000000", "1000000003"] }
+        ];
+
+        const { getHelperGroups } = require("../src/main/row");
+
+        const helperGroups: HelperGroup[] = getHelperGroups(rowMock);
+
+        expect(helperGroups).toStrictEqual(expectedHelperGroups);
+    });
 });
 
 describe("clearAllRowMetadata", () => {

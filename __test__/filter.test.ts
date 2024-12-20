@@ -1,9 +1,23 @@
+import { PropertiesService } from 'gasmask';
+global.PropertiesService = PropertiesService;
+
+import { isFilter } from "../src/main/filter";
 import { getRandomlyGeneratedMember } from "./testUtils";
+
+describe("isFilter", () => {
+    it("should return true when the given string does correspond to a filter", () => {
+        expect(isFilter("Bros")).toBeTruthy();
+    });
+
+    it("should return false when the given string does correspond to a filter", () => {
+        expect(isFilter("John Doe")).toBeFalsy();
+    });
+});
 
 describe("filterMembers", () => {
     it("should return an empty list when the group members list is empty", () => {
         const groupMembersMock: string[] = [];
-        const filterListMock: string = "";
+        const filterListMock: string[] = [];
 
         const memberMapMock: MemberMap = {};
         memberMapMock["John Doe"] = getRandomlyGeneratedMember();
@@ -29,7 +43,7 @@ describe("filterMembers", () => {
 
     it("should return the same list of group members when the filter list is empty", () => {
         const groupMembersMock: string[] = ["John Doe", "Jane Smith", "Alice Johnson", "Bob Brown"];
-        const filterListMock: string = "";
+        const filterListMock: string[] = [];
 
         const memberMapMock: MemberMap = {};
         memberMapMock["John Doe"] = getRandomlyGeneratedMember();
@@ -55,7 +69,7 @@ describe("filterMembers", () => {
 
     it("should remove invalid members when the group members list contains invalid members", () => {
         const groupMembersMock: string[] = ["John Doe", "Jane Smith", "Charles Davis", "Alice Johnson", "Emily Clark", "Bob Brown"];
-        const filterListMock: string = "Bros";
+        const filterListMock: string[] = ["Bros"];
 
         const memberMapMock: MemberMap = {};
         memberMapMock["John Doe"] = getRandomlyGeneratedMember();
@@ -81,7 +95,7 @@ describe("filterMembers", () => {
 
     it("should ignore invalid filters when there are invalid filters in the filter list", () => {
         const groupMembersMock: string[] = ["John Doe", "Jane Smith", "Alice Johnson", "Bob Brown"];
-        const filterListMock: string = "Married, Bad Filter";
+        const filterListMock: string[] = ["Married", "Bad Filter"];
 
         const memberMapMock: MemberMap = {};
         memberMapMock["John Doe"] = getRandomlyGeneratedMember();
@@ -107,7 +121,7 @@ describe("filterMembers", () => {
 
     it("should filter out the sisters when the Bros filter is specified", () => {
         const groupMembersMock: string[] = ["John Doe", "Jane Smith", "Alice Johnson", "Bob Brown"];
-        const filterListMock: string = "Bros";
+        const filterListMock: string[] = ["Bros"];
 
         const memberMapMock: MemberMap = {};
         memberMapMock["John Doe"] = getRandomlyGeneratedMember();
@@ -133,7 +147,7 @@ describe("filterMembers", () => {
 
     it("should filter out the brothers when the Sis filter is specified", () => {
         const groupMembersMock: string[] = ["John Doe", "Jane Smith", "Alice Johnson", "Bob Brown"];
-        const filterListMock: string = "Sis";
+        const filterListMock: string[] = ["Sis"];
 
         const memberMapMock: MemberMap = {};
         memberMapMock["John Doe"] = getRandomlyGeneratedMember();
@@ -159,7 +173,7 @@ describe("filterMembers", () => {
 
     it("should filter out the non-married when the Married filter is specified", () => {
         const groupMembersMock: string[] = ["John Doe", "Jane Smith", "Alice Johnson", "Bob Brown"];
-        const filterListMock: string = "Married";
+        const filterListMock: string[] = ["Married"];
 
         const memberMapMock: MemberMap = {};
         memberMapMock["John Doe"] = getRandomlyGeneratedMember();
@@ -185,7 +199,7 @@ describe("filterMembers", () => {
 
     it("should filter out the non-parents when the Parents filter is specified", () => {
         const groupMembersMock: string[] = ["John Doe", "Jane Smith", "Alice Johnson", "Bob Brown"];
-        const filterListMock: string = "Parents";
+        const filterListMock: string[] = ["Parents"];
 
         const memberMapMock: MemberMap = {};
         memberMapMock["John Doe"] = getRandomlyGeneratedMember();
@@ -211,7 +225,7 @@ describe("filterMembers", () => {
 
     it("should filter out non-dads when the Dads filter is specified", () => {
         const groupMembersMock: string[] = ["John Doe", "Jane Smith", "Alice Johnson", "Bob Brown"];
-        const filterListMock: string = "Dads";
+        const filterListMock: string[] = ["Dads"];
 
         const memberMapMock: MemberMap = {};
         memberMapMock["John Doe"] = getRandomlyGeneratedMember();
@@ -241,7 +255,7 @@ describe("filterMembers", () => {
 
     it("should filter out non-moms when the Moms filter is specified", () => {
         const groupMembersMock: string[] = ["John Doe", "Jane Smith", "Alice Johnson", "Bob Brown"];
-        const filterListMock: string = "Moms";
+        const filterListMock: string[] = ["Moms"];
 
         const memberMapMock: MemberMap = {};
         memberMapMock["John Doe"] = getRandomlyGeneratedMember();
@@ -271,7 +285,7 @@ describe("filterMembers", () => {
 
     it("should filter out moms when the Minus Moms filter is specified", () => {
         const groupMembersMock: string[] = ["John Doe", "Jane Smith", "Alice Johnson", "Bob Brown"];
-        const filterListMock: string = "Minus Moms";
+        const filterListMock: string[] = ["Minus Moms"];
 
         const memberMapMock: MemberMap = {};
         memberMapMock["John Doe"] = getRandomlyGeneratedMember();
@@ -301,7 +315,7 @@ describe("filterMembers", () => {
 
     it("should filter out non-dads when the Dads filter is specified", () => {
         const groupMembersMock: string[] = ["John Doe", "Jane Smith", "Alice Johnson", "Bob Brown"];
-        const filterListMock: string = "Minus Dads";
+        const filterListMock: string[] = ["Minus Dads"];
 
         const memberMapMock: MemberMap = {};
         memberMapMock["John Doe"] = getRandomlyGeneratedMember();
@@ -331,7 +345,7 @@ describe("filterMembers", () => {
 
     it("should apply multiple filters to the group members list when there are multiple filters in the filter list", () => {
         const groupMembersMock: string[] = ["John Doe", "Jane Smith", "Alice Johnson", "Bob Brown"];
-        const filterListMock: string = "Bros, Married";
+        const filterListMock: string[] = ["Bros", "Married"];
 
         const memberMapMock: MemberMap = {};
         memberMapMock["John Doe"] = getRandomlyGeneratedMember();
