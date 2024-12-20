@@ -20,7 +20,6 @@ declare interface Row {
   startTime: Date,
   endTime: Date,
   domain: string,
-  ministry: string,
   who: string,
   numAttendees: number,
   what: Text,
