@@ -10,7 +10,7 @@ const BROS_GENDER: string = "Male";
 const SIS_GENDER: string = "Female";
 
 // Maps a filter's name on the Onestop to its corresponding filter function
-const FILTER_MAP: FilterMap = {
+export const FILTER_MAP: FilterMap = {
     Bros: brosFilter, 
     Sis: sisFilter,
     Married: marriedFilter,
@@ -63,6 +63,11 @@ export function containsFilter(stringToCheck: string): boolean {
 export function isFilter(potentialFilter: string): boolean {
     return FILTER_MAP.hasOwnProperty(potentialFilter);
 }
+
+/**
+ * A list of all the filters from FILTER_MAP
+ */
+export const FILTER_NAMES: string[] = Object.keys(FILTER_MAP) as string[];
 
 /**
  * Filters an array of group members based on the given list of filters from the Onestop

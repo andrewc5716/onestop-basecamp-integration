@@ -1,6 +1,7 @@
 // Mock PropertiesService must be imported and set before the row module is imported
 // and attempts to access the global PropertiesService object
-import { PropertiesService } from 'gasmask';
+import { Logger, PropertiesService } from 'gasmask';
+global.Logger = Logger;
 global.PropertiesService = PropertiesService;
 
 import { generateIdForRow, getId, getMetadata, hasId } from "../src/main/row";

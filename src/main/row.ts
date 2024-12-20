@@ -1,11 +1,10 @@
-import { DomainMissingError } from "./error/domainMissingError";
 import { InvalidHashError } from "./error/invalidHashError";
 import { RowBasecampMappingMissingError } from "./error/rowBasecampMappingMissingError";
 import { RowMissingIdError } from "./error/rowMissingIdError";
 import { RowNotSavedError } from "./error/rowNotSavedError";
 import { containsFilter, filterMembers, isFilter, removeFilters } from "./filter";
 import { GROUPS_MAP, getMembersFromGroups, GROUP_NAMES } from "./groups";
-import { ALIASES_MAP, MEMBER_MAP } from "./members";
+import { ALIASES_MAP } from "./members";
 import { getPersonId } from "./people";
 import { deleteAllDocumentProperties, getDocumentProperty, setDocumentProperty } from "./propertiesService";
 import { getBasecampTodoRequest } from "./todos";
@@ -534,7 +533,7 @@ function splitWhoColumn(row: Row): string[] {
  */
 function getMinistryNames(row: Row): string[] {
     return splitWhoColumn(row)
-        .map(name => name.trim()).filter(value => GROUP_NAMES.includes(value.toUpperCase()));
+        .map(name => name.trim()).filter(value => GROUP_NAMES.includes(value));
 }
 
 /**
@@ -620,7 +619,7 @@ export function getAttendeesFromRow(row: Row): string[] {
 
     } else  {
         // Step 5: Handle Missing Data
-        console.log("ERROR: Unable to get attendees from row becuase both domain and ministry columns are empty!")
+        Logger.log("ERROR: Unable to get attendees from row becuase both domain and ministry columns are empty!")
     }
 
     return attendees;
