@@ -2,6 +2,7 @@ import { Logger } from "gasmask";
 global.Logger = Logger;
 
 import { getRandomlyGeneratedGroupsMap, getRandomlyGeneratedGroupsTable, getRandomlyGeneratedSupergroupsTable, Mock } from "./testUtils";
+import { getMembersFromGroups } from "../src/main/groups";
 
 const GROUP_NAME_COLUMN_INDEX: number = 0;
 const GROUP_MEMBERS_COLUMN_INDEX: number = 1;
@@ -481,5 +482,51 @@ describe("loadGroupsFromOnestopIntoScriptProperties", () => {
         };
 
         expect(setScriptPropertyMock).toHaveBeenCalledWith("GROUPS_MAP", JSON.stringify(expectedMap));
+    });
+});
+
+
+// Mocked GROUPS_MAP
+const MOCK_GROUPS_MAP = {
+    SDSU: ['Josh Wong', 'Isaac Otero', 'Kevin Lai', 'Joyce Lai'],
+    IUSM: ['Brian Lin', 'James Lee'],
+    IGSM: ['Jack Zhang', 'Angel Zhang']
+};
+
+describe('getMembersFromGroups', () => {
+    it('should return a flat array of members for given group names', () => {
+        const groupNames = ['SDSU', 'IUSM'];
+
+        // Mock GROUPS_MAP in your test environment if needed
+        jest.mock('../src/main/groups', () => ({
+            loadMapFromScriptProperties: jest.fn().mockReturnValueOnce(MOCK_GROUPS_MAP)
+        }));
+
+        const result = getMembersFromGroups(groupNames);
+        expect(result).toEqual(['Josh Wong', 'Isaac Otero', 'Kevin Lai', 'Joyce Lai', 'Brian Lin', 'James Lee']);
+    });
+
+    it('should return an empty array when no groups are provided', () => {
+        const groupNames: string[] = [];
+        const result = getMembersFromGroups(groupNames);
+        expect(result).toEqual([]);
+    });
+
+    it('should skip groups not found in GROUPS_MAP', () => {
+        const groupNames = ['IGSM', 'KALEO'];
+        const result = getMembersFromGroups(groupNames);
+        expect(result).toEqual(['Jack Zhang', 'Angel Zhang']);
+    });
+
+    it('should handle duplicate group names', () => {
+        const groupNames = ['IUSM', 'IUSM'];
+        const result = getMembersFromGroups(groupNames);
+        expect(result).toEqual(['Brian Lin', 'James Lee']);
+    });
+
+    it('should return an empty array if no group names match', () => {
+        const groupNames = ['KALEO', 'IMPACT'];
+        const result = getMembersFromGroups(groupNames);
+        expect(result).toEqual([]);
     });
 });
