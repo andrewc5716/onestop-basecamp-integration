@@ -1,7 +1,7 @@
-import { Logger, PropertiesService, SpreadsheetApp } from 'gasmask';
+import { Logger } from 'gasmask';
 import randomstring from "randomstring";
 import {getRandomlyGeneratedScheduleEntry} from "./testUtils";
-import { createScheduleEntry, updateScheduleEntry } from "../src/main/schedule";
+import { createScheduleEntry, updateScheduleEntry, deleteScheduleEntry } from "../src/main/schedule";
 import { sendBasecampPostRequest, sendBasecampPutRequest, getBasecampProjectUrl } from "../src/main/basecamp";
 
 global.Logger = Logger;
@@ -18,6 +18,7 @@ describe("createScheduleEntry", () => {
         };
 
         const mockResponse = { id: randomstring.generate() };
+
         (sendBasecampPostRequest as jest.Mock).mockReturnValue(mockResponse);
         (getBasecampProjectUrl as jest.Mock).mockReturnValue("https://3.basecamp.com/4474129/buckets/TEST_PROJECT_ID")
 
@@ -73,6 +74,30 @@ describe("updateScheduleEntry", () => {
         expect(sendBasecampPutRequest).toHaveBeenCalledWith(
             "https://3.basecamp.com/4474129/buckets/TEST_PROJECT_ID/schedule_entries/TEST_SCHEDULE_ENTRY_ID.json",
             randomScheduleEntry
+        );
+    });
+});
+
+describe("deleteScheduleEntry", () => {
+    it("should send a put request with the right url", () => {
+        // Arrange
+        const scheduleIdentifier: ScheduleEntryIdentifier = {
+            projectId: "TEST_PROJECT_ID",
+            scheduleEntryId: "TEST_SCHEDULE_ENTRY_ID"
+        };
+
+        const mockResponse = { id: randomstring.generate() };
+        (sendBasecampPutRequest as jest.Mock).mockReturnValue(mockResponse);
+        (getBasecampProjectUrl as jest.Mock).mockReturnValue("https://3.basecamp.com/4474129/buckets/TEST_PROJECT_ID")
+
+        // Act
+        deleteScheduleEntry(scheduleIdentifier);
+
+        // Assert
+        expect(sendBasecampPutRequest).toHaveBeenCalled();
+        expect(sendBasecampPutRequest).toHaveBeenCalledWith(
+            "https://3.basecamp.com/4474129/buckets/TEST_PROJECT_ID/recordings/TEST_SCHEDULE_ENTRY_ID/status/trashed.json",
+            {}
         );
     });
 });
