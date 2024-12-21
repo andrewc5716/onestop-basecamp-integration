@@ -498,7 +498,7 @@ describe('getMembersFromGroups', () => {
 
         // Mock GROUPS_MAP in your test environment if needed
         jest.mock('../src/main/propertiesService', () => ({
-            loadMapFromScriptProperties: jest.fn().mockReturnValueOnce(MOCK_GROUPS_MAP)
+            loadMapFromScriptProperties: jest.fn(() => MOCK_GROUPS_MAP)
         }));
 
         const { getMembersFromGroups } = require("../src/main/groups");
@@ -510,6 +510,11 @@ describe('getMembersFromGroups', () => {
     it('should return an empty array when no groups are provided', () => {
         const groupNames: string[] = [];
 
+        // Mock GROUPS_MAP in your test environment if needed
+        jest.mock('../src/main/propertiesService', () => ({
+            loadMapFromScriptProperties: jest.fn(() => MOCK_GROUPS_MAP)
+        }));
+
         const { getMembersFromGroups } = require("../src/main/groups");
 
         const result = getMembersFromGroups(groupNames);
@@ -518,6 +523,11 @@ describe('getMembersFromGroups', () => {
 
     it('should skip groups not found in GROUPS_MAP', () => {
         const groupNames = ['IGSM', 'KALEO'];
+
+        // Mock GROUPS_MAP in your test environment if needed
+        jest.mock('../src/main/propertiesService', () => ({
+            loadMapFromScriptProperties: jest.fn(() => MOCK_GROUPS_MAP)
+        }));
 
         const { getMembersFromGroups } = require("../src/main/groups");
 
@@ -528,6 +538,11 @@ describe('getMembersFromGroups', () => {
     it('should handle duplicate group names', () => {
         const groupNames = ['IUSM', 'IUSM'];
 
+        // Mock GROUPS_MAP in your test environment if needed
+        jest.mock('../src/main/propertiesService', () => ({
+            loadMapFromScriptProperties: jest.fn(() => MOCK_GROUPS_MAP)
+        }));
+
         const { getMembersFromGroups } = require("../src/main/groups");
 
         const result = getMembersFromGroups(groupNames);
@@ -536,6 +551,11 @@ describe('getMembersFromGroups', () => {
 
     it('should return an empty array if no group names match', () => {
         const groupNames = ['KALEO', 'IMPACT'];
+
+        // Mock GROUPS_MAP in your test environment if needed
+        jest.mock('../src/main/propertiesService', () => ({
+            loadMapFromScriptProperties: jest.fn(() => MOCK_GROUPS_MAP)
+        }));
 
         const { getMembersFromGroups } = require("../src/main/groups");
 
