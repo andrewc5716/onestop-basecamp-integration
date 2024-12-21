@@ -6,22 +6,9 @@ import { sendBasecampPostRequest, sendBasecampPutRequest, getBasecampProjectUrl 
 
 global.Logger = Logger;
 
-        // jest.mock("../src/main/basecamp", () => ({
-        //     sendBasecampPostRequest: jest.fn(),
-        //     getBasecampProjectUrl: jest.fn(() => "https://3.basecamp.com/4474129/buckets/"),
-        // }));
 jest.mock("../src/main/basecamp");
 
 describe("createScheduleEntry", () => {
-    beforeEach(() => {
-        // jest.clearAllMocks(); // Clear any previous mock calls or resets
-        // Mock the functions within the block
-        // jest.mock('../src/main/basecamp', () => ({
-        //     sendBasecampPostRequest: jest.fn(), 
-        //     getBasecampProjectUrl: jest.fn(),
-        // }));
-    });
-
     it("should send a post request with the right url", () => {
         // Arrange
         const randomScheduleEntry = getRandomlyGeneratedScheduleEntry();
@@ -66,15 +53,6 @@ describe("createScheduleEntry", () => {
 });
 
 describe("updateScheduleEntry", () => {
-    beforeEach(() => {
-        // jest.clearAllMocks(); // Clear any previous mock calls or resets
-        // Mock the functions within the block
-        // jest.mock('../src/main/basecamp', () => ({
-        //     sendBasecampPostRequest: jest.fn(), 
-        //     getBasecampProjectUrl: jest.fn(),
-        // }));
-    });
-
     it("should send a put request with the right url", () => {
         // Arrange
         const randomScheduleEntry = getRandomlyGeneratedScheduleEntry();
