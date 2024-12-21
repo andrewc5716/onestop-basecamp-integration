@@ -509,6 +509,52 @@ describe("getHelperGroups", () => {
         expect(helperGroups).toStrictEqual(expectedHelperGroups);
     });
 
+    it("should remove any duplicate names when helpers are specified more than once", () => {
+        const rowMock: Row = getRandomlyGeneratedRow();
+        const helpersValueMock: string = "Food: Bob Brown, Alice Johnson, Bob Brown, UCSD";
+        rowMock.helpers = { value: helpersValueMock, hyperlink: null };
+
+        const memberMapMock: MemberMap = {};
+        memberMapMock["John Doe"] = getRandomlyGeneratedMember();
+        memberMapMock["John Doe"].gender = "Male";
+        memberMapMock["Jane Smith"] = getRandomlyGeneratedMember();
+        memberMapMock["Jane Smith"].gender = "Female";
+        memberMapMock["Alice Johnson"] = getRandomlyGeneratedMember();
+        memberMapMock["Alice Johnson"].gender = "Female";
+        memberMapMock["Bob Brown"] = getRandomlyGeneratedMember();
+        memberMapMock["Bob Brown"].gender = "Male";
+
+        const peopleToBasecampIdMap: { [name: string]: string } = {
+            "John Doe": randomstring.generate(),
+            "Jane Smith": randomstring.generate(),
+            "Alice Johnson": randomstring.generate(),
+            "Bob Brown": randomstring.generate(),
+        };
+
+        jest.mock("../src/main/members", () => ({
+            MEMBER_MAP: memberMapMock,
+            ALIASES_MAP: {},
+        }));
+
+        jest.mock("../src/main/groups", () => ({
+            GROUPS_MAP: { "UCSD": ["John Doe", "Alice Johnson"] },
+        }));
+
+        jest.mock("../src/main/people", () => ({
+            getPersonId: jest.fn((personName) => peopleToBasecampIdMap.hasOwnProperty(personName) ? peopleToBasecampIdMap[personName] : randomstring.generate()),
+        }));
+
+        const expectedHelperGroups: HelperGroup[] = [
+            { role: "Food", helperIds: [peopleToBasecampIdMap["Bob Brown"], peopleToBasecampIdMap["Alice Johnson"], peopleToBasecampIdMap["John Doe"]] }
+        ];
+
+        const { getHelperGroups } = require("../src/main/row");
+
+        const helperGroups: HelperGroup[] = getHelperGroups(rowMock);
+
+        expect(helperGroups).toStrictEqual(expectedHelperGroups);
+    });
+
     it("should return the group members when there is no role specified", () => {
         const rowMock: Row = getRandomlyGeneratedRow();
         const helpersValueMock: string = "John Doe, Jane Smith, Alice Johnson, Bob Brown";

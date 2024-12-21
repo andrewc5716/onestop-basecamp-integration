@@ -398,8 +398,10 @@ function getHelpersNames(helpers: string): string[] {
     const filters: string[] = helperStrings.filter((helperString) => isFilter(helperString));
     const helperStringsWithoutFilters: string[] = helperStrings.filter((helperString) => !isFilter(helperString));
     const helperNames: string[] = helperStringsWithoutFilters.flatMap((helperString) => getMemberNamesFromHelperString(helperString));
+    const filteredMembers: string[] = filters.length > 0 ? filterMembers(helperNames, filters) : helperNames;
 
-    return filters.length > 0 ? filterMembers(helperNames, filters) : helperNames;
+    // Removes any duplicates
+    return [...new Set(filteredMembers)];
 }
 
 /**
