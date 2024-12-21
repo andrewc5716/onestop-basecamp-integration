@@ -186,7 +186,56 @@ describe("getHelperGroups", () => {
     });
 
     it("should return a HelperGroup corresponding to each role when there are multiple roles", () => {
+        const rowMock: Row = getRandomlyGeneratedRow();
+        const helpersValueMock: string = "Food: John Doe, Jane Smith\nTech: Alice Johnson, Bob Brown";
+        rowMock.helpers = { value: helpersValueMock, hyperlink: null };
 
+        const memberMapMock: MemberMap = {};
+        memberMapMock["John Doe"] = getRandomlyGeneratedMember();
+        memberMapMock["John Doe"].gender = "Male";
+        memberMapMock["Jane Smith"] = getRandomlyGeneratedMember();
+        memberMapMock["Jane Smith"].gender = "Female";
+        memberMapMock["Alice Johnson"] = getRandomlyGeneratedMember();
+        memberMapMock["Alice Johnson"].gender = "Female";
+        memberMapMock["Bob Brown"] = getRandomlyGeneratedMember();
+        memberMapMock["Bob Brown"].gender = "Male";
+
+        jest.mock("../src/main/members", () => ({
+            MEMBER_MAP: memberMapMock,
+            ALIASES_MAP: {},
+        }));
+
+        jest.mock("../src/main/groups", () => ({
+            GROUPS_MAP: {},
+        }));
+
+        jest.mock("../src/main/people", () => ({
+            getPersonId: jest.fn((personName) => {
+                switch(personName) {
+                    case "John Doe": 
+                        return "1000000000";
+                    case "Jane Smith":
+                        return "1000000001";
+                    case "Alice Johnson":
+                        return "1000000002";
+                    case "Bob Brown":
+                        return "1000000003";
+                    default:
+                        return "1000000004";
+                }
+            }),
+        }));
+
+        const expectedHelperGroups: HelperGroup[] = [
+            { role: "Food", helperIds: ["1000000000", "1000000001"] },
+            { role: "Tech", helperIds: ["1000000002", "1000000003"] }
+        ];
+
+        const { getHelperGroups } = require("../src/main/row");
+
+        const helperGroups: HelperGroup[] = getHelperGroups(rowMock);
+
+        expect(helperGroups).toStrictEqual(expectedHelperGroups);
     });
 
     it("should apply filters to all members of a HelperGroup when a filter is included in the list of helpers", () => {
@@ -440,6 +489,58 @@ describe("getHelperGroups", () => {
 
         const expectedHelperGroups: HelperGroup[] = [
             { role: "Food", helperIds: ["1000000000", "1000000003"] }
+        ];
+
+        const { getHelperGroups } = require("../src/main/row");
+
+        const helperGroups: HelperGroup[] = getHelperGroups(rowMock);
+
+        expect(helperGroups).toStrictEqual(expectedHelperGroups);
+    });
+
+    it("should return the group members when there is no role specified", () => {
+        const rowMock: Row = getRandomlyGeneratedRow();
+        const helpersValueMock: string = "John Doe, Jane Smith, Alice Johnson, Bob Brown";
+        rowMock.helpers = { value: helpersValueMock, hyperlink: null };
+
+        const memberMapMock: MemberMap = {};
+        memberMapMock["John Doe"] = getRandomlyGeneratedMember();
+        memberMapMock["John Doe"].gender = "Male";
+        memberMapMock["Jane Smith"] = getRandomlyGeneratedMember();
+        memberMapMock["Jane Smith"].gender = "Female";
+        memberMapMock["Alice Johnson"] = getRandomlyGeneratedMember();
+        memberMapMock["Alice Johnson"].gender = "Female";
+        memberMapMock["Bob Brown"] = getRandomlyGeneratedMember();
+        memberMapMock["Bob Brown"].gender = "Male";
+
+        jest.mock("../src/main/members", () => ({
+            MEMBER_MAP: memberMapMock,
+            ALIASES_MAP: {},
+        }));
+
+        jest.mock("../src/main/groups", () => ({
+            GROUPS_MAP: {},
+        }));
+
+        jest.mock("../src/main/people", () => ({
+            getPersonId: jest.fn((personName) => {
+                switch(personName) {
+                    case "John Doe": 
+                        return "1000000000";
+                    case "Jane Smith":
+                        return "1000000001";
+                    case "Alice Johnson":
+                        return "1000000002";
+                    case "Bob Brown":
+                        return "1000000003";
+                    default:
+                        return "1000000004";
+                }
+            }),
+        }));
+
+        const expectedHelperGroups: HelperGroup[] = [
+            { role: undefined, helperIds: ["1000000000", "1000000001", "1000000002", "1000000003"] }
         ];
 
         const { getHelperGroups } = require("../src/main/row");
