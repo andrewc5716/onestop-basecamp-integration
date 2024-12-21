@@ -1,12 +1,8 @@
 import { Logger } from 'gasmask';
 import randomstring from "randomstring";
-import {getRandomlyGeneratedScheduleEntry} from "./testUtils";
-import { createScheduleEntry, updateScheduleEntry, deleteScheduleEntry } from "../src/main/schedule";
-import { sendBasecampPostRequest, sendBasecampPutRequest, getBasecampProjectUrl } from "../src/main/basecamp";
+import { getRandomlyGeneratedScheduleEntry, Mock } from "./testUtils";
 
 global.Logger = Logger;
-
-jest.mock("../src/main/basecamp");
 
 describe("createScheduleEntry", () => {
     it("should send a post request with the right url", () => {
@@ -19,15 +15,20 @@ describe("createScheduleEntry", () => {
 
         const mockResponse = { id: randomstring.generate() };
 
-        (sendBasecampPostRequest as jest.Mock).mockReturnValue(mockResponse);
-        (getBasecampProjectUrl as jest.Mock).mockReturnValue("https://3.basecamp.com/4474129/buckets/TEST_PROJECT_ID")
+        const sendBasecampPostRequestMock: Mock = jest.fn(() => mockResponse);
+        const getBasecampProjectUrlMock: Mock = jest.fn(() => "https://3.basecamp.com/4474129/buckets/TEST_PROJECT_ID");
+        jest.mock("../src/main/basecamp", () => ({
+            sendBasecampPostRequest: sendBasecampPostRequestMock,
+            getBasecampProjectUrl: getBasecampProjectUrlMock,
+        }));
 
         // Act
+        const { createScheduleEntry } = require("../src/main/schedule");
         createScheduleEntry(randomScheduleEntry, scheduleIdentifier);
 
         // Assert
-        expect(sendBasecampPostRequest).toHaveBeenCalled();
-        expect(sendBasecampPostRequest).toHaveBeenCalledWith(
+        expect(sendBasecampPostRequestMock).toHaveBeenCalled();
+        expect(sendBasecampPostRequestMock).toHaveBeenCalledWith(
             "https://3.basecamp.com/4474129/buckets/TEST_PROJECT_ID/schedules/TEST_SCHEDULE_ID/entries.json",
             randomScheduleEntry
         );
@@ -41,12 +42,16 @@ describe("createScheduleEntry", () => {
             scheduleId: randomstring.generate()
         };
         const mockResponse = { id: "12345" };
-        (sendBasecampPostRequest as jest.Mock).mockReturnValue(mockResponse);
-        (getBasecampProjectUrl as jest.Mock).mockReturnValue("https://3.basecamp.com/4474129/buckets/TEST_PROJECT_ID")
+        const sendBasecampPostRequestMock: Mock = jest.fn(() => mockResponse);
+        const getBasecampProjectUrlMock: Mock = jest.fn(() => "https://3.basecamp.com/4474129/buckets/TEST_PROJECT_ID");
+        jest.mock("../src/main/basecamp", () => ({
+            sendBasecampPostRequest: sendBasecampPostRequestMock,
+            getBasecampProjectUrl: getBasecampProjectUrlMock,
+        }));
 
         // Act
+        const { createScheduleEntry } = require("../src/main/schedule");
         const response = createScheduleEntry(randomScheduleEntry, scheduleIdentifier);
-        console.log(response);
         
         // Assert
         expect(response).toEqual("12345");
@@ -63,15 +68,20 @@ describe("updateScheduleEntry", () => {
         };
 
         const mockResponse = { id: randomstring.generate() };
-        (sendBasecampPutRequest as jest.Mock).mockReturnValue(mockResponse);
-        (getBasecampProjectUrl as jest.Mock).mockReturnValue("https://3.basecamp.com/4474129/buckets/TEST_PROJECT_ID")
+        const sendBasecampPutRequestMock: Mock = jest.fn(() => mockResponse);
+        const getBasecampProjectUrlMock: Mock = jest.fn(() => "https://3.basecamp.com/4474129/buckets/TEST_PROJECT_ID");
+        jest.mock("../src/main/basecamp", () => ({
+            sendBasecampPutRequest: sendBasecampPutRequestMock,
+            getBasecampProjectUrl: getBasecampProjectUrlMock,
+        }));
 
         // Act
+        const { updateScheduleEntry } = require("../src/main/schedule");
         updateScheduleEntry(randomScheduleEntry, scheduleIdentifier);
 
         // Assert
-        expect(sendBasecampPutRequest).toHaveBeenCalled();
-        expect(sendBasecampPutRequest).toHaveBeenCalledWith(
+        expect(sendBasecampPutRequestMock).toHaveBeenCalled();
+        expect(sendBasecampPutRequestMock).toHaveBeenCalledWith(
             "https://3.basecamp.com/4474129/buckets/TEST_PROJECT_ID/schedule_entries/TEST_SCHEDULE_ENTRY_ID.json",
             randomScheduleEntry
         );
@@ -87,15 +97,20 @@ describe("deleteScheduleEntry", () => {
         };
 
         const mockResponse = { id: randomstring.generate() };
-        (sendBasecampPutRequest as jest.Mock).mockReturnValue(mockResponse);
-        (getBasecampProjectUrl as jest.Mock).mockReturnValue("https://3.basecamp.com/4474129/buckets/TEST_PROJECT_ID")
+        const sendBasecampPutRequestMock: Mock = jest.fn(() => mockResponse);
+        const getBasecampProjectUrlMock: Mock = jest.fn(() => "https://3.basecamp.com/4474129/buckets/TEST_PROJECT_ID");
+        jest.mock("../src/main/basecamp", () => ({
+            sendBasecampPutRequest: sendBasecampPutRequestMock,
+            getBasecampProjectUrl: getBasecampProjectUrlMock,
+        }));
 
         // Act
+        const { deleteScheduleEntry } = require("../src/main/schedule");
         deleteScheduleEntry(scheduleIdentifier);
 
         // Assert
-        expect(sendBasecampPutRequest).toHaveBeenCalled();
-        expect(sendBasecampPutRequest).toHaveBeenCalledWith(
+        expect(sendBasecampPutRequestMock).toHaveBeenCalled();
+        expect(sendBasecampPutRequestMock).toHaveBeenCalledWith(
             "https://3.basecamp.com/4474129/buckets/TEST_PROJECT_ID/recordings/TEST_SCHEDULE_ENTRY_ID/status/trashed.json",
             {}
         );
