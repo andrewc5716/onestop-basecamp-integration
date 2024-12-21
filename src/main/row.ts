@@ -466,7 +466,7 @@ function getMinistryFilters(row: Row): string[] {
  * @param row - Row to retrieve the different attendees from.
  * @returns Array of Person.
  */
-function getAttendeesFromRow(row: Row): string[] {
+export function getAttendeesFromRow(row: Row): string[] {
     const attendees: string[] = [];
 
     // Step 1: Extract Ministry Names and Filters
@@ -533,7 +533,7 @@ function filterDomainAttendees(domainNames: string[], domainFilters: string[]): 
 function handleMissingData(domainNames: string[], ministryNames: string[]): void {
     if (domainNames.length === 0 && ministryNames.length === 0) {
         throw new DomainMissingError(
-            "The OneStop row was missing both ministry groups and domains."
+            "ERROR: Unable to get attendees from row becuase both domain and ministry columns are empty!"
         );
     }
 }
