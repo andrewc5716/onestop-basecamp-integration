@@ -6,6 +6,7 @@ global.PropertiesService = PropertiesService;
 import { generateIdForRow, getId, getMetadata, hasId } from "../src/main/row";
 import { RowMissingIdError } from '../src/main/error/rowMissingIdError';
 import { getRandomlyGeneratedMember, getRandomlyGeneratedMetadata, getRandomlyGeneratedRange, getRandomlyGeneratedRow, Mock } from './testUtils';
+import randomstring from "randomstring";
 
 describe("getMetadata", () => {
     it("should return the Metadata object when a single Metadata object is present", () => {
@@ -200,6 +201,13 @@ describe("getHelperGroups", () => {
         memberMapMock["Bob Brown"] = getRandomlyGeneratedMember();
         memberMapMock["Bob Brown"].gender = "Male";
 
+        const peopleToBasecampIdMap: { [name: string]: string } = {
+            "John Doe": randomstring.generate(),
+            "Jane Smith": randomstring.generate(),
+            "Alice Johnson": randomstring.generate(),
+            "Bob Brown": randomstring.generate(),
+        };
+
         jest.mock("../src/main/members", () => ({
             MEMBER_MAP: memberMapMock,
             ALIASES_MAP: {},
@@ -210,25 +218,12 @@ describe("getHelperGroups", () => {
         }));
 
         jest.mock("../src/main/people", () => ({
-            getPersonId: jest.fn((personName) => {
-                switch(personName) {
-                    case "John Doe": 
-                        return "1000000000";
-                    case "Jane Smith":
-                        return "1000000001";
-                    case "Alice Johnson":
-                        return "1000000002";
-                    case "Bob Brown":
-                        return "1000000003";
-                    default:
-                        return "1000000004";
-                }
-            }),
+            getPersonId: jest.fn((personName) => peopleToBasecampIdMap.hasOwnProperty(personName) ? peopleToBasecampIdMap[personName] : randomstring.generate()),
         }));
 
         const expectedHelperGroups: HelperGroup[] = [
-            { role: "Food", helperIds: ["1000000000", "1000000001"] },
-            { role: "Tech", helperIds: ["1000000002", "1000000003"] }
+            { role: "Food", helperIds: [peopleToBasecampIdMap["John Doe"], peopleToBasecampIdMap["Jane Smith"]] },
+            { role: "Tech", helperIds: [peopleToBasecampIdMap["Alice Johnson"], peopleToBasecampIdMap["Bob Brown"]] }
         ];
 
         const { getHelperGroups } = require("../src/main/row");
@@ -253,6 +248,13 @@ describe("getHelperGroups", () => {
         memberMapMock["Bob Brown"] = getRandomlyGeneratedMember();
         memberMapMock["Bob Brown"].gender = "Male";
 
+        const peopleToBasecampIdMap: { [name: string]: string } = {
+            "John Doe": randomstring.generate(),
+            "Jane Smith": randomstring.generate(),
+            "Alice Johnson": randomstring.generate(),
+            "Bob Brown": randomstring.generate(),
+        };
+
         jest.mock("../src/main/members", () => ({
             MEMBER_MAP: memberMapMock,
             ALIASES_MAP: {},
@@ -263,24 +265,11 @@ describe("getHelperGroups", () => {
         }));
 
         jest.mock("../src/main/people", () => ({
-            getPersonId: jest.fn((personName) => {
-                switch(personName) {
-                    case "John Doe": 
-                        return "1000000000";
-                    case "Jane Smith":
-                        return "1000000001";
-                    case "Alice Johnson":
-                        return "1000000002";
-                    case "Bob Brown":
-                        return "1000000003";
-                    default:
-                        return "1000000004";
-                }
-            }),
+            getPersonId: jest.fn((personName) => peopleToBasecampIdMap.hasOwnProperty(personName) ? peopleToBasecampIdMap[personName] : randomstring.generate()),
         }));
 
         const expectedHelperGroups: HelperGroup[] = [
-            { role: "Food", helperIds: ["1000000000", "1000000003"] }
+            { role: "Food", helperIds: [peopleToBasecampIdMap["John Doe"], peopleToBasecampIdMap["Bob Brown"]] }
         ];
 
         const { getHelperGroups } = require("../src/main/row");
@@ -305,6 +294,13 @@ describe("getHelperGroups", () => {
         memberMapMock["Bob Brown"] = getRandomlyGeneratedMember();
         memberMapMock["Bob Brown"].gender = "Male";
 
+        const peopleToBasecampIdMap: { [name: string]: string } = {
+            "John Doe": randomstring.generate(),
+            "Jane Smith": randomstring.generate(),
+            "Alice Johnson": randomstring.generate(),
+            "Bob Brown": randomstring.generate(),
+        };
+
         jest.mock("../src/main/members", () => ({
             MEMBER_MAP: memberMapMock,
             ALIASES_MAP: {},
@@ -315,24 +311,11 @@ describe("getHelperGroups", () => {
         }));
 
         jest.mock("../src/main/people", () => ({
-            getPersonId: jest.fn((personName) => {
-                switch(personName) {
-                    case "John Doe": 
-                        return "1000000000";
-                    case "Jane Smith":
-                        return "1000000001";
-                    case "Alice Johnson":
-                        return "1000000002";
-                    case "Bob Brown":
-                        return "1000000003";
-                    default:
-                        return "1000000004";
-                }
-            }),
+            getPersonId: jest.fn((personName) => peopleToBasecampIdMap.hasOwnProperty(personName) ? peopleToBasecampIdMap[personName] : randomstring.generate()),
         }));
 
         const expectedHelperGroups: HelperGroup[] = [
-            { role: "Food", helperIds: ["1000000001", "1000000002", "1000000000", "1000000003"] }
+            { role: "Food", helperIds: [peopleToBasecampIdMap["Jane Smith"], peopleToBasecampIdMap["Alice Johnson"], peopleToBasecampIdMap["John Doe"], peopleToBasecampIdMap["Bob Brown"]] }
         ];
 
         const { getHelperGroups } = require("../src/main/row");
@@ -357,6 +340,13 @@ describe("getHelperGroups", () => {
         memberMapMock["Bob Brown"] = getRandomlyGeneratedMember();
         memberMapMock["Bob Brown"].gender = "Male";
 
+        const peopleToBasecampIdMap: { [name: string]: string } = {
+            "John Doe": randomstring.generate(),
+            "Jane Smith": randomstring.generate(),
+            "Alice Johnson": randomstring.generate(),
+            "Bob Brown": randomstring.generate(),
+        };
+
         jest.mock("../src/main/members", () => ({
             MEMBER_MAP: memberMapMock,
             ALIASES_MAP: { "John/Jane": ["John Doe", "Jane Smith"] },
@@ -367,24 +357,11 @@ describe("getHelperGroups", () => {
         }));
 
         jest.mock("../src/main/people", () => ({
-            getPersonId: jest.fn((personName) => {
-                switch(personName) {
-                    case "John Doe": 
-                        return "1000000000";
-                    case "Jane Smith":
-                        return "1000000001";
-                    case "Alice Johnson":
-                        return "1000000002";
-                    case "Bob Brown":
-                        return "1000000003";
-                    default:
-                        return "1000000004";
-                }
-            }),
+            getPersonId: jest.fn((personName) => peopleToBasecampIdMap.hasOwnProperty(personName) ? peopleToBasecampIdMap[personName] : randomstring.generate()),
         }));
 
         const expectedHelperGroups: HelperGroup[] = [
-            { role: "Food", helperIds: ["1000000000", "1000000001", "1000000002", "1000000003"] }
+            { role: "Food", helperIds: [peopleToBasecampIdMap["John Doe"], peopleToBasecampIdMap["Jane Smith"], peopleToBasecampIdMap["Alice Johnson"], peopleToBasecampIdMap["Bob Brown"]] }
         ];
 
         const { getHelperGroups } = require("../src/main/row");
@@ -409,6 +386,13 @@ describe("getHelperGroups", () => {
         memberMapMock["Bob Brown"] = getRandomlyGeneratedMember();
         memberMapMock["Bob Brown"].gender = "Male";
 
+        const peopleToBasecampIdMap: { [name: string]: string } = {
+            "John Doe": randomstring.generate(),
+            "Jane Smith": randomstring.generate(),
+            "Alice Johnson": randomstring.generate(),
+            "Bob Brown": randomstring.generate(),
+        };
+
         jest.mock("../src/main/members", () => ({
             MEMBER_MAP: memberMapMock,
             ALIASES_MAP: {},
@@ -419,24 +403,11 @@ describe("getHelperGroups", () => {
         }));
 
         jest.mock("../src/main/people", () => ({
-            getPersonId: jest.fn((personName) => {
-                switch(personName) {
-                    case "John Doe": 
-                        return "1000000000";
-                    case "Jane Smith":
-                        return "1000000001";
-                    case "Alice Johnson":
-                        return "1000000002";
-                    case "Bob Brown":
-                        return "1000000003";
-                    default:
-                        return "1000000004";
-                }
-            }),
+            getPersonId: jest.fn((personName) => peopleToBasecampIdMap.hasOwnProperty(personName) ? peopleToBasecampIdMap[personName] : randomstring.generate()),
         }));
 
         const expectedHelperGroups: HelperGroup[] = [
-            { role: "Food", helperIds: ["1000000003", "1000000000"] }
+            { role: "Food", helperIds: [peopleToBasecampIdMap["Bob Brown"], peopleToBasecampIdMap["John Doe"]] }
         ];
 
         const { getHelperGroups } = require("../src/main/row");
@@ -461,6 +432,13 @@ describe("getHelperGroups", () => {
         memberMapMock["Bob Brown"] = getRandomlyGeneratedMember();
         memberMapMock["Bob Brown"].gender = "Male";
 
+        const peopleToBasecampIdMap: { [name: string]: string } = {
+            "John Doe": randomstring.generate(),
+            "Jane Smith": randomstring.generate(),
+            "Alice Johnson": randomstring.generate(),
+            "Bob Brown": randomstring.generate(),
+        };
+
         jest.mock("../src/main/members", () => ({
             MEMBER_MAP: memberMapMock,
             ALIASES_MAP: { "John/Jane": ["John Doe", "Jane Smith"] },
@@ -471,24 +449,11 @@ describe("getHelperGroups", () => {
         }));
 
         jest.mock("../src/main/people", () => ({
-            getPersonId: jest.fn((personName) => {
-                switch(personName) {
-                    case "John Doe": 
-                        return "1000000000";
-                    case "Jane Smith":
-                        return "1000000001";
-                    case "Alice Johnson":
-                        return "1000000002";
-                    case "Bob Brown":
-                        return "1000000003";
-                    default:
-                        return "1000000004";
-                }
-            }),
+            getPersonId: jest.fn((personName) => peopleToBasecampIdMap.hasOwnProperty(personName) ? peopleToBasecampIdMap[personName] : randomstring.generate()),
         }));
 
         const expectedHelperGroups: HelperGroup[] = [
-            { role: "Food", helperIds: ["1000000000", "1000000003"] }
+            { role: "Food", helperIds: [peopleToBasecampIdMap["John Doe"], peopleToBasecampIdMap["Bob Brown"]] }
         ];
 
         const { getHelperGroups } = require("../src/main/row");
@@ -513,6 +478,13 @@ describe("getHelperGroups", () => {
         memberMapMock["Bob Brown"] = getRandomlyGeneratedMember();
         memberMapMock["Bob Brown"].gender = "Male";
 
+        const peopleToBasecampIdMap: { [name: string]: string } = {
+            "John Doe": randomstring.generate(),
+            "Jane Smith": randomstring.generate(),
+            "Alice Johnson": randomstring.generate(),
+            "Bob Brown": randomstring.generate(),
+        };
+
         jest.mock("../src/main/members", () => ({
             MEMBER_MAP: memberMapMock,
             ALIASES_MAP: {},
@@ -523,24 +495,11 @@ describe("getHelperGroups", () => {
         }));
 
         jest.mock("../src/main/people", () => ({
-            getPersonId: jest.fn((personName) => {
-                switch(personName) {
-                    case "John Doe": 
-                        return "1000000000";
-                    case "Jane Smith":
-                        return "1000000001";
-                    case "Alice Johnson":
-                        return "1000000002";
-                    case "Bob Brown":
-                        return "1000000003";
-                    default:
-                        return "1000000004";
-                }
-            }),
+            getPersonId: jest.fn((personName) => peopleToBasecampIdMap.hasOwnProperty(personName) ? peopleToBasecampIdMap[personName] : randomstring.generate()),
         }));
 
         const expectedHelperGroups: HelperGroup[] = [
-            { role: "Food", helperIds: ["1000000003", "1000000002", "1000000000"] }
+            { role: "Food", helperIds: [peopleToBasecampIdMap["Bob Brown"], peopleToBasecampIdMap["Alice Johnson"], peopleToBasecampIdMap["John Doe"]] }
         ];
 
         const { getHelperGroups } = require("../src/main/row");
@@ -565,6 +524,13 @@ describe("getHelperGroups", () => {
         memberMapMock["Bob Brown"] = getRandomlyGeneratedMember();
         memberMapMock["Bob Brown"].gender = "Male";
 
+        const peopleToBasecampIdMap: { [name: string]: string } = {
+            "John Doe": randomstring.generate(),
+            "Jane Smith": randomstring.generate(),
+            "Alice Johnson": randomstring.generate(),
+            "Bob Brown": randomstring.generate(),
+        };
+
         jest.mock("../src/main/members", () => ({
             MEMBER_MAP: memberMapMock,
             ALIASES_MAP: {},
@@ -575,24 +541,11 @@ describe("getHelperGroups", () => {
         }));
 
         jest.mock("../src/main/people", () => ({
-            getPersonId: jest.fn((personName) => {
-                switch(personName) {
-                    case "John Doe": 
-                        return "1000000000";
-                    case "Jane Smith":
-                        return "1000000001";
-                    case "Alice Johnson":
-                        return "1000000002";
-                    case "Bob Brown":
-                        return "1000000003";
-                    default:
-                        return "1000000004";
-                }
-            }),
+            getPersonId: jest.fn((personName) => peopleToBasecampIdMap.hasOwnProperty(personName) ? peopleToBasecampIdMap[personName] : randomstring.generate()),
         }));
 
         const expectedHelperGroups: HelperGroup[] = [
-            { role: undefined, helperIds: ["1000000000", "1000000001", "1000000002", "1000000003"] }
+            { role: undefined, helperIds: [peopleToBasecampIdMap["John Doe"], peopleToBasecampIdMap["Jane Smith"], peopleToBasecampIdMap["Alice Johnson"], peopleToBasecampIdMap["Bob Brown"]] }
         ];
 
         const { getHelperGroups } = require("../src/main/row");
