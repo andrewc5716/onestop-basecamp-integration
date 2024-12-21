@@ -1,6 +1,8 @@
 import { onOpen } from './main/menu';
 
 export * from './main/basecamp';
+export * from './main/filter';
+export * from './main/groups';
 export * from './main/main';
 export * from './main/members';
 export * from './main/people';

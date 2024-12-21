@@ -4,8 +4,7 @@ global.Logger = Logger;
 global.PropertiesService = PropertiesService;
 global.SpreadsheetApp = SpreadsheetApp;
 
-import { getRandomlyGeneratedAliasMap, getRandomlyGeneratedAliasTable, getRandomlyGeneratedMemberMap, getRandomlyGeneratedMemberTable, getRandomlyGeneratedRange, getRandomlyGeneratedSheet, Mock } from './testUtils';
-import { TabNotFoundError } from '../src/main/error/tabNotFoundError';
+import { getRandomlyGeneratedAliasMap, getRandomlyGeneratedAliasTable, getRandomlyGeneratedMemberMap, getRandomlyGeneratedMemberTable, Mock } from './testUtils';
 
 const NAME_COLUMN_INDEX: number = 0;
 const GENDER_COLUMN_INDEX: number = 1;
@@ -18,8 +17,8 @@ describe("MEMBER_MAP", () => {
     it("should return the member map from the script properties when it is present", () => {
         const memberMapMock: MemberMap = getRandomlyGeneratedMemberMap();
 
-        jest.doMock("../src/main/propertiesService", () => ({
-            getScriptProperty: jest.fn(() => JSON.stringify(memberMapMock)),
+        jest.mock("../src/main/propertiesService", () => ({
+            loadMapFromScriptProperties: jest.fn(() => memberMapMock),
         }));
         
         // Import the MEMBER_MAP with the mocked propertiesService
@@ -29,8 +28,8 @@ describe("MEMBER_MAP", () => {
     });
 
     it("should return an empty map when there is no member map present in the script properties", () => {
-        jest.doMock("../src/main/propertiesService", () => ({
-            getScriptProperty: jest.fn(() => null),
+        jest.mock("../src/main/propertiesService", () => ({
+            loadMapFromScriptProperties: jest.fn(() => ({})),
         }));
 
         // Import the MEMBER_MAP with the mocked propertiesService
@@ -44,8 +43,8 @@ describe("ALIASES_MAP", () => {
     it("should return the aliases map from the script properties when it is present", () => {
         const aliasesMapMock: AliasMap = getRandomlyGeneratedAliasMap();
 
-        jest.doMock("../src/main/propertiesService", () => ({
-            getScriptProperty: jest.fn(() => JSON.stringify(aliasesMapMock)),
+        jest.mock("../src/main/propertiesService", () => ({
+            loadMapFromScriptProperties: jest.fn(() => aliasesMapMock),
         }));
         
         // Import the MEMBER_MAP with the mocked propertiesService
@@ -55,8 +54,8 @@ describe("ALIASES_MAP", () => {
     });
 
     it("should return an empty map when there is no aliases map present in the script properties", () => {
-        jest.doMock("../src/main/propertiesService", () => ({
-            getScriptProperty: jest.fn(() => null),
+        jest.mock("../src/main/propertiesService", () => ({
+            loadMapFromScriptProperties: jest.fn(() => ({})),
         }));
 
         // Import the MEMBER_MAP with the mocked propertiesService
@@ -69,12 +68,6 @@ describe("ALIASES_MAP", () => {
 describe("loadMembersFromOnestopIntoScriptProperties", () => {
     it("should load the members and couples table from the onestop into the script properties when the members and couples table are present on the onestop", () => {
         const membersDataValuesMock: any[][] = getRandomlyGeneratedMemberTable(5, 1);
-        const membersDataRangeMock: Range = getRandomlyGeneratedRange();
-        membersDataRangeMock.getValues = jest.fn(() => membersDataValuesMock);
-        const membersTableSheetMock: Sheet = getRandomlyGeneratedSheet();
-        membersTableSheetMock.getName = jest.fn(() => "Members");
-        membersTableSheetMock.getDataRange = jest.fn(() => membersDataRangeMock);
-
         membersDataValuesMock[1][NAME_COLUMN_INDEX] = "John Doe";
         membersDataValuesMock[1][ALTERNATE_NAMES_COLUMN_INDEX] = "John,John D";
         membersDataValuesMock[2][NAME_COLUMN_INDEX] = "James Brown";
@@ -87,25 +80,18 @@ describe("loadMembersFromOnestopIntoScriptProperties", () => {
         membersDataValuesMock[5][ALTERNATE_NAMES_COLUMN_INDEX] = "Emily,Emily W";
         
         const couplesDataValuesMock: any[][] = getRandomlyGeneratedAliasTable(2);
-        const couplesDataRangeMock: Range = getRandomlyGeneratedRange();
-        couplesDataRangeMock.getValues = jest.fn(() => couplesDataValuesMock);
-        const couplesTableSheetMock: Sheet = getRandomlyGeneratedSheet();
-        couplesTableSheetMock.getName = jest.fn(() => "Couples");
-        couplesTableSheetMock.getDataRange = jest.fn(() => couplesDataRangeMock);
-
         couplesDataValuesMock[1] = ["James Brown", "Mary Brown", "James/Mary,Browns"];
         couplesDataValuesMock[2] = ["Robert White", "Emily White", "Robert/Emily,Whites"];
 
-        const sheetsMock: Sheet[] = Array.from({length: 10}, getRandomlyGeneratedSheet);
-        sheetsMock.push(membersTableSheetMock);
-        sheetsMock.push(couplesTableSheetMock);
         jest.mock("../src/main/scan", () => ({
-            getAllSpreadsheetTabs: jest.fn(() => sheetsMock),
+            getCellValues: jest.fn()
+            .mockReturnValueOnce(membersDataValuesMock)
+            .mockReturnValueOnce(couplesDataValuesMock),
         }));
 
         const setScriptPropertyMock: Mock = jest.fn();
         jest.mock("../src/main/propertiesService", () => ({
-            getScriptProperty: jest.fn(),
+            loadMapFromScriptProperties: jest.fn(),
             setScriptProperty: setScriptPropertyMock,
         }));
 
@@ -142,60 +128,19 @@ describe("loadMembersFromOnestopIntoScriptProperties", () => {
         expect(setScriptPropertyMock).toHaveBeenNthCalledWith(2, "ALIASES_MAP", JSON.stringify(expectedAliasMap));
     });
 
-    it("should throw a TabNotFoundError error when the Members tab does not exist on the onestop", () => {
-        jest.doMock("../src/main/scan", () => ({
-            getAllSpreadsheetTabs: jest.fn(() => Array.from({length: 10}, getRandomlyGeneratedSheet)),
-        }));
-
-        const { loadMembersFromOnestopIntoScriptProperties } = require('../src/main/members');
-
-        expect(() => loadMembersFromOnestopIntoScriptProperties()).toThrow(new TabNotFoundError("No Members tab found"));
-    });
-
-    it("should throw a TabNotFoundError error when the Couples tab does not exist on the onestop", () => {
-        const membersDataValuesMock: any[][] = getRandomlyGeneratedMemberTable();
-        const membersDataRangeMock: Range = getRandomlyGeneratedRange();
-        membersDataRangeMock.getValues = jest.fn(() => membersDataValuesMock);
-        const membersTableSheetMock: Sheet = getRandomlyGeneratedSheet();
-        membersTableSheetMock.getName = jest.fn(() => "Members");
-        membersTableSheetMock.getDataRange = jest.fn(() => membersDataRangeMock);
-
-        const sheetsMock: Sheet[] = Array.from({length: 10}, getRandomlyGeneratedSheet);
-        sheetsMock.push(membersTableSheetMock);
-        jest.mock("../src/main/scan", () => ({
-            getAllSpreadsheetTabs: jest.fn(() => sheetsMock),
-        }));
-
-        const { loadMembersFromOnestopIntoScriptProperties } = require('../src/main/members');
-
-        expect(() => loadMembersFromOnestopIntoScriptProperties()).toThrow(new TabNotFoundError("No Couples tab found"));
-    });
-
     it("should load an empty object into script properties for the members map when the members table is empty", () => {
         const membersDataValuesMock: any[][] = getRandomlyGeneratedMemberTable(0);
-        const membersDataRangeMock: Range = getRandomlyGeneratedRange();
-        membersDataRangeMock.getValues = jest.fn(() => membersDataValuesMock);
-        const membersTableSheetMock: Sheet = getRandomlyGeneratedSheet();
-        membersTableSheetMock.getName = jest.fn(() => "Members");
-        membersTableSheetMock.getDataRange = jest.fn(() => membersDataRangeMock);
-
         const couplesDataValuesMock: any[][] = getRandomlyGeneratedAliasTable(3);
-        const couplesDataRangeMock: Range = getRandomlyGeneratedRange();
-        couplesDataRangeMock.getValues = jest.fn(() => couplesDataValuesMock);
-        const couplesTableSheetMock: Sheet = getRandomlyGeneratedSheet();
-        couplesTableSheetMock.getName = jest.fn(() => "Couples");
-        couplesTableSheetMock.getDataRange = jest.fn(() => couplesDataRangeMock);
 
-        const sheetsMock: Sheet[] = Array.from({length: 10}, getRandomlyGeneratedSheet);
-        sheetsMock.push(membersTableSheetMock);
-        sheetsMock.push(couplesTableSheetMock);
         jest.mock("../src/main/scan", () => ({
-            getAllSpreadsheetTabs: jest.fn(() => sheetsMock),
+            getCellValues: jest.fn()
+            .mockReturnValueOnce(membersDataValuesMock)
+            .mockReturnValueOnce(couplesDataValuesMock),
         }));
 
         const setScriptPropertyMock: Mock = jest.fn();
         jest.mock("../src/main/propertiesService", () => ({
-            getScriptProperty: jest.fn(),
+            loadMapFromScriptProperties: jest.fn(),
             setScriptProperty: setScriptPropertyMock,
         }));
 
@@ -207,34 +152,22 @@ describe("loadMembersFromOnestopIntoScriptProperties", () => {
 
     it("should load a object of just the member alternate names when the couples table is empty", () => {
         const membersDataValuesMock: any[][] = getRandomlyGeneratedMemberTable(2, 1);
-        const membersDataRangeMock: Range = getRandomlyGeneratedRange();
-        membersDataRangeMock.getValues = jest.fn(() => membersDataValuesMock);
-        const membersTableSheetMock: Sheet = getRandomlyGeneratedSheet();
-        membersTableSheetMock.getName = jest.fn(() => "Members");
-        membersTableSheetMock.getDataRange = jest.fn(() => membersDataRangeMock);
-
         membersDataValuesMock[1][NAME_COLUMN_INDEX] = "John Doe";
         membersDataValuesMock[1][ALTERNATE_NAMES_COLUMN_INDEX] = "John,John D";
         membersDataValuesMock[2][NAME_COLUMN_INDEX] = "James Brown";
         membersDataValuesMock[2][ALTERNATE_NAMES_COLUMN_INDEX] = "James,James B";
 
         const couplesDataValuesMock: any[][] = getRandomlyGeneratedAliasTable(0);
-        const couplesDataRangeMock: Range = getRandomlyGeneratedRange();
-        couplesDataRangeMock.getValues = jest.fn(() => couplesDataValuesMock);
-        const couplesTableSheetMock: Sheet = getRandomlyGeneratedSheet();
-        couplesTableSheetMock.getName = jest.fn(() => "Couples");
-        couplesTableSheetMock.getDataRange = jest.fn(() => couplesDataRangeMock);
 
-        const sheetsMock: Sheet[] = Array.from({length: 10}, getRandomlyGeneratedSheet);
-        sheetsMock.push(membersTableSheetMock);
-        sheetsMock.push(couplesTableSheetMock);
         jest.mock("../src/main/scan", () => ({
-            getAllSpreadsheetTabs: jest.fn(() => sheetsMock),
+            getCellValues: jest.fn()
+            .mockReturnValueOnce(membersDataValuesMock)
+            .mockReturnValueOnce(couplesDataValuesMock),
         }));
 
         const setScriptPropertyMock: Mock = jest.fn();
         jest.mock("../src/main/propertiesService", () => ({
-            getScriptProperty: jest.fn(),
+            loadMapFromScriptProperties: jest.fn(),
             setScriptProperty: setScriptPropertyMock,
         }));
 
@@ -252,34 +185,22 @@ describe("loadMembersFromOnestopIntoScriptProperties", () => {
 
     it("should map an alternate name to multiple people when multiple people share the same alternate name", () => {
         const membersDataValuesMock: any[][] = getRandomlyGeneratedMemberTable(2, 1);
-        const membersDataRangeMock: Range = getRandomlyGeneratedRange();
-        membersDataRangeMock.getValues = jest.fn(() => membersDataValuesMock);
-        const membersTableSheetMock: Sheet = getRandomlyGeneratedSheet();
-        membersTableSheetMock.getName = jest.fn(() => "Members");
-        membersTableSheetMock.getDataRange = jest.fn(() => membersDataRangeMock);
-
         membersDataValuesMock[1][NAME_COLUMN_INDEX] = "John Doe";
         membersDataValuesMock[1][ALTERNATE_NAMES_COLUMN_INDEX] = "John,John D";
         membersDataValuesMock[2][NAME_COLUMN_INDEX] = "John Brown";
         membersDataValuesMock[2][ALTERNATE_NAMES_COLUMN_INDEX] = "John,John B";
 
         const couplesDataValuesMock: any[][] = getRandomlyGeneratedAliasTable(0);
-        const couplesDataRangeMock: Range = getRandomlyGeneratedRange();
-        couplesDataRangeMock.getValues = jest.fn(() => couplesDataValuesMock);
-        const couplesTableSheetMock: Sheet = getRandomlyGeneratedSheet();
-        couplesTableSheetMock.getName = jest.fn(() => "Couples");
-        couplesTableSheetMock.getDataRange = jest.fn(() => couplesDataRangeMock);
 
-        const sheetsMock: Sheet[] = Array.from({length: 10}, getRandomlyGeneratedSheet);
-        sheetsMock.push(membersTableSheetMock);
-        sheetsMock.push(couplesTableSheetMock);
         jest.mock("../src/main/scan", () => ({
-            getAllSpreadsheetTabs: jest.fn(() => sheetsMock),
+            getCellValues: jest.fn()
+            .mockReturnValueOnce(membersDataValuesMock)
+            .mockReturnValueOnce(couplesDataValuesMock),
         }));
 
         const setScriptPropertyMock: Mock = jest.fn();
         jest.mock("../src/main/propertiesService", () => ({
-            getScriptProperty: jest.fn(),
+            loadMapFromScriptProperties: jest.fn(),
             setScriptProperty: setScriptPropertyMock,
         }));
 
@@ -296,11 +217,6 @@ describe("loadMembersFromOnestopIntoScriptProperties", () => {
 
     it("should map an alias to both a person and a couple when a person's alternate name is the same as a couple's alias", () => {
         const membersDataValuesMock: any[][] = getRandomlyGeneratedMemberTable(3, 1);
-        const membersDataRangeMock: Range = getRandomlyGeneratedRange();
-        membersDataRangeMock.getValues = jest.fn(() => membersDataValuesMock);
-        const membersTableSheetMock: Sheet = getRandomlyGeneratedSheet();
-        membersTableSheetMock.getName = jest.fn(() => "Members");
-        membersTableSheetMock.getDataRange = jest.fn(() => membersDataRangeMock);
 
         membersDataValuesMock[1][NAME_COLUMN_INDEX] = "John Miller";
         membersDataValuesMock[1][ALTERNATE_NAMES_COLUMN_INDEX] = "John,John M, JM";
@@ -310,24 +226,17 @@ describe("loadMembersFromOnestopIntoScriptProperties", () => {
         membersDataValuesMock[3][ALTERNATE_NAMES_COLUMN_INDEX] = "Mary,Mary B";
         
         const couplesDataValuesMock: any[][] = getRandomlyGeneratedAliasTable(1);
-        const couplesDataRangeMock: Range = getRandomlyGeneratedRange();
-        couplesDataRangeMock.getValues = jest.fn(() => couplesDataValuesMock);
-        const couplesTableSheetMock: Sheet = getRandomlyGeneratedSheet();
-        couplesTableSheetMock.getName = jest.fn(() => "Couples");
-        couplesTableSheetMock.getDataRange = jest.fn(() => couplesDataRangeMock);
-
         couplesDataValuesMock[1] = ["James Brown", "Mary Brown", "JM"];
 
-        const sheetsMock: Sheet[] = Array.from({length: 10}, getRandomlyGeneratedSheet);
-        sheetsMock.push(membersTableSheetMock);
-        sheetsMock.push(couplesTableSheetMock);
         jest.mock("../src/main/scan", () => ({
-            getAllSpreadsheetTabs: jest.fn(() => sheetsMock),
+            getCellValues: jest.fn()
+            .mockReturnValueOnce(membersDataValuesMock)
+            .mockReturnValueOnce(couplesDataValuesMock),
         }));
 
         const setScriptPropertyMock: Mock = jest.fn();
         jest.mock("../src/main/propertiesService", () => ({
-            getScriptProperty: jest.fn(),
+            loadMapFromScriptProperties: jest.fn(),
             setScriptProperty: setScriptPropertyMock,
         }));
 

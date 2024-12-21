@@ -19,13 +19,13 @@ declare interface Row {
   metadata: Metadata,
   startTime: Date,
   endTime: Date,
+  domain: string,
   who: string,
   numAttendees: number,
   what: Text,
   where: Text,
   inCharge: Text,
   helpers: Text,
-  foodLead: Text,
   childcare: Text,
   notes: Text
 }
@@ -137,3 +137,9 @@ type MemberMap = { [key: string]: Member };
 
 // Maps an alias to an array of member names that the alias corresponds to
 type AliasMap = { [key: string]: string[] };
+
+// Maps a group name to an array of group member names
+type GroupsMap = { [key: string]: string[] }
+
+// function used to filter groups of members; meant to be used with the array filter() function
+type FilterFunction = (memberName: string) => boolean;

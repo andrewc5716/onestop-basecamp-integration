@@ -1,6 +1,5 @@
-import { TabNotFoundError } from "./error/tabNotFoundError";
-import { getScriptProperty, setScriptProperty } from "./propertiesService";
-import { getAllSpreadsheetTabs } from "./scan";
+import { loadMapFromScriptProperties, setScriptProperty } from "./propertiesService";
+import { getCellValues } from "./scan";
 
 const MEMBERS_TAB_NAME: string = "Members";
 const COUPLES_TAB_NAME: string = "Couples";
@@ -33,22 +32,8 @@ export function loadMembersFromOnestopIntoScriptProperties(): void {
     setScriptProperty(ALIASES_MAP_KEY, JSON.stringify(combinedAliases));
 }
 
-function getTab(tabName: string): Sheet {
-    const tabs: Sheet[] = getAllSpreadsheetTabs();
-    for(const tab of tabs) {
-        const currentTabName: string = tab.getName();
-        if(currentTabName === tabName) {
-            return tab;
-        }
-    }
-
-    throw new TabNotFoundError(`No ${tabName} tab found`);
-}
-
 function loadMembersFromOnestop(): { memberMap: MemberMap, alternateNamesMap: AliasMap } {
-    const membersTab: Sheet = getTab(MEMBERS_TAB_NAME);
-    const dataRange: Range = membersTab.getDataRange();
-    const cellValues: any[][] = dataRange.getValues();
+    const cellValues: any[][] = getCellValues(MEMBERS_TAB_NAME);
 
     const memberMap: MemberMap = {};
     let alternateNamesMap: AliasMap = {};
@@ -96,10 +81,7 @@ function addAlternateNamesToMap(alternateNamesMap: AliasMap, alternateNames: str
 }
 
 function loadCouplesFromOnestop(): AliasMap {
-    const couplesTab: Sheet = getTab(COUPLES_TAB_NAME);
-    const dataRange: Range = couplesTab.getDataRange();
-    const cellValues: any[][] = dataRange.getValues();
-
+    const cellValues: any[][] = getCellValues(COUPLES_TAB_NAME);
     const aliasMap: AliasMap = {};
 
     // Start at row 1 to skip the table header row
@@ -129,9 +111,4 @@ function mergeAliasMaps(firstAliasMap: AliasMap, secondAliasMap: AliasMap): Alia
     }
 
     return finalAliasMap;
-}
-
-function loadMapFromScriptProperties(key: string): Object {
-    const map: string | null = getScriptProperty(key);
-    return map ? JSON.parse(map) : {};
 }
