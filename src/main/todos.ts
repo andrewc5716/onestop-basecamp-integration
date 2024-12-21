@@ -25,7 +25,7 @@ const DEFAULT_TODOLIST_IDENTIFIER: TodolistIdentifier = {
  * @returns the id of the created todo. This must be saved by the caller to update this todo in the future.
  */
 export function createTodo(request: BasecampTodoRequest, todolistIdentifier: TodolistIdentifier): string {
-    Logger.log(`Creating new todo: "${request.content}"...\n`)
+    Logger.log(`Creating new todo: "${request.content}"...\n`);
     const rawTodoResponse: JsonData = sendBasecampPostRequest(getCreateTodoUrl(todolistIdentifier), request);
     const todoResponse: BasecampTodoResponse = rawTodoResponse as BasecampTodoResponse;
     return todoResponse.id;
@@ -39,7 +39,7 @@ export function createTodo(request: BasecampTodoRequest, todolistIdentifier: Tod
  * @param todoIdentifier id of the existing todo to replace
  */
 export function updateTodo(request: BasecampTodoRequest, todoIdentifier: TodoIdentifier): void {
-    Logger.log(`Updating existing todo: "${request.content}"...\n`)
+    Logger.log(`Updating existing todo: "${request.content}"...\n`);
     sendBasecampPutRequest(getUpdateTodoUrl(todoIdentifier), request);
 }
 
@@ -51,7 +51,7 @@ export function updateTodo(request: BasecampTodoRequest, todoIdentifier: TodoIde
  * @param todoIdentifier id of the existing todo to replace
  */
 export function deleteTodo(todoIdentifier: TodoIdentifier): void {
-    Logger.log("Deleting todo...\n")
+    Logger.log("Deleting todo...\n");
     sendBasecampPutRequest(getDeleteTodoUrl(todoIdentifier), {});
 }
 

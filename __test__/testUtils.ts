@@ -329,3 +329,15 @@ function getRandomNumber(upperBound: number = Number.MAX_SAFE_INTEGER): number {
 function getRandomBoolean(): boolean {
     return getRandomNumber(BOOLEAN_UPPERBOUND) ? true: false;
 }
+
+export function getRandomlyGeneratedScheduleEntry(): BasecampScheduleEntryRequest {
+    return {
+        summary: randomstring.generate(),
+        starts_at: randomstring.generate(),
+        ends_at: randomstring.generate(),
+        description: randomstring.generate(),
+        participant_ids: [randomstring.generate()],
+        all_day: getRandomBoolean(),
+        notify: getRandomBoolean()
+    }
+}
