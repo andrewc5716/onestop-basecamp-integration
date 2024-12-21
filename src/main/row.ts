@@ -2,7 +2,7 @@ import { InvalidHashError } from "./error/invalidHashError";
 import { RowBasecampMappingMissingError } from "./error/rowBasecampMappingMissingError";
 import { RowMissingIdError } from "./error/rowMissingIdError";
 import { RowNotSavedError } from "./error/rowNotSavedError";
-import { filterMembers, isFilter } from "./filter";
+import { containsFilter, filterMembers, isFilter, removeFilters } from "./filter";
 import { GROUPS_MAP } from "./groups";
 import { ALIASES_MAP, MEMBER_MAP } from "./members";
 import { getPersonId } from "./people";
@@ -397,7 +397,7 @@ function getHelpersNames(helpers: string): string[] {
 
     const filters: string[] = helperStrings.filter((helperString) => isFilter(helperString));
     const helperStringsWithoutFilters: string[] = helperStrings.filter((helperString) => !isFilter(helperString));
-    const helperNames: string[] = helperStringsWithoutFilters.map((helperString) => getMemberNamesFromHelperString(helperString)).flat();
+    const helperNames: string[] = helperStringsWithoutFilters.flatMap((helperString) => getMemberNamesFromHelperString(helperString));
 
     return filters.length > 0 ? filterMembers(helperNames, filters) : helperNames;
 }
@@ -409,16 +409,31 @@ function getHelpersNames(helpers: string): string[] {
  * @returns an array of member names
  */
 function getMemberNamesFromHelperString(helperString: string): string[] {
-    if(GROUPS_MAP.hasOwnProperty(helperString)) {
+    let helperToken: string = helperString;
+    let filters: string[] = [];
+    let members: string[] = [];
+
+    // Remove any filters if the individual helper string contains a filter applied specifically to this helper
+    if(containsFilter(helperString)) {
+        let { stringWithoutFilters: stringWithoutFilters, removedFilters: removedFilters } = removeFilters(helperString);
+        helperToken = stringWithoutFilters;
+        filters = removedFilters;
+    }
+
+    // Expands any groups or aliases if possible
+    if(GROUPS_MAP.hasOwnProperty(helperToken)) {
         // Helper string refers to a group
-        return GROUPS_MAP[helperString];
-    } else if(ALIASES_MAP.hasOwnProperty(helperString)) {
+        members = GROUPS_MAP[helperToken];
+    } else if(ALIASES_MAP.hasOwnProperty(helperToken)) {
         // Helper string is an alias
-        return ALIASES_MAP[helperString];
+        members = ALIASES_MAP[helperToken];
     } else {
         // If the string is not a group or an alias, assume it is a member name
-        return [helperString];
+        members = [helperToken];
     }
+
+    // Filters the helpers if any filters were detected
+    return filters.length > 0 ? filterMembers(members, filters) : members;
 }
 
 /**

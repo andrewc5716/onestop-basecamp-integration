@@ -1,8 +1,40 @@
 import { PropertiesService } from 'gasmask';
 global.PropertiesService = PropertiesService;
 
-import { isFilter } from "../src/main/filter";
+import { containsFilter, isFilter, removeFilters } from "../src/main/filter";
 import { getRandomlyGeneratedMember } from "./testUtils";
+
+describe("removeFilters", () => {
+    it("should return the original string and an empty array when the input string does not contain any filters", () => {
+        const inputString: string = "IGSM";
+        const expectedOutput: { stringWithoutFilters: string, removedFilters: string[] } = { stringWithoutFilters: inputString, removedFilters: [] };
+        expect(removeFilters(inputString)).toStrictEqual(expectedOutput);
+    });
+
+    it("should remove a filter from the input string when the input string contains a filter", () => {
+        const inputString: string = "IGSM Bros";
+        const expectedOutput: { stringWithoutFilters: string, removedFilters: string[] } = { stringWithoutFilters: "IGSM", removedFilters: ["Bros"] };
+        expect(removeFilters(inputString)).toStrictEqual(expectedOutput);
+    });
+
+    it("should remove multiple filters from the input string when the input string contains multiple filters", () => {
+        const inputString: string = "IGSM Married Bros";
+        const expectedOutput: { stringWithoutFilters: string, removedFilters: string[] } = { stringWithoutFilters: "IGSM", removedFilters: ["Bros", "Married"] };
+        expect(removeFilters(inputString)).toStrictEqual(expectedOutput);
+    });
+});
+
+describe("containsFilter", () => {
+    it("should return true when the input string contains a filter", () => {
+        const inputString: string = "IGSM Bros";
+        expect(containsFilter(inputString)).toBeTruthy();
+    });
+
+    it("should return false when the input string does not contain a filter", () => {
+        const inputString: string = "IGSM";
+        expect(containsFilter(inputString)).toBeFalsy();
+    });
+});
 
 describe("isFilter", () => {
     it("should return true when the given string does correspond to a filter", () => {
