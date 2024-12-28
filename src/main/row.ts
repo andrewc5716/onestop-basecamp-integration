@@ -395,13 +395,14 @@ function getHelpersNames(helpers: string): string[] {
     .map(name => name.trim())
     .filter(name => name !== "");
 
-    const filters: string[] = helperStrings.filter((helperString) => isFilter(helperString));
-    const helperStringsWithoutFilters: string[] = helperStrings.filter((helperString) => !isFilter(helperString));
-    const helperNames: string[] = helperStringsWithoutFilters.flatMap((helperString) => getMemberNamesFromHelperString(helperString));
-    const filteredMembers: string[] = filters.length > 0 ? filterMembers(helperNames, filters) : helperNames;
-
+    //const filters: string[] = helperStrings.filter((helperString) => isFilter(helperString));
+    //const helperStringsWithoutFilters: string[] = helperStrings.filter((helperString) => !isFilter(helperString));
+    const helperNames: string[] = helperStrings.flatMap((helperString) => getMemberNamesFromHelperString(helperString));
     // Removes any duplicates
-    return [...new Set(filteredMembers)];
+    const uniqueHelperNames: string[] = [...new Set(helperNames)];
+    //const filteredMembers: string[] = filters.length > 0 ? filterMembers(helperNames, filters) : helperNames;
+
+    return uniqueHelperNames;
 }
 
 /**
