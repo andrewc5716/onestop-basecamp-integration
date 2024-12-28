@@ -2,6 +2,9 @@ import { InvalidHashError } from "./error/invalidHashError";
 import { RowBasecampMappingMissingError } from "./error/rowBasecampMappingMissingError";
 import { RowMissingIdError } from "./error/rowMissingIdError";
 import { RowNotSavedError } from "./error/rowNotSavedError";
+import { containsFilter, filterMembers, isFilter, removeFilters } from "./filter";
+import { GROUPS_MAP } from "./groups";
+import { ALIASES_MAP, MEMBER_MAP } from "./members";
 import { getPersonId } from "./people";
 import { deleteAllDocumentProperties, getDocumentProperty, setDocumentProperty } from "./propertiesService";
 import { getBasecampTodoRequest } from "./todos";
@@ -12,14 +15,10 @@ const HEXIDECIMAL_CHAR_LENGTH: number = 2;
 const COMMA_FORWARD_SLASH_DELIM_REGEX: RegExp = /[,\/]/;
 const MONTH_LENGTH: number = 2;
 const DAY_LENGTH: number = 2;
-const NEW_LINE_DELIM = "\n";
-const COLON_DELIM = ":";
-const LEAD_ROLE_TITLE = "Lead";
-
-declare interface HelperGroup {
-    readonly role?: string,
-    readonly helperIds: string[]
-}
+const NEW_LINE_DELIM: string = "\n";
+const COLON_DELIM: string = ":";
+const LEAD_ROLE_TITLE: string = "Lead";
+const COMMA_DELIMITER: string = ",";
 
 /**
  * Retrieves the metadata object for a given range. If the metadata object does not exist,
@@ -364,7 +363,7 @@ export function getBasecampTodosForHelpers(row: Row): RoleRequestMap {
  * @param row row to retrieve the different HelperGroups from
  * @returns array of HelperGroups
  */
-function getHelperGroups(row: Row): HelperGroup[] {
+export function getHelperGroups(row: Row): HelperGroup[] {
     if(row.helpers.value === "") {
         return [];
     }
@@ -374,12 +373,12 @@ function getHelperGroups(row: Row): HelperGroup[] {
     const helperLines: string[] = row.helpers.value.split(NEW_LINE_DELIM);
     for(const helperLine of helperLines) {
         if (helperLine.includes(COLON_DELIM)) {
-            const [role, helperNameList] = helperLine.split(COLON_DELIM);
-            const trimmedHelperNameList: string = helperNameList.trim();
-            helperGroups.push(getHelperGroupFromNameList(trimmedHelperNameList, role));
+            const [role, helperList] = helperLine.split(COLON_DELIM);
+            const trimmedHelperList: string = helperList.trim();
+            helperGroups.push(getHelperGroupFromHelperList(trimmedHelperList, role));
             
         } else if(helperLine !== "") {
-            helperGroups.push(getHelperGroupFromNameList(helperLine, undefined));
+            helperGroups.push(getHelperGroupFromHelperList(helperLine, undefined));
         }
     }
     return helperGroups;
@@ -392,19 +391,62 @@ function getHelperGroups(row: Row): HelperGroup[] {
  * @returns array of helper names
  */
 function getHelpersNames(helpers: string): string[] {
-    return helpers.split(COMMA_FORWARD_SLASH_DELIM_REGEX)
+    const helperStrings: string[] = helpers.split(COMMA_DELIMITER)
     .map(name => name.trim())
     .filter(name => name !== "");
+
+    //const filters: string[] = helperStrings.filter((helperString) => isFilter(helperString));
+    //const helperStringsWithoutFilters: string[] = helperStrings.filter((helperString) => !isFilter(helperString));
+    const helperNames: string[] = helperStrings.flatMap((helperString) => getMemberNamesFromHelperString(helperString));
+    // Removes any duplicates
+    const uniqueHelperNames: string[] = [...new Set(helperNames)];
+    //const filteredMembers: string[] = filters.length > 0 ? filterMembers(helperNames, filters) : helperNames;
+
+    return uniqueHelperNames;
 }
 
 /**
- * Constructs a HelperGroup object given a list of helper names and a role for the group
+ * Retrieves an array of member names from a helper string
+ * 
+ * @param helperString string to transform into helper names
+ * @returns an array of member names
+ */
+function getMemberNamesFromHelperString(helperString: string): string[] {
+    let helperToken: string = helperString;
+    let filters: string[] = [];
+    let members: string[] = [];
+
+    // Remove any filters if the individual helper string contains a filter applied specifically to this helper
+    if(containsFilter(helperString)) {
+        let { stringWithoutFilters: stringWithoutFilters, removedFilters: removedFilters } = removeFilters(helperString);
+        helperToken = stringWithoutFilters;
+        filters = removedFilters;
+    }
+
+    // Expands any groups or aliases if possible
+    if(GROUPS_MAP.hasOwnProperty(helperToken)) {
+        // Helper string refers to a group
+        members = GROUPS_MAP[helperToken];
+    } else if(ALIASES_MAP.hasOwnProperty(helperToken)) {
+        // Helper string is an alias
+        members = ALIASES_MAP[helperToken];
+    } else {
+        // If the string is not a group or an alias, assume it is a member name
+        members = [helperToken];
+    }
+
+    // Filters the helpers if any filters were detected
+    return filters.length > 0 ? filterMembers(members, filters) : members;
+}
+
+/**
+ * Constructs a HelperGroup object given a list of helpers and a role for the group
  * 
  * @param helperNameList list of comma and foward slash deliminated helper names
  * @param role the role for the group or undefined if one is not provided
  * @returns constructed HelperGroup object
  */
-function getHelperGroupFromNameList(helperNameList: string, role: string | undefined): HelperGroup {
+function getHelperGroupFromHelperList(helperNameList: string, role: string | undefined): HelperGroup {
     const helperNames: string[] = getHelpersNames(helperNameList);
     const helperIds: string[] = getBasecampIdsFromPersonNameList(helperNames);
     return {
