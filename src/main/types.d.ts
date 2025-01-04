@@ -88,6 +88,31 @@ declare interface BasecampTodoResponse extends JsonObject {
   id: string // id of the created todo
 }
 
+declare interface ScheduleIdentifier {
+  readonly projectId: string,
+  readonly scheduleId: string
+}
+
+declare interface ScheduleEntryIdentifier {
+  readonly projectId: string,
+  readonly scheduleEntryId: string
+}
+
+// Response from Basecamp Schedule Entry. Only need id for now, can add more later
+declare interface BasecampScheduleEntryResponse extends JsonObject {
+  id: string // id of the created schedule entry
+}
+
+declare interface BasecampScheduleEntryRequest extends JsonObject {
+  summary: string,
+  starts_at: string, // ISO 8601
+  ends_at: string,
+  description: string,
+  participant_ids: string[],
+  all_day: boolean,
+  notify: boolean
+}
+
 // Response from Basecamp people API. Only need id and name for now, can add more later
 declare interface Person extends JsonObject {
   id: string,
@@ -118,3 +143,8 @@ type GroupsMap = { [key: string]: string[] }
 
 // function used to filter groups of members; meant to be used with the array filter() function
 type FilterFunction = (memberName: string) => boolean;
+
+declare interface HelperGroup {
+  role?: string,
+  helperIds: string[],
+}

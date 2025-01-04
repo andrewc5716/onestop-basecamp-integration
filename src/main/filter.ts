@@ -6,12 +6,10 @@ import { MEMBER_MAP } from "./members";
 
 type FilterMap = { [onestopFilterName: string]: FilterFunction };
 
-const COMMA_DELIMITER: string = ",";
 const BROS_GENDER: string = "Male";
 const SIS_GENDER: string = "Female";
-
 // Maps a filter's name on the Onestop to its corresponding filter function
-export const FILTER_MAP: FilterMap = {
+const FILTER_MAP: FilterMap = {
     Bros: brosFilter, 
     Sis: sisFilter,
     Married: marriedFilter,
@@ -23,9 +21,48 @@ export const FILTER_MAP: FilterMap = {
 };
 
 /**
- * A list of all the filters from FILTER_MAP
+ * Removes all filters from a string
+ * 
+ * @param stringWithFilters input string to remove filters from
+ * @returns modified string with filters removed as well as the array of removed filters
  */
-export const FILTER_NAMES: string[] = Object.keys(FILTER_MAP) as string[];
+export function removeFilters(stringWithFilters: string): { stringWithoutFilters: string, removedFilters: string[] } {
+    if(!containsFilter(stringWithFilters)) {
+        return { stringWithoutFilters: stringWithFilters, removedFilters: [] };
+    }
+
+    const filters: string[] = Object.keys(FILTER_MAP);
+    let finalString = stringWithFilters;
+    const removedFilters: string[] = [];
+    for(const filter of filters) {
+        if(finalString.includes(filter)) {
+            finalString = finalString.replace(filter, "").trim();
+            removedFilters.push(filter);
+        }
+    }
+
+    return { stringWithoutFilters: finalString, removedFilters: removedFilters };
+}
+
+/**
+ * Determines if a given string contains a filter
+ * 
+ * @param stringToCheck string to check for filters
+ * @returns boolean indicating whether the provided string contains a filter
+ */
+export function containsFilter(stringToCheck: string): boolean {
+    return Object.keys(FILTER_MAP).some((filterName) => stringToCheck.includes(filterName));
+}
+
+/**
+ * Determines if a given string has a corresponding filter
+ * 
+ * @param potentialFilter the potential filter string
+ * @returns boolean representing whether the given string has a corresponding filter
+ */
+export function isFilter(potentialFilter: string): boolean {
+    return FILTER_MAP.hasOwnProperty(potentialFilter);
+}
 
 /**
  * Filters an array of group members based on the given list of filters from the Onestop
@@ -34,7 +71,7 @@ export const FILTER_NAMES: string[] = Object.keys(FILTER_MAP) as string[];
  * @param filterList comma separated list of filters from the Onestop
  * @returns array of group members that meet all of the filters criteria
  */
-export function filterMembers(groupMembers: string[], filterList: string): string[] {
+export function filterMembers(groupMembers: string[], filterList: string[]): string[] {
     return groupMembers.filter(getCombinedFilter(filterList));
 }
 
@@ -43,11 +80,11 @@ export function filterMembers(groupMembers: string[], filterList: string): strin
  * in the given list from the Onestop. The returned filtering function should only return true if a group member meets the criteria for
  * every filter in the list
  * 
- * @param filterList comma separated list of filters from the Onestop
+ * @param filterList list of filters from the Onestop
  * @returns singular filtering function that is composed of all of the filters from the filter list
  */
-function getCombinedFilter(filterList: string): FilterFunction {
-    const filterNames: string[] = parseFilterNames(filterList);
+function getCombinedFilter(filterList: string[]): FilterFunction {
+    const filterNames: string[] = getFilters(filterList);
     // Gets all filter function pointers using the FILTER_MAP
     const filterFunctions: FilterFunction[] = filterNames.map((filterName) => FILTER_MAP[filterName]).filter((filter) => filter != undefined);
     // Adds the valid member filter to the beginning. The first filter always applied will be to check if the member is valid
@@ -57,8 +94,8 @@ function getCombinedFilter(filterList: string): FilterFunction {
     return (memberName: string) => filterFunctions.every((filterFunction) => filterFunction(memberName));
 }
 
-function parseFilterNames(filterList: string): string[] {
-    return filterList.split(COMMA_DELIMITER).map(filterName => filterName.trim()).filter(filterName => filterName !== "");
+function getFilters(filterList: string[]): string[] {
+    return filterList.map(filterName => filterName.trim()).filter(filterName => filterName !== "");
 }
 
 function validMemberFilter(memberName: string): boolean {
