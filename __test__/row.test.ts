@@ -104,11 +104,9 @@ describe("generateIdForRow", () => {
 describe('getAttendeesFromRow', () => {
 
     it('should return ministry members instead of all domain members when ministry is populated', () => {
-
-        interface Row {
-            [key: string]: any;
-        }
-        const row: Row = { domain: "INT'L", who: 'IGSM' };
+        const row: Row = getRandomlyGeneratedRow();
+        row.domain = "INT'L";
+        row.who = "IGSM";
 
         const MOCK_GROUPS_MAP = {
             IGSM: ['Jack Zhang', 'Angel Zhang'],
@@ -138,12 +136,9 @@ describe('getAttendeesFromRow', () => {
     });
 
     it('should return all specified domain members when no ministry names are present', () => {
-
-        interface Row {
-            [key: string]: any;
-        }
-
-        const row: Row = { domain: "INT'L", who: "" };
+        const row: Row = getRandomlyGeneratedRow();
+        row.domain = "INT'L";
+        row.who = "";
 
         // Mocked GROUPS_MAP
         const MOCK_GROUPS_MAP = {
@@ -177,12 +172,9 @@ describe('getAttendeesFromRow', () => {
     });
 
     it('should not throw an error when both ministry and domain names are missing', () => {
-
-        interface Row {
-            [key: string]: any;
-        }
-
-        const row: Row = { domain: '', who: '' };
+        const row: Row = getRandomlyGeneratedRow();
+        row.domain = '';
+        row.who = '';
 
         jest.mock('../src/main/propertiesService', () => ({
             loadMapFromScriptProperties: jest.fn((key: string) => {
@@ -201,11 +193,9 @@ describe('getAttendeesFromRow', () => {
     });
 
     it('should apply any filters present in the ministry column', () => {
-        interface Row {
-            [key: string]: any;
-        }
-
-        const row: Row = { domain: "INT'L", who: "IGSM, Bros" };
+        const row: Row = getRandomlyGeneratedRow();
+        row.domain = "INT'L";
+        row.who = "IGSM, Bros";
 
         const MOCK_GROUPS_MAP = {
             IGSM: ['Jack Zhang', 'Angel Zhang'],
@@ -234,11 +224,9 @@ describe('getAttendeesFromRow', () => {
     });
 
     it('should apply any filters present in the domain column', () => {
-        interface Row {
-            [key: string]: any;
-        }
-
-        const row: Row = { domain: "COLLEGE, Sis", who: "" };
+        const row: Row = getRandomlyGeneratedRow();
+        row.domain = "COLLEGE, Sis";
+        row.who = "";
 
         const MOCK_GROUPS_MAP = {
             COLLEGE: ['Andrew Chan', 'Janice Chan', 'Josh Wong', 'Isaac Otero', 'Kevin Lai', 'Joyce Lai', 'Brian Lin', 'James Lee'],
@@ -268,11 +256,9 @@ describe('getAttendeesFromRow', () => {
     });
 
     it('should filter the domain using filters from the ministry column if there are no ministry groups present in the ministry column', () => {
-        interface Row {
-            [key: string]: any;
-        }
-
-        const row: Row = { domain: "CHURCHWIDE", who: "Sis" };
+        const row: Row = getRandomlyGeneratedRow();
+        row.domain = "CHURCHWIDE";
+        row.who = "Sis";
 
         // Mocked GROUPS_MAP
         const MOCK_GROUPS_MAP = {
@@ -309,11 +295,11 @@ describe('getAttendeesFromRow', () => {
     
 
     it('should return attendees from the In Charge and Helpers columns when Domain is Rotation', () => {
-        interface Row {
-            [key: string]: any;
-        }
-
-        const row: Row = { domain: "ROTATION", who: "Rotation", inCharge: { value: "Kevin Lai" } as Text, helpers: { value: "Josh Wong, Isaac Otero" } as Text };
+        const row: Row = getRandomlyGeneratedRow();
+        row.domain = "ROTATION";
+        row.who = "Rotation";
+        row.inCharge = { value: "Kevin Lai", hyperlink: null };
+        row.helpers = { value: "Josh Wong, Isaac Otero", hyperlink: null };
 
         const MOCK_GROUPS_MAP = {
             ROTATION: undefined,
