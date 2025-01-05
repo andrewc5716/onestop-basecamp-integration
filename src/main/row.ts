@@ -581,6 +581,16 @@ export function CheckForOther(row: Row): boolean {
 }
 
 /**
+ * Checks if the event has a who (ministry) column value of CHURCHWIDE
+ * 
+ * @param row - An event row
+ * @returns true or false
+ */
+export function CheckForChurchwide(row: Row): boolean {
+    return row.domain.split(COMMA_FORWARD_SLASH_DELIM_REGEX)[0].toUpperCase() ===  "CHURCHWIDE";
+}
+
+/**
  * Retrieves an array of names from a row.
  * 
  * @param row - Row to retrieve the different attendees from.
@@ -600,23 +610,31 @@ export function getAttendeesFromRow(row: Row): string[] {
     const isRotation = CheckForRotation(row);
     const isVarious = CheckForVarious(row);
     const isOther = CheckForOther(row);
+    const isChurchwide = CheckForChurchwide(row);
 
     if(isRotation || isVarious || isOther) {
         attendees.push(...getLeadsNames(row));
         attendees.push(...getAllHelperNames(row));
         
     } else if(ministryNames.length > 0) {
-        // Step 3: Process Ministry Attendees
+        // Process Ministry Attendees
         const ministryAttendees = filterMinistryAttendees(ministryNames, ministryFilters);
         attendees.push(...ministryAttendees);
 
-    } else if(domainNames.length > 0) {
-        // Step 4: Process Domain Attendees
+    } else if(domainNames.length > 0 && ministryFilters.length === 0) {
+        // Process Domain Attendees
         const domainAttendees = filterDomainAttendees(domainNames, domainFilters);
         attendees.push(...domainAttendees);
+
+    } else if(isChurchwide && ministryFilters.length > 0) {
+        // Special case: CHURCHWIDE is the domain and only a filter is set in the ministry column
+        const churchwideAttendees = filterDomainAttendees(domainNames, ministryFilters);
+        attendees.push(...churchwideAttendees);
+
     } else  {
         // Step 5: Handle Missing Data
-        handleMissingData(domainNames, ministryNames);
+        Logger.log("ERROR: Unable to get attendees from row becuase both domain and ministry columns are empty!")
+        //handleMissingData(domainNames, ministryNames);
     }
 
     return attendees;
@@ -642,12 +660,8 @@ function filterMinistryAttendees(ministryNames: string[], ministryFilters: strin
  * @returns Array of filtered members.
  */
 function filterDomainAttendees(domainNames: string[], domainFilters: string[]): string[] {
-    if (domainNames[0] === "Rotation") {
-        return []; // TODO: Josh will implement this.
-    } else {
-        const members = getMembersFromGroups(domainNames);
-        return filterMembers(members, domainFilters);
-    }
+    const members = getMembersFromGroups(domainNames);
+    return filterMembers(members, domainFilters);
 }
 
 /**

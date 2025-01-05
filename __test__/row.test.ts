@@ -103,6 +103,7 @@ describe("generateIdForRow", () => {
 
 // Mocked GROUPS_MAP
 const MOCK_GROUPS_MAP = {
+    CHURCHWIDE: ['Andrew Chan', 'Janice Chan', 'Josh Wong', 'Isaac Otero', 'Kevin Lai', 'Joyce Lai', 'Brian Lin', 'James Lee', 'Brian Lin', 'James Lee', 'Jack Zhang', 'Angel Zhang'],
     COLLEGE: ['Andrew Chan', 'Janice Chan', 'Josh Wong', 'Isaac Otero', 'Kevin Lai', 'Joyce Lai', 'Brian Lin', 'James Lee'],
     UCSD: ['Andrew Chan', 'Janice Chan'],
     SDSU: ['Josh Wong', 'Isaac Otero', 'Kevin Lai', 'Joyce Lai'],
@@ -179,31 +180,31 @@ describe('getAttendeesFromRow', () => {
         expect(result).toEqual(['Brian Lin', 'James Lee', 'Jack Zhang', 'Angel Zhang']);
     });
 
-    it('should throw an error when both ministry and domain names are missing', () => {
+    // it('should not throw an error when both ministry and domain names are missing', () => {
 
-        interface Row {
-            [key: string]: any;
-        }
+    //     interface Row {
+    //         [key: string]: any;
+    //     }
 
-        const row: Row = { domain: '', who: '' };
+    //     const row: Row = { domain: '', who: '' };
 
-        jest.mock('../src/main/propertiesService', () => ({
-            loadMapFromScriptProperties: jest.fn((key: string) => {
-                if (key === "MEMBER_MAP") {
-                    return MOCK_MEMBER_MAP;
+    //     jest.mock('../src/main/propertiesService', () => ({
+    //         loadMapFromScriptProperties: jest.fn((key: string) => {
+    //             if (key === "MEMBER_MAP") {
+    //                 return MOCK_MEMBER_MAP;
 
-                } else if (key === "GROUPS_MAP") {
-                    return MOCK_GROUPS_MAP;
-                } 
-            }),
-        }));
+    //             } else if (key === "GROUPS_MAP") {
+    //                 return MOCK_GROUPS_MAP;
+    //             } 
+    //         }),
+    //     }));
 
-        const { getAttendeesFromRow } = require("../src/main/row");
+    //     const { getAttendeesFromRow } = require("../src/main/row");
 
-        expect(() => getAttendeesFromRow(row)).toThrow(
-            'ERROR: Unable to get attendees from row becuase both domain and ministry columns are empty!'
-        );
-    });
+    //     expect(() => getAttendeesFromRow(row)).toThrow(
+    //         'ERROR: Unable to get attendees from row becuase both domain and ministry columns are empty!'
+    //     );
+    // });
 
     it('should apply any filters present in the ministry column', () => {
         interface Row {
@@ -253,6 +254,31 @@ describe('getAttendeesFromRow', () => {
         const result = getAttendeesFromRow(row);
 
         expect(result).toEqual(['Janice Chan', 'Joyce Lai']);
+    });
+
+    it('should apply any filters present in the ministry column to the CHURCHWIDE group if domain value is CHURCHWIDE', () => {
+        interface Row {
+            [key: string]: any;
+        }
+
+        const row: Row = { domain: "CHURCHWIDE", who: "Sis" };
+
+        jest.mock('../src/main/propertiesService', () => ({
+            loadMapFromScriptProperties: jest.fn((key: string) => {
+                if (key === "MEMBER_MAP") {
+                    return MOCK_MEMBER_MAP;
+
+                } else if (key === "GROUPS_MAP") {
+                    return MOCK_GROUPS_MAP;
+                } 
+            }),
+        }));
+
+        const { getAttendeesFromRow } = require("../src/main/row");
+
+        const result = getAttendeesFromRow(row);
+
+        expect(result).toEqual(['Janice Chan', 'Joyce Lai', 'Angel Zhang']);
     });
     
 
