@@ -593,34 +593,30 @@ export function getAttendeesFromRow(row: Row): string[] {
     const ministryNames = getMinistryNames(row);
     const ministryFilters = getMinistryFilters(row);
 
+    // Step 2: Extract Domain Names and Filters
+    const domainNames = getDomainNames(row);
+    const domainFilters = getDomainFilters(row);
+
     const isRotation = CheckForRotation(row);
     const isVarious = CheckForVarious(row);
     const isOther = CheckForOther(row);
 
-    // Step 2: Process Ministry Attendees
-    if (ministryNames.length > 0) {
+    if(isRotation || isVarious || isOther) {
+        attendees.push(...getLeadsNames(row));
+        attendees.push(...getAllHelperNames(row));
+        
+    } else if(ministryNames.length > 0) {
+        // Step 3: Process Ministry Attendees
+        const ministryAttendees = filterMinistryAttendees(ministryNames, ministryFilters);
+        attendees.push(...ministryAttendees);
 
-        if(isRotation || isVarious || isOther) {
-            attendees.push(...getLeadsNames(row));
-            attendees.push(...getAllHelperNames(row));
-        } else {
-            const ministryAttendees = filterMinistryAttendees(ministryNames, ministryFilters);
-            attendees.push(...ministryAttendees);
-        }
-
-    } else {
-        // Step 3: Extract Domain Names and Filters
-        const domainNames = getDomainNames(row);
-        const domainFilters = getDomainFilters(row);
-
+    } else if(domainNames.length > 0) {
         // Step 4: Process Domain Attendees
-        if (domainNames.length > 0) {
-            const domainAttendees = filterDomainAttendees(domainNames, domainFilters);
-            attendees.push(...domainAttendees);
-        } else {
-            // Step 5: Handle Missing Data
-            handleMissingData(domainNames, ministryNames);
-        }
+        const domainAttendees = filterDomainAttendees(domainNames, domainFilters);
+        attendees.push(...domainAttendees);
+    } else  {
+        // Step 5: Handle Missing Data
+        handleMissingData(domainNames, ministryNames);
     }
 
     return attendees;
