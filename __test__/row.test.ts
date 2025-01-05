@@ -293,7 +293,10 @@ describe('getAttendeesFromRow', () => {
 
                 } else if (key === "GROUPS_MAP") {
                     return MOCK_GROUPS_MAP;
-                } 
+
+                } else if(key === "ALIASES_MAP") {
+                    return {};
+                }
             }),
         }));
 
