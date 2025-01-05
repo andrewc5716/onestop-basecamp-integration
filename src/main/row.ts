@@ -578,16 +578,6 @@ export function checkForOther(row: Row): boolean {
 }
 
 /**
- * Checks if the event has a who (ministry) column value of CHURCHWIDE
- * 
- * @param row - An event row
- * @returns true or false
- */
-export function CheckForChurchwide(row: Row): boolean {
-    return row.domain.split(COMMA_FORWARD_SLASH_DELIM_REGEX)[0].toUpperCase() ===  "CHURCHWIDE";
-}
-
-/**
  * Retrieves an array of names from a row.
  * 
  * @param row - Row to retrieve the different attendees from.
