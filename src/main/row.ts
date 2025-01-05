@@ -616,13 +616,13 @@ export function getAttendeesFromRow(row: Row): string[] {
         attendees.push(...domainAttendees);
 
     } else if(domainNames.length > 0 && ministryFilters.length > 0) {
-        // Special case: CHURCHWIDE is the domain and only a filter is set in the ministry column
+        // Special case: e.g. If CHURCHWIDE is the domain and only a filter is set in the ministry column
         const domainAttendees = filterDomainAttendees(domainNames, ministryFilters);
         attendees.push(...domainAttendees);
 
     } else  {
         // Step 5: Handle Missing Data
-        Logger.log("ERROR: Unable to get attendees from row becuase both domain and ministry columns are empty!")
+        console.log("ERROR: Unable to get attendees from row becuase both domain and ministry columns are empty!")
         //handleMissingData(domainNames, ministryNames);
     }
 

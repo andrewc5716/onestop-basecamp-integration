@@ -100,33 +100,6 @@ describe("generateIdForRow", () => {
 });
 
 
-
-// Mocked GROUPS_MAP
-const MOCK_GROUPS_MAP = {
-    CHURCHWIDE: ['Andrew Chan', 'Janice Chan', 'Josh Wong', 'Isaac Otero', 'Kevin Lai', 'Joyce Lai', 'Brian Lin', 'James Lee', 'Brian Lin', 'James Lee', 'Jack Zhang', 'Angel Zhang'],
-    COLLEGE: ['Andrew Chan', 'Janice Chan', 'Josh Wong', 'Isaac Otero', 'Kevin Lai', 'Joyce Lai', 'Brian Lin', 'James Lee'],
-    UCSD: ['Andrew Chan', 'Janice Chan'],
-    SDSU: ['Josh Wong', 'Isaac Otero', 'Kevin Lai', 'Joyce Lai'],
-    IUSM: ['Brian Lin', 'James Lee'],
-    IGSM: ['Jack Zhang', 'Angel Zhang'],
-    "INT'L": ['Brian Lin', 'James Lee', 'Jack Zhang', 'Angel Zhang'],
-    ROTATION: undefined,
-};
-
-// Mocked MEMBER MAP
-const MOCK_MEMBER_MAP = {
-    "Andrew Chan": {"gender": "Male"},
-    "Janice Chan": {"gender": "Female"},
-    "Josh Wong": {"gender": "Male"},
-    "Isaac Otero": {"gender": "Male"},
-    "Kevin Lai": {"gender": "Male"},
-    "Joyce Lai": {"gender": "Female"},
-    "Brian Lin": {"gender": "Male"},
-    "James Lee": {"gender": "Male"},
-    "Jack Zhang": {"gender": "Male"},
-    "Angel Zhang": {"gender": "Female"}
-};
-
 describe('getAttendeesFromRow', () => {
 
     it('should return ministry members instead of all domain members when ministry is populated', () => {
@@ -135,6 +108,15 @@ describe('getAttendeesFromRow', () => {
             [key: string]: any;
         }
         const row: Row = { domain: "INT'L", who: 'IGSM' };
+
+        const MOCK_GROUPS_MAP = {
+            IGSM: ['Jack Zhang', 'Angel Zhang'],
+        };
+
+        const MOCK_MEMBER_MAP = {
+            "Jack Zhang": {"gender": "Male"},
+            "Angel Zhang": {"gender": "Female"}
+        };
 
         jest.mock('../src/main/propertiesService', () => ({
             loadMapFromScriptProperties: jest.fn((key: string) => {
@@ -162,6 +144,19 @@ describe('getAttendeesFromRow', () => {
 
         const row: Row = { domain: "INT'L", who: "" };
 
+        // Mocked GROUPS_MAP
+        const MOCK_GROUPS_MAP = {
+            "INT'L": ['Brian Lin', 'James Lee', 'Jack Zhang', 'Angel Zhang'],
+        };
+
+        // Mocked MEMBER MAP
+        const MOCK_MEMBER_MAP = {
+            "Brian Lin": {"gender": "Male"},
+            "James Lee": {"gender": "Male"},
+            "Jack Zhang": {"gender": "Male"},
+            "Angel Zhang": {"gender": "Female"}
+        };
+
         jest.mock('../src/main/propertiesService', () => ({
             loadMapFromScriptProperties: jest.fn((key: string) => {
                 if (key === "MEMBER_MAP") {
@@ -180,31 +175,29 @@ describe('getAttendeesFromRow', () => {
         expect(result).toEqual(['Brian Lin', 'James Lee', 'Jack Zhang', 'Angel Zhang']);
     });
 
-    // it('should not throw an error when both ministry and domain names are missing', () => {
+    it('should not throw an error when both ministry and domain names are missing', () => {
 
-    //     interface Row {
-    //         [key: string]: any;
-    //     }
+        interface Row {
+            [key: string]: any;
+        }
 
-    //     const row: Row = { domain: '', who: '' };
+        const row: Row = { domain: '', who: '' };
 
-    //     jest.mock('../src/main/propertiesService', () => ({
-    //         loadMapFromScriptProperties: jest.fn((key: string) => {
-    //             if (key === "MEMBER_MAP") {
-    //                 return MOCK_MEMBER_MAP;
+        jest.mock('../src/main/propertiesService', () => ({
+            loadMapFromScriptProperties: jest.fn((key: string) => {
+                if (key === "MEMBER_MAP") {
+                    return {};
 
-    //             } else if (key === "GROUPS_MAP") {
-    //                 return MOCK_GROUPS_MAP;
-    //             } 
-    //         }),
-    //     }));
+                } else if (key === "GROUPS_MAP") {
+                    return {};
+                } 
+            }),
+        }));
 
-    //     const { getAttendeesFromRow } = require("../src/main/row");
+        const { getAttendeesFromRow } = require("../src/main/row");
 
-    //     expect(() => getAttendeesFromRow(row)).toThrow(
-    //         'ERROR: Unable to get attendees from row becuase both domain and ministry columns are empty!'
-    //     );
-    // });
+        expect(() => getAttendeesFromRow(row)).not.toThrow();
+    });
 
     it('should apply any filters present in the ministry column', () => {
         interface Row {
@@ -212,6 +205,14 @@ describe('getAttendeesFromRow', () => {
         }
 
         const row: Row = { domain: "INT'L", who: "IGSM, Bros" };
+
+        const MOCK_GROUPS_MAP = {
+            IGSM: ['Jack Zhang', 'Angel Zhang'],
+        };
+
+        const MOCK_MEMBER_MAP = {
+            "Jack Zhang": {"gender": "Male"},
+        };
 
         jest.mock('../src/main/propertiesService', () => ({
             loadMapFromScriptProperties: jest.fn((key: string) => {
@@ -238,6 +239,15 @@ describe('getAttendeesFromRow', () => {
 
         const row: Row = { domain: "COLLEGE, Sis", who: "" };
 
+        const MOCK_GROUPS_MAP = {
+            COLLEGE: ['Andrew Chan', 'Janice Chan', 'Josh Wong', 'Isaac Otero', 'Kevin Lai', 'Joyce Lai', 'Brian Lin', 'James Lee'],
+        };
+
+        const MOCK_MEMBER_MAP = {
+            "Janice Chan": {"gender": "Female"},
+            "Joyce Lai": {"gender": "Female"},
+        };
+
         jest.mock('../src/main/propertiesService', () => ({
             loadMapFromScriptProperties: jest.fn((key: string) => {
                 if (key === "MEMBER_MAP") {
@@ -262,6 +272,18 @@ describe('getAttendeesFromRow', () => {
         }
 
         const row: Row = { domain: "CHURCHWIDE", who: "Sis" };
+
+        // Mocked GROUPS_MAP
+        const MOCK_GROUPS_MAP = {
+            CHURCHWIDE: ['Andrew Chan', 'Janice Chan', 'Josh Wong', 'Isaac Otero', 'Kevin Lai', 'Joyce Lai', 'Brian Lin', 'James Lee', 'Brian Lin', 'James Lee', 'Jack Zhang', 'Angel Zhang'],
+        };
+
+        // Mocked MEMBER MAP
+        const MOCK_MEMBER_MAP = {
+            "Janice Chan": {"gender": "Female"},
+            "Joyce Lai": {"gender": "Female"},
+            "Angel Zhang": {"gender": "Female"}
+        };
 
         jest.mock('../src/main/propertiesService', () => ({
             loadMapFromScriptProperties: jest.fn((key: string) => {
@@ -289,10 +311,14 @@ describe('getAttendeesFromRow', () => {
 
         const row: Row = { domain: "ROTATION", who: "Rotation", inCharge: { value: "Kevin Lai" } as Text, helpers: { value: "Josh Wong, Isaac Otero" } as Text };
 
+        const MOCK_GROUPS_MAP = {
+            ROTATION: undefined,
+        };
+
         jest.mock('../src/main/propertiesService', () => ({
             loadMapFromScriptProperties: jest.fn((key: string) => {
                 if (key === "MEMBER_MAP") {
-                    return MOCK_MEMBER_MAP;
+                    return {};
 
                 } else if (key === "GROUPS_MAP") {
                     return MOCK_GROUPS_MAP;
