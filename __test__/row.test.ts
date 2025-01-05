@@ -266,7 +266,7 @@ describe('getAttendeesFromRow', () => {
         expect(result).toEqual(['Janice Chan', 'Joyce Lai']);
     });
 
-    it('should apply any filters present in the ministry column to the CHURCHWIDE group if domain value is CHURCHWIDE', () => {
+    it('should filter the domain using filters from the ministry column if there are no ministry groups present in the ministry column', () => {
         interface Row {
             [key: string]: any;
         }
