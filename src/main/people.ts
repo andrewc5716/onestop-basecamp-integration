@@ -95,7 +95,7 @@ function getPersonIdFromCache(personName: string): string | undefined {
  * @param rawPersonName person name that may include city in parenthesis or middle names, e.g. Andrew Chan (Sd)
  * @returns the person's first and last name only, e.g. Andrew Chan
  */
-function normalizePersonName(rawPersonName: string): string {
+export function normalizePersonName(rawPersonName: string): string {
     const parenthesisIndex = rawPersonName.indexOf('(');
     const nameWithoutParenthesis = parenthesisIndex === -1 ? rawPersonName : rawPersonName.slice(0, parenthesisIndex);
     const fullName = nameWithoutParenthesis.trim().split(' ');
