@@ -261,7 +261,7 @@ describe('getAttendeesFromRow', () => {
             [key: string]: any;
         }
 
-        const row: Row = { domain: "ROTATION", who: "", inCharge: "Kevin Lai", helpers: "Josh Wong, Isaac Otero" };
+        const row: Row = { domain: "ROTATION", who: "Rotation", inCharge: { value: "Kevin Lai" } as Text, helpers: { value: "Josh Wong, Isaac Otero" } as Text };
 
         jest.mock('../src/main/propertiesService', () => ({
             loadMapFromScriptProperties: jest.fn((key: string) => {
@@ -270,7 +270,10 @@ describe('getAttendeesFromRow', () => {
 
                 } else if (key === "GROUPS_MAP") {
                     return MOCK_GROUPS_MAP;
-                } 
+
+                } else if(key === "ALIASES_MAP") {
+                    return {};
+                }
             }),
         }));
 

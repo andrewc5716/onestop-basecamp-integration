@@ -47,7 +47,8 @@ export function loadGroupsFromOnestopIntoScriptProperties(): void {
  * @returns array of member names
  */
 export function getMembersFromGroups(groupNames: string[]): string[] {
-    return groupNames.flatMap(groupName => GROUPS_MAP[groupName] || []);
+    const dedupedGroupNames = Array.from(new Set(groupNames));
+    return dedupedGroupNames.flatMap(groupName => GROUPS_MAP[groupName] || []);
 }
 
 function loadGroupsFromOnestop(): GroupsMap {

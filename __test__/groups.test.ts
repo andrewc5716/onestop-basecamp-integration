@@ -484,7 +484,6 @@ describe("loadGroupsFromOnestopIntoScriptProperties", () => {
     });
 });
 
-
 // Mocked GROUPS_MAP
 const MOCK_GROUPS_MAP = {
     SDSU: ['Josh Wong', 'Isaac Otero', 'Kevin Lai', 'Joyce Lai'],

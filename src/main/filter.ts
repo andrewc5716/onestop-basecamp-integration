@@ -8,8 +8,9 @@ type FilterMap = { [onestopFilterName: string]: FilterFunction };
 
 const BROS_GENDER: string = "Male";
 const SIS_GENDER: string = "Female";
+
 // Maps a filter's name on the Onestop to its corresponding filter function
-const FILTER_MAP: FilterMap = {
+export const FILTER_MAP: FilterMap = {
     Bros: brosFilter, 
     Sis: sisFilter,
     Married: marriedFilter,
@@ -20,8 +21,7 @@ const FILTER_MAP: FilterMap = {
     "Minus Dads": minusDadsFilter,
 };
 
-/**
- * Removes all filters from a string
+/** Removes all filters from a string
  * 
  * @param stringWithFilters input string to remove filters from
  * @returns modified string with filters removed as well as the array of removed filters
