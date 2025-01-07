@@ -1,3 +1,6 @@
+import { mergeAliasMaps, saveAliasMap } from "./aliases";
+import { loadGroupsFromOnestopIntoScriptProperties } from "./groups";
+import { loadMembersFromOnestopIntoScriptProperties } from "./members";
 import { deleteDocumentProperty, getAllDocumentProperties } from "./propertiesService";
 import { getRoleTodoIdMap, getSavedScheduleEntryId, getScheduleEntryRequestForRow } from "./row";
 import { generateIdForRow, getBasecampTodoRequestsForRow, getId, hasChanged, hasId, saveRow } from "./row";
@@ -124,4 +127,11 @@ function deleteOldRows(processedRowIds: string[]): void {
 
 function isInFuture(date: Date): boolean {
     return date.getTime() > Date.now();
+}
+
+export function loadDataFromOnestopIntoScriptProperties(): void {
+    const membersAliasMap: AliasMap = loadMembersFromOnestopIntoScriptProperties();
+    const groupAliasMap: AliasMap = loadGroupsFromOnestopIntoScriptProperties();
+    const combinedAliasMaps: AliasMap = mergeAliasMaps(membersAliasMap, groupAliasMap);
+    saveAliasMap(combinedAliasMaps);
 }

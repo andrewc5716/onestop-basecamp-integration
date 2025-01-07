@@ -458,3 +458,9 @@ describe("importOnestopToBasecamp", () => {
         expect(deleteScheduleEntryMock).toHaveBeenCalledTimes(0);
     });
 });
+
+describe("loadDataFromOnestopIntoScriptProperties", () => {
+    it("should when", () => {
+
+    });
+});

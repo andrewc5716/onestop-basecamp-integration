@@ -1,5 +1,6 @@
 import { onOpen } from './main/menu';
 
+export * from './main/aliases';
 export * from './main/basecamp';
 export * from './main/filter';
 export * from './main/groups';

@@ -569,6 +569,9 @@ describe("getHelperGroups", () => {
 
         jest.mock("../src/main/members", () => ({
             MEMBER_MAP: memberMapMock,
+        }));
+
+        jest.mock("../src/main/aliases", () => ({
             ALIASES_MAP: { "John/Jane": ["John Doe", "Jane Smith"] },
         }));
 
