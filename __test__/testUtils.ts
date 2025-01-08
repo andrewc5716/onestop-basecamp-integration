@@ -326,7 +326,7 @@ function getRandomNumber(upperBound: number = Number.MAX_SAFE_INTEGER): number {
     return Math.floor(Math.random() * upperBound);
 }
 
-function getRandomBoolean(): boolean {
+export function getRandomBoolean(): boolean {
     return getRandomNumber(BOOLEAN_UPPERBOUND) ? true: false;
 }
 

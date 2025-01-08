@@ -1,3 +1,5 @@
+// Utilities module that provides some helpful functions for developing/debugging Google Apps Script
+
 import { deleteAllDocumentProperties } from "./propertiesService";
 import { getEventRowsFromSpreadsheet } from "./scan";
 

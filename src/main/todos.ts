@@ -21,6 +21,7 @@ export const TODOLIST_ID: string= "7865336721";
  * @returns the id of the created todo. This must be saved by the caller to update this todo in the future.
  */
 export function createTodo(request: BasecampTodoRequest, todolistIdentifier: TodolistIdentifier): string {
+    Logger.log(`Creating new todo: "${request.content}"...\n`);
     const rawTodoResponse: JsonData = sendBasecampPostRequest(getCreateTodoUrl(todolistIdentifier), request);
     const todoResponse: BasecampTodoResponse = rawTodoResponse as BasecampTodoResponse;
     return todoResponse.id;
