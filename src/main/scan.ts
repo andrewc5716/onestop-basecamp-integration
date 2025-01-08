@@ -248,6 +248,7 @@ function constructRow(rowRange: Range, rowData: CellData[], currentDate: Date): 
     const endTime: Date = rowData[END_TIME_COL_INDEX].value;
 
     return {
+        date: currentDate,
         metadata: getMetadata(rowRange),
         startTime: constructDate(currentDate, startTime),
         endTime: constructDate(currentDate, endTime),

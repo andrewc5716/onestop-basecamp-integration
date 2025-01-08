@@ -16,6 +16,7 @@ declare interface Text {
 }
 
 declare interface Row {
+  date: Date,
   metadata: Metadata,
   startTime: Date,
   endTime: Date,
@@ -30,11 +31,17 @@ declare interface Row {
 }
 
 // The key string represents a role and the value represents a todoId
-type RoleTodoIdMap = { [key: string]: string };
+type RoleTodoIdMap = { [role: string]: string };
+
+declare interface TabInfo {
+  date: Date
+}
 
 declare interface RowBasecampMapping {
   rowHash: string,
   roleTodoIdMap: RoleTodoIdMap
+  scheduleEntryId: string,
+  tabInfo: TabInfo
 }
 
 type HTTPResponse = GoogleAppsScript.URL_Fetch.HTTPResponse;

@@ -1,4 +1,5 @@
-import { getBasecampProjectUrl, PROJECT_ID, sendBasecampPostRequest, sendBasecampPutRequest } from "./basecamp";
+import { BASECAMP_PROJECT_ID } from "../../config/environmentVariables";
+import { getBasecampProjectUrl, sendBasecampPostRequest, sendBasecampPutRequest } from "./basecamp";
 import { BasecampRequestMissingError } from "./error/basecampRequestMissingError";
 import { TodoIdMissingError } from "./error/todoIdMissingError";
 import { getExistingRoles, getNewRoles, getRemovedRoles } from "./role";
@@ -12,11 +13,6 @@ const TRASHED_TODO_JSON_PATH: string = '/status/trashed' + JSON_PATH;
 
 export const TODOLIST_ID: string= "7865336721";
 
-const DEFAULT_TODOLIST_IDENTIFIER: TodolistIdentifier = {
-    projectId: PROJECT_ID,
-    todolistId: TODOLIST_ID
-};
-
 /**
  * Creates a todo in Basecamp
  * 
@@ -25,7 +21,6 @@ const DEFAULT_TODOLIST_IDENTIFIER: TodolistIdentifier = {
  * @returns the id of the created todo. This must be saved by the caller to update this todo in the future.
  */
 export function createTodo(request: BasecampTodoRequest, todolistIdentifier: TodolistIdentifier): string {
-    Logger.log(`Creating new todo: "${request.content}"...\n`);
     const rawTodoResponse: JsonData = sendBasecampPostRequest(getCreateTodoUrl(todolistIdentifier), request);
     const todoResponse: BasecampTodoResponse = rawTodoResponse as BasecampTodoResponse;
     return todoResponse.id;
@@ -101,7 +96,7 @@ export function createNewTodos(roleRequestMap: RoleRequestMap): RoleTodoIdMap {
 
     Object.keys(roleRequestMap).forEach( role => {
         let request: BasecampTodoRequest = roleRequestMap[role];
-        let basecampTodoId: string = createTodo(request, DEFAULT_TODOLIST_IDENTIFIER)
+        let basecampTodoId: string = createTodo(request, getDefaultTodoListIdentifier());
         roleTodoIdMap[role] = basecampTodoId;
     });
 
@@ -118,7 +113,7 @@ export function deleteTodos(todoIds: string[]): void {
     for(const id of todoIds) {
 
         let todoIdentifier: TodoIdentifier = {
-            projectId: PROJECT_ID,
+            projectId: BASECAMP_PROJECT_ID,
             todoId: id
         }
 
@@ -194,7 +189,7 @@ export function updateTodosForExistingRoles(currentRoleRequestMap: RoleRequestMa
         }
         
         let todoIdentifier: TodoIdentifier = {
-            projectId: PROJECT_ID,
+            projectId: BASECAMP_PROJECT_ID,
             todoId: existingTodoId
         };
 
@@ -228,7 +223,7 @@ export function createTodosForNewRoles(currentRoleRequestMap: RoleRequestMap, la
                 throw new BasecampRequestMissingError("Missing basecamp request!");
             }
 
-            let newTodoId = createTodo(request, DEFAULT_TODOLIST_IDENTIFIER);
+            let newTodoId = createTodo(request, getDefaultTodoListIdentifier());
             newRoleTodoIdMap[role] = newTodoId;
         }
 
@@ -238,3 +233,10 @@ export function createTodosForNewRoles(currentRoleRequestMap: RoleRequestMap, la
 
     return newRoleTodoIdMap;
 }
+
+function getDefaultTodoListIdentifier(): TodolistIdentifier {
+    return {
+        projectId: BASECAMP_PROJECT_ID,
+        todolistId: TODOLIST_ID
+    }
+};

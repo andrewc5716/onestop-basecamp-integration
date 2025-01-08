@@ -1,7 +1,8 @@
 import { deleteDocumentProperty, getAllDocumentProperties } from "./propertiesService";
-import { getRoleTodoIdMap } from "./row";
+import { getRoleTodoIdMap, getSavedScheduleEntryId, getScheduleEntryRequestForRow, hasBasecampAttendees } from "./row";
 import { generateIdForRow, getBasecampTodoRequestsForRow, getId, hasChanged, hasId, saveRow } from "./row";
 import { getEventRowsFromSpreadsheet } from "./scan";
+import { createScheduleEntry, deleteScheduleEntry, getDefaultScheduleIdentifier, getScheduleEntryIdentifier, updateScheduleEntry } from "./schedule";
 import { createNewTodos, createTodosForNewRoles, deleteObsoleteTodos, deleteTodos, updateTodosForExistingRoles } from "./todos";
 
 /**
@@ -47,6 +48,7 @@ function processExistingRow(row: Row): void {
 
     if(hasChanged(row)) {
 
+        // Handles Todos
         const currentRoleRequestMap: RoleRequestMap = getBasecampTodoRequestsForRow(row);
         const lastSavedRoleTodoIdMap: RoleTodoIdMap  = getRoleTodoIdMap(row);
 
@@ -57,7 +59,13 @@ function processExistingRow(row: Row): void {
 
         const updatedRoleTodoIdMap: RoleTodoIdMap = {...existingRoleTodoIdMap, ...newRoleTodoIdMap};
 
-        saveRow(row, updatedRoleTodoIdMap);
+        // Handles Schedule Entries
+        const scheduleEntryId: string = getSavedScheduleEntryId(row);
+        const scheduleEntryRequest: BasecampScheduleEntryRequest = getScheduleEntryRequestForRow(row);
+        const scheduleEntryIdentifier: ScheduleEntryIdentifier = getScheduleEntryIdentifier(scheduleEntryId);
+        updateScheduleEntry(scheduleEntryRequest, scheduleEntryIdentifier);
+
+        saveRow(row, updatedRoleTodoIdMap, scheduleEntryId);
     }
 }
 
@@ -72,9 +80,15 @@ function processNewRow(row: Row): void {
     const roleRequestMap: RoleRequestMap = getBasecampTodoRequestsForRow(row);
     const roleTodoIdMap: RoleTodoIdMap = createNewTodos(roleRequestMap);
 
-    if(Object.keys(roleTodoIdMap).length > 0) {
+    let scheduleEntryId: string = "";
+    if(hasBasecampAttendees(row)) {
+        const scheduleEntryRequest: BasecampScheduleEntryRequest = getScheduleEntryRequestForRow(row);
+        scheduleEntryId = createScheduleEntry(scheduleEntryRequest, getDefaultScheduleIdentifier());
+    }
+
+    if(Object.keys(roleTodoIdMap).length > 0 && scheduleEntryId !== "") {
         generateIdForRow(row);
-        saveRow(row, roleTodoIdMap);
+        saveRow(row, roleTodoIdMap, scheduleEntryId);
     }
 }
 
@@ -85,11 +99,25 @@ function deleteOldRows(processedRowIds: string[]): void {
         if(!processedRowIds.includes(rowId)) {
 
             const rowBasecampMapping: RowBasecampMapping = propertyStore[rowId];
+
+            // Handle Todos
             const roleTodoIdMap: RoleTodoIdMap = rowBasecampMapping.roleTodoIdMap;
             const todoIds: string[] = Object.values(roleTodoIdMap);
-
             deleteTodos(todoIds);
+
+            // Handle Schedule Entries
+            const rowDate: Date = rowBasecampMapping.tabInfo.date;
+            if(isInFuture(rowDate)) {
+                const scheduleEntryId: string = rowBasecampMapping.scheduleEntryId;
+                const scheduleEntryIdentifier: ScheduleEntryIdentifier = getScheduleEntryIdentifier(scheduleEntryId);
+                deleteScheduleEntry(scheduleEntryIdentifier);
+            }
+
             deleteDocumentProperty(rowId);
         }
     }
+}
+
+function isInFuture(date: Date) {
+    return date.getTime() > Date.now();
 }

@@ -24,6 +24,7 @@ export function getRandomlyGeneratedMetadata(): Metadata {
 
 export function getRandomlyGeneratedRow(): Row {
     return {
+        date: new Date(),
         metadata: getRandomlyGeneratedMetadata(),
         startTime: new Date(),
         endTime: new Date(),
