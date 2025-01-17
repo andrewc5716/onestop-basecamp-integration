@@ -1,5 +1,5 @@
 import { deleteDocumentProperty, getAllDocumentProperties } from "./propertiesService";
-import { getRoleTodoIdMap, getSavedScheduleEntryId, getScheduleEntryRequestForRow, hasBasecampAttendees } from "./row";
+import { getRoleTodoIdMap, getSavedScheduleEntryId, getScheduleEntryRequestForRow } from "./row";
 import { generateIdForRow, getBasecampTodoRequestsForRow, getId, hasChanged, hasId, saveRow } from "./row";
 import { getEventRowsFromSpreadsheet } from "./scan";
 import { createScheduleEntry, deleteScheduleEntry, getDefaultScheduleIdentifier, getScheduleEntryIdentifier, updateScheduleEntry } from "./schedule";
@@ -80,11 +80,8 @@ function processNewRow(row: Row): void {
     const roleRequestMap: RoleRequestMap = getBasecampTodoRequestsForRow(row);
     const roleTodoIdMap: RoleTodoIdMap = createNewTodos(roleRequestMap);
 
-    let scheduleEntryId: string = "";
-    if(hasBasecampAttendees(row)) {
-        const scheduleEntryRequest: BasecampScheduleEntryRequest = getScheduleEntryRequestForRow(row);
-        scheduleEntryId = createScheduleEntry(scheduleEntryRequest, getDefaultScheduleIdentifier());
-    }
+    const scheduleEntryRequest: BasecampScheduleEntryRequest = getScheduleEntryRequestForRow(row);
+    const scheduleEntryId: string = createScheduleEntry(scheduleEntryRequest, getDefaultScheduleIdentifier());
 
     if(Object.keys(roleTodoIdMap).length > 0 && scheduleEntryId !== "") {
         generateIdForRow(row);
@@ -106,7 +103,8 @@ function deleteOldRows(processedRowIds: string[]): void {
             deleteTodos(todoIds);
 
             // Handle Schedule Entries
-            const rowDate: Date = rowBasecampMapping.tabInfo.date;
+            // Have to use the Date constructor because GAS retrieves the date as a string
+            const rowDate: Date = new Date(rowBasecampMapping.tabInfo.date);
             if(isInFuture(rowDate)) {
                 const scheduleEntryId: string = rowBasecampMapping.scheduleEntryId;
                 const scheduleEntryIdentifier: ScheduleEntryIdentifier = getScheduleEntryIdentifier(scheduleEntryId);

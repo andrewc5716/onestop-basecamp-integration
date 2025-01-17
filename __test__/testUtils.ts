@@ -364,3 +364,39 @@ export function getRandomlyGeneratedRowBasecampMapping(): RowBasecampMapping {
         tabInfo: { date: new Date() },
     };
 }
+
+export function getRandomlyGeneratedRoleRequestMap(numRoles: number = 10): RoleRequestMap {
+    const roleRequestMap: RoleRequestMap = {};
+    for(let i = 0; i < numRoles; i++) {
+        roleRequestMap[randomstring.generate()] = getRandomlyGeneratedBasecampTodoRequest();
+    }
+
+    return roleRequestMap;
+}
+
+export function getRandomlyGeneratedBasecampTodoRequest(numAssignees: number = 5): BasecampTodoRequest {
+    const ids: string[] = Array.from({length: numAssignees}, () => randomstring.generate());
+
+    return {
+        content: randomstring.generate(),
+        description: randomstring.generate(),
+        assignee_ids: ids,
+        completion_subscriber_ids: ids,
+        notify: getRandomBoolean(),
+        due_on: randomstring.generate(),
+    };
+}
+
+export function getRandomlyGeneratedScheduleIdentifier(): ScheduleIdentifier {
+    return {
+        projectId: randomstring.generate(),
+        scheduleId: randomstring.generate(),
+    }
+}
+
+export function getRandomlyGeneratedScheduleEntryIdentifier(): ScheduleEntryIdentifier {
+    return {
+        projectId: randomstring.generate(),
+        scheduleEntryId: randomstring.generate(),
+    }
+}
