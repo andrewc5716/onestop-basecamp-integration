@@ -281,7 +281,8 @@ function getBasecampIdsFromPersonNameList(personNameList: string[]): string[] {
  */
 function getLeadsNames(row: Row): string[] {
     return row.inCharge.value.split(COMMA_FORWARD_SLASH_DELIM_REGEX)
-    .map(name => name.trim());
+    .map(name => name.trim())
+    .filter(name => name !== "");
 }
 
 /**

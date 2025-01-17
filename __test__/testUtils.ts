@@ -1,4 +1,5 @@
 import randomstring from "randomstring";
+import { randomBytes } from 'crypto';
 
 const BOOLEAN_UPPERBOUND: number = 2;
 
@@ -340,4 +341,26 @@ export function getRandomlyGeneratedScheduleEntry(): BasecampScheduleEntryReques
         all_day: getRandomBoolean(),
         notify: getRandomBoolean()
     }
+}
+
+export function getRandomlyGeneratedRoleTodoIdMap(numRoles: number = 10): RoleTodoIdMap {
+    const roleTodoIdMap: RoleTodoIdMap = {};
+    for(let i = 0; i < numRoles; i++) {
+        roleTodoIdMap[randomstring.generate()] = randomstring.generate();
+    }
+
+    return roleTodoIdMap;
+}
+
+export function getRandomlyGeneratedByteArray(numBytes: number = 100): Uint8Array {
+    return Uint8Array.from(randomBytes(numBytes));
+}
+
+export function getRandomlyGeneratedRowBasecampMapping(): RowBasecampMapping {
+    return {
+        rowHash: randomstring.generate(),
+        roleTodoIdMap: getRandomlyGeneratedRoleTodoIdMap(),
+        scheduleEntryId: randomstring.generate(),
+        tabInfo: { date: new Date() },
+    };
 }
