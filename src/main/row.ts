@@ -370,7 +370,7 @@ export function getHelperLines(row: Row): string[] {
  * @param helperLine a line from the helpers column in a row
  * @returns true or false
  */
-export function hasRole(helperLine: string) {
+export function hasRole(helperLine: string): boolean {
     return helperLine.includes(COLON_DELIM);
 }
 
@@ -556,7 +556,7 @@ function getMinistryFilters(row: Row): string[] {
  * @param row - An event row
  * @returns true or false
  */
-export function CheckForRotation(row: Row): boolean {
+export function checkForRotation(row: Row): boolean {
     return splitWhoColumn(row)[0].toUpperCase() === "ROTATION";
 }
 
@@ -566,7 +566,7 @@ export function CheckForRotation(row: Row): boolean {
  * @param row - An event row
  * @returns true or false
  */
-export function CheckForVarious(row: Row): boolean {
+export function checkForVarious(row: Row): boolean {
     return splitWhoColumn(row)[0].toUpperCase() ===  "VARIOUS";
 }
 
@@ -576,7 +576,7 @@ export function CheckForVarious(row: Row): boolean {
  * @param row - An event row
  * @returns true or false
  */
-export function CheckForOther(row: Row): boolean {
+export function checkForOther(row: Row): boolean {
     return splitWhoColumn(row)[0].toUpperCase() ===  "OTHER";
 }
 
