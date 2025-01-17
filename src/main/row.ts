@@ -597,9 +597,9 @@ export function getAttendeesFromRow(row: Row): string[] {
     const domainNames = getDomainNames(row);
     const domainFilters = getDomainFilters(row);
 
-    const isRotation = CheckForRotation(row);
-    const isVarious = CheckForVarious(row);
-    const isOther = CheckForOther(row);
+    const isRotation = checkForRotation(row);
+    const isVarious = checkForVarious(row);
+    const isOther = checkForOther(row);
 
     if(isRotation || isVarious || isOther) {
         attendees.push(...getLeadsNames(row));
@@ -623,7 +623,6 @@ export function getAttendeesFromRow(row: Row): string[] {
     } else  {
         // Step 5: Handle Missing Data
         console.log("ERROR: Unable to get attendees from row becuase both domain and ministry columns are empty!")
-        //handleMissingData(domainNames, ministryNames);
     }
 
     return attendees;
@@ -652,21 +651,6 @@ function filterDomainAttendees(domainNames: string[], domainFilters: string[]): 
     const members = getMembersFromGroups(domainNames);
     return filterMembers(members, domainFilters);
 }
-
-/**
- * Handle missing data by throwing an error if both ministry groups and domains are missing.
- * 
- * @param domainNames - Names of domains.
- * @param ministryNames - Names of ministry groups.
- */
-function handleMissingData(domainNames: string[], ministryNames: string[]): void {
-    if (domainNames.length === 0 && ministryNames.length === 0) {
-        throw new DomainMissingError(
-            "ERROR: Unable to get attendees from row becuase both domain and ministry columns are empty!"
-        );
-    }
-}
-
 
 /**
  * Helpful debugging function which clears all row metadata
