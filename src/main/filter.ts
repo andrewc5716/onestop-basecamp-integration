@@ -9,7 +9,7 @@ type FilterMap = { [onestopFilterName: string]: FilterFunction };
 const BROS_GENDER: string = "Male";
 const SIS_GENDER: string = "Female";
 // Maps a filter's name on the Onestop to its corresponding filter function
-export const FILTER_MAP: FilterMap = {
+const FILTER_MAP: FilterMap = {
     Bros: brosFilter, 
     Sis: sisFilter,
     Married: marriedFilter,
