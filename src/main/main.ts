@@ -116,6 +116,6 @@ function deleteOldRows(processedRowIds: string[]): void {
     }
 }
 
-function isInFuture(date: Date) {
+function isInFuture(date: Date): boolean {
     return date.getTime() > Date.now();
 }
