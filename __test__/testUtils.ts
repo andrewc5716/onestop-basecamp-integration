@@ -34,7 +34,6 @@ export function getRandomlyGeneratedRow(): Row {
         where: getRandomlyGeneratedText(),
         inCharge: getRandomlyGeneratedText(),
         helpers: getRandomlyGeneratedText(),
-        childcare: getRandomlyGeneratedText(),
         notes: getRandomlyGeneratedText()
     }
 }
