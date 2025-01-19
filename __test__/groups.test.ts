@@ -54,7 +54,7 @@ describe("loadGroupsFromOnestopIntoScriptProperties", () => {
 
         const setScriptPropertyMock: Mock = jest.fn();
         jest.mock("../src/main/propertiesService", () => ({
-            loadMapFromScriptProperties: jest.fn(),
+            loadMapFromScriptProperties: jest.fn(() => ({})),
             setScriptProperty: setScriptPropertyMock,
         }));
 
@@ -82,7 +82,7 @@ describe("loadGroupsFromOnestopIntoScriptProperties", () => {
 
         const setScriptPropertyMock: Mock = jest.fn();
         jest.mock("../src/main/propertiesService", () => ({
-            loadMapFromScriptProperties: jest.fn(),
+            loadMapFromScriptProperties: jest.fn(() => ({})),
             setScriptProperty: setScriptPropertyMock,
         }));
 
@@ -107,7 +107,7 @@ describe("loadGroupsFromOnestopIntoScriptProperties", () => {
 
         const setScriptPropertyMock: Mock = jest.fn();
         jest.mock("../src/main/propertiesService", () => ({
-            loadMapFromScriptProperties: jest.fn(),
+            loadMapFromScriptProperties: jest.fn(() => ({})),
             setScriptProperty: setScriptPropertyMock,
         }));
 
@@ -140,7 +140,7 @@ describe("loadGroupsFromOnestopIntoScriptProperties", () => {
 
         const setScriptPropertyMock: Mock = jest.fn();
         jest.mock("../src/main/propertiesService", () => ({
-            loadMapFromScriptProperties: jest.fn(),
+            loadMapFromScriptProperties: jest.fn(() => ({})),
             setScriptProperty: setScriptPropertyMock,
         }));
 
@@ -183,7 +183,7 @@ describe("loadGroupsFromOnestopIntoScriptProperties", () => {
 
         const setScriptPropertyMock: Mock = jest.fn();
         jest.mock("../src/main/propertiesService", () => ({
-            loadMapFromScriptProperties: jest.fn(),
+            loadMapFromScriptProperties: jest.fn(() => ({})),
             setScriptProperty: setScriptPropertyMock,
         }));
 
@@ -228,7 +228,7 @@ describe("loadGroupsFromOnestopIntoScriptProperties", () => {
 
         const setScriptPropertyMock: Mock = jest.fn();
         jest.mock("../src/main/propertiesService", () => ({
-            loadMapFromScriptProperties: jest.fn(),
+            loadMapFromScriptProperties: jest.fn(() => ({})),
             setScriptProperty: setScriptPropertyMock,
         }));
 
@@ -274,7 +274,7 @@ describe("loadGroupsFromOnestopIntoScriptProperties", () => {
 
         const setScriptPropertyMock: Mock = jest.fn();
         jest.mock("../src/main/propertiesService", () => ({
-            loadMapFromScriptProperties: jest.fn(),
+            loadMapFromScriptProperties: jest.fn(() => ({})),
             setScriptProperty: setScriptPropertyMock,
         }));
 
@@ -320,7 +320,7 @@ describe("loadGroupsFromOnestopIntoScriptProperties", () => {
 
         const setScriptPropertyMock: Mock = jest.fn();
         jest.mock("../src/main/propertiesService", () => ({
-            loadMapFromScriptProperties: jest.fn(),
+            loadMapFromScriptProperties: jest.fn(() => ({})),
             setScriptProperty: setScriptPropertyMock,
         }));
 
@@ -368,7 +368,7 @@ describe("loadGroupsFromOnestopIntoScriptProperties", () => {
 
         const setScriptPropertyMock: Mock = jest.fn();
         jest.mock("../src/main/propertiesService", () => ({
-            loadMapFromScriptProperties: jest.fn(),
+            loadMapFromScriptProperties: jest.fn(() => ({})),
             setScriptProperty: setScriptPropertyMock,
         }));
 
@@ -415,7 +415,7 @@ describe("loadGroupsFromOnestopIntoScriptProperties", () => {
 
         const setScriptPropertyMock: Mock = jest.fn();
         jest.mock("../src/main/propertiesService", () => ({
-            loadMapFromScriptProperties: jest.fn(),
+            loadMapFromScriptProperties: jest.fn(() => ({})),
             setScriptProperty: setScriptPropertyMock,
         }));
 
@@ -463,7 +463,7 @@ describe("loadGroupsFromOnestopIntoScriptProperties", () => {
 
         const setScriptPropertyMock: Mock = jest.fn();
         jest.mock("../src/main/propertiesService", () => ({
-            loadMapFromScriptProperties: jest.fn(),
+            loadMapFromScriptProperties: jest.fn(() => ({})),
             setScriptProperty: setScriptPropertyMock,
         }));
 
@@ -481,5 +481,81 @@ describe("loadGroupsFromOnestopIntoScriptProperties", () => {
         };
 
         expect(setScriptPropertyMock).toHaveBeenCalledWith("GROUPS_MAP", JSON.stringify(expectedMap));
+    });
+});
+
+// Mocked GROUPS_MAP
+const MOCK_GROUPS_MAP = {
+    SDSU: ['Josh Wong', 'Isaac Otero', 'Kevin Lai', 'Joyce Lai'],
+    IUSM: ['Brian Lin', 'James Lee'],
+    IGSM: ['Jack Zhang', 'Angel Zhang'],
+    "INT'L": ['Brian Lin', 'James Lee', 'Jack Zhang', 'Angel Zhang']
+};
+
+describe('getMembersFromGroups', () => {
+    it('should return a flat array of members for given group names', () => {
+        const groupNames = ['SDSU', 'IUSM'];
+
+        jest.mock('../src/main/propertiesService', () => ({
+            loadMapFromScriptProperties: jest.fn(() => MOCK_GROUPS_MAP)
+        }));
+
+        const { getMembersFromGroups } = require("../src/main/groups");
+
+        const result = getMembersFromGroups(groupNames);
+        expect(result).toEqual(['Josh Wong', 'Isaac Otero', 'Kevin Lai', 'Joyce Lai', 'Brian Lin', 'James Lee']);
+    });
+
+    it('should return an empty array when no groups are provided', () => {
+        const groupNames: string[] = [];
+
+        jest.mock('../src/main/propertiesService', () => ({
+            loadMapFromScriptProperties: jest.fn(() => MOCK_GROUPS_MAP)
+        }));
+
+        const { getMembersFromGroups } = require("../src/main/groups");
+
+        const result = getMembersFromGroups(groupNames);
+        expect(result).toEqual([]);
+    });
+
+    it('should skip groups not found in GROUPS_MAP', () => {
+        const groupNames = ['IGSM', 'KALEO'];
+
+        jest.mock('../src/main/propertiesService', () => ({
+            loadMapFromScriptProperties: jest.fn(() => MOCK_GROUPS_MAP)
+        }));
+
+        const { getMembersFromGroups } = require("../src/main/groups");
+
+        const result = getMembersFromGroups(groupNames);
+        expect(result).toEqual(['Jack Zhang', 'Angel Zhang']);
+    });
+
+    it('should handle duplicate group names', () => {
+        const groupNames = ['IUSM', 'IUSM'];
+
+        jest.mock('../src/main/propertiesService', () => ({
+            loadMapFromScriptProperties: jest.fn(() => MOCK_GROUPS_MAP)
+        }));
+
+        const { getMembersFromGroups } = require("../src/main/groups");
+
+        const result = getMembersFromGroups(groupNames);
+        expect(result).toEqual(['Brian Lin', 'James Lee']);
+    });
+
+    it('should return an empty array if no group names match', () => {
+        const groupNames = ['KALEO', 'IMPACT'];
+
+        // Mock GROUPS_MAP in your test environment if needed
+        jest.mock('../src/main/propertiesService', () => ({
+            loadMapFromScriptProperties: jest.fn(() => MOCK_GROUPS_MAP)
+        }));
+
+        const { getMembersFromGroups } = require("../src/main/groups");
+
+        const result = getMembersFromGroups(groupNames);
+        expect(result).toEqual([]);
     });
 });

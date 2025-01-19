@@ -22,6 +22,12 @@ type SupergroupMap = { [key: string]: Supergroup };
 
 export const GROUPS_MAP: GroupsMap = loadMapFromScriptProperties(GROUPS_MAP_KEY) as GroupsMap;
 
+
+/**
+ * A list of all the group names from GROUPS_MAP
+ */
+export const GROUP_NAMES: string[] = Object.keys(GROUPS_MAP) as string[];
+
 /**
  * Loads groups and supergroups from the Onestop into script properties
  */
@@ -32,6 +38,17 @@ export function loadGroupsFromOnestopIntoScriptProperties(): void {
     const duplicateFreeGroupsMap: GroupsMap = removeDuplicatesFromGroupMaps(combinedGroupsMaps);
 
     setScriptProperty(GROUPS_MAP_KEY, JSON.stringify(duplicateFreeGroupsMap));
+}
+
+/**
+ * Retrieves an array of normalized member names from an array of group names.
+ * 
+ * @param groupNames an array of group names (i.e. ministry names, domain names)
+ * @returns array of member names
+ */
+export function getMembersFromGroups(groupNames: string[]): string[] {
+    const dedupedGroupNames = Array.from(new Set(groupNames));
+    return dedupedGroupNames.flatMap(groupName => GROUPS_MAP[groupName] || []);
 }
 
 function loadGroupsFromOnestop(): GroupsMap {

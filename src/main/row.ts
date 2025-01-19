@@ -1,9 +1,10 @@
+import { DomainMissingError } from "./error/domainMissingError";
 import { InvalidHashError } from "./error/invalidHashError";
 import { RowBasecampMappingMissingError } from "./error/rowBasecampMappingMissingError";
 import { RowMissingIdError } from "./error/rowMissingIdError";
 import { RowNotSavedError } from "./error/rowNotSavedError";
 import { containsFilter, filterMembers, isFilter, removeFilters } from "./filter";
-import { GROUPS_MAP } from "./groups";
+import { GROUPS_MAP, getMembersFromGroups, GROUP_NAMES } from "./groups";
 import { ALIASES_MAP, MEMBER_MAP } from "./members";
 import { getPersonId } from "./people";
 import { deleteAllDocumentProperties, getDocumentProperty, setDocumentProperty } from "./propertiesService";
@@ -358,6 +359,22 @@ export function getBasecampTodosForHelpers(row: Row): RoleRequestMap {
 }
 
 /**
+ * @param row row to retrieve helper lines from
+ * @returns an array of helper lines
+ */
+export function getHelperLines(row: Row): string[] {
+    return row.helpers.value.split(NEW_LINE_DELIM);
+}
+
+/**
+ * @param helperLine a line from the helpers column in a row
+ * @returns true or false
+ */
+export function hasRole(helperLine: string): boolean {
+    return helperLine.includes(COLON_DELIM);
+}
+
+/**
  * Retrieves an array of HelperGroup objects from a row
  * 
  * @param row row to retrieve the different HelperGroups from
@@ -370,9 +387,9 @@ export function getHelperGroups(row: Row): HelperGroup[] {
 
     const helperGroups: HelperGroup[] = [];
 
-    const helperLines: string[] = row.helpers.value.split(NEW_LINE_DELIM);
+    const helperLines: string[] = getHelperLines(row);
     for(const helperLine of helperLines) {
-        if (helperLine.includes(COLON_DELIM)) {
+        if (hasRole(helperLine)) {
             const [role, helperList] = helperLine.split(COLON_DELIM);
             const trimmedHelperList: string = helperList.trim();
             helperGroups.push(getHelperGroupFromHelperList(trimmedHelperList, role));
@@ -453,6 +470,186 @@ function getHelperGroupFromHelperList(helperNameList: string, role: string | und
         role: role,
         helperIds: helperIds
     };
+}
+
+/**
+ * Gets all of the expanded helper names as a list of member names from the helper column of a row
+ * 
+ * @param row the row to get the helper names from
+ * @returns constructed HelperGroup object
+ */
+function getAllHelperNames(row: Row): string[] {
+    const allHelpers: string[] = [];
+    const helperLines: string[] = getHelperLines(row);
+
+    for(const helperLine of helperLines) {
+        if (hasRole(helperLine)) {
+            const [role, helperList] = helperLine.split(COLON_DELIM);
+            const trimmedHelperList: string = helperList.trim();
+            allHelpers.push(...getHelpersNames(trimmedHelperList));
+            
+        } else if(helperLine !== "") {
+            allHelpers.push(...getHelpersNames(helperLine));
+        }
+    }
+
+    return allHelpers;
+}
+
+/**
+ * Retrieves an array of domain names from a row
+ * 
+ * @param row row to retrieve domain names from
+ * @returns array of domain names
+ */
+function getDomainNames(row: Row): string[] {
+    return row.domain.split(COMMA_FORWARD_SLASH_DELIM_REGEX)
+    .map(value => value.trim()).filter(value => GROUP_NAMES.includes(value));
+}
+
+/**
+ * Retrieves an array of domain filters from a row
+ * 
+ * @param row row to retrieve domain filters from
+ * @returns array of domain filters
+ */
+function getDomainFilters(row: Row): string[] {
+    return row.domain.split(COMMA_FORWARD_SLASH_DELIM_REGEX)
+    .map(value => value.trim()).filter(value => isFilter(value));
+}
+
+/**
+ * Splits the value of the who column of a row based on the COMMA_FORWARD_SLASH_DELIM_REGEX
+ * 
+ * @param row - An event row
+ * @returns a split string representing who is attending an event
+ */
+function splitWhoColumn(row: Row): string[] {
+    return row.who.split(COMMA_FORWARD_SLASH_DELIM_REGEX);
+}
+
+/**
+ * Retrieves an array of ministry names from a row
+ * 
+ * @param row row to retrieve ministry names from
+ * @returns array of ministry group names
+ */
+function getMinistryNames(row: Row): string[] {
+    return splitWhoColumn(row)
+        .map(name => name.trim()).filter(value => GROUP_NAMES.includes(value.toUpperCase()));
+}
+
+/**
+ * Retrieves an array of ministry filters from a row
+ * 
+ * @param row row to retrieve ministry filters from
+ * @returns array of ministry filters
+ */
+function getMinistryFilters(row: Row): string[] {
+    return splitWhoColumn(row)
+    .map(name => name.trim()).filter(value => isFilter(value));;
+}
+
+/**
+ * Checks if the event has a who (ministy) column value of ROTATION
+ * 
+ * @param row - An event row
+ * @returns true or false
+ */
+export function checkForRotation(row: Row): boolean {
+    return splitWhoColumn(row)[0].toUpperCase() === "ROTATION";
+}
+
+/**
+ * Checks if the event has a who (ministry) column value of VARIOUS
+ * 
+ * @param row - An event row
+ * @returns true or false
+ */
+export function checkForVarious(row: Row): boolean {
+    return splitWhoColumn(row)[0].toUpperCase() ===  "VARIOUS";
+}
+
+/**
+ * Checks if the event has a who (ministry) column value of OTHER
+ * 
+ * @param row - An event row
+ * @returns true or false
+ */
+export function checkForOther(row: Row): boolean {
+    return splitWhoColumn(row)[0].toUpperCase() ===  "OTHER";
+}
+
+/**
+ * Retrieves an array of names from a row.
+ * 
+ * @param row - Row to retrieve the different attendees from.
+ * @returns Array of Person.
+ */
+export function getAttendeesFromRow(row: Row): string[] {
+    const attendees: string[] = [];
+
+    // Step 1: Extract Ministry Names and Filters
+    const ministryNames = getMinistryNames(row);
+    const ministryFilters = getMinistryFilters(row);
+
+    // Step 2: Extract Domain Names and Filters
+    const domainNames = getDomainNames(row);
+    const domainFilters = getDomainFilters(row);
+
+    const isRotation = checkForRotation(row);
+    const isVarious = checkForVarious(row);
+    const isOther = checkForOther(row);
+
+    if(isRotation || isVarious || isOther) {
+        attendees.push(...getLeadsNames(row));
+        attendees.push(...getAllHelperNames(row));
+        
+    } else if(ministryNames.length > 0) {
+        // Process Ministry Attendees
+        const ministryAttendees = filterMinistryAttendees(ministryNames, ministryFilters);
+        attendees.push(...ministryAttendees);
+
+    } else if(domainNames.length > 0 && ministryFilters.length === 0) {
+        // Process Domain Attendees
+        const domainAttendees = filterDomainAttendees(domainNames, domainFilters);
+        attendees.push(...domainAttendees);
+
+    } else if(domainNames.length > 0 && ministryFilters.length > 0) {
+        // Special case: Filter the domain using filters from the ministry column if there are no ministry groups present in the ministry column
+        const domainAttendees = filterDomainAttendees(domainNames, ministryFilters);
+        attendees.push(...domainAttendees);
+
+    } else  {
+        // Step 5: Handle Missing Data
+        console.log("ERROR: Unable to get attendees from row becuase both domain and ministry columns are empty!")
+    }
+
+    return attendees;
+}
+
+/**
+ * Process attendees for ministry groups.
+ * 
+ * @param ministryNames - Names of ministry groups.
+ * @param ministryFilters - Filters to apply to the ministry members.
+ * @returns Array of filtered members.
+ */
+function filterMinistryAttendees(ministryNames: string[], ministryFilters: string[]): string[] {
+    const members = getMembersFromGroups(ministryNames);
+    return filterMembers(members, ministryFilters);
+}
+
+/**
+ * Process attendees for domains.
+ * 
+ * @param domainNames - Names of domains.
+ * @param domainFilters - Filters to apply to the domain members.
+ * @returns Array of filtered members.
+ */
+function filterDomainAttendees(domainNames: string[], domainFilters: string[]): string[] {
+    const members = getMembersFromGroups(domainNames);
+    return filterMembers(members, domainFilters);
 }
 
 /**
