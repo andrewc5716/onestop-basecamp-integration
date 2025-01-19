@@ -19,8 +19,7 @@ const WHAT_COL_INDEX: number = 5;
 const WHERE_COL_INDEX: number = 6;
 const IN_CHARGE_COL_INDEX: number = 7;
 const HELPERS_COL_INDEX: number = 8;
-const CHILDCARE_COL_INDEX: number = 9;
-const NOTES_COL_INDEX: number = 10;
+const NOTES_COL_INDEX: number = 9;
 
 // Number of minutes in an hour
 const MIN_IN_HOUR: number = 60;
@@ -259,7 +258,6 @@ function constructRow(rowRange: Range, rowData: CellData[], currentDate: Date): 
         where: {value: rowData[WHERE_COL_INDEX].value, hyperlink: rowData[WHERE_COL_INDEX].linkUrl},
         inCharge: {value: rowData[IN_CHARGE_COL_INDEX].value, hyperlink: rowData[IN_CHARGE_COL_INDEX].linkUrl},
         helpers: {value: rowData[HELPERS_COL_INDEX].value, hyperlink: rowData[HELPERS_COL_INDEX].linkUrl},
-        childcare: {value: rowData[CHILDCARE_COL_INDEX].value, hyperlink: rowData[CHILDCARE_COL_INDEX].linkUrl},
         notes: {value: rowData[NOTES_COL_INDEX].value, hyperlink: rowData[NOTES_COL_INDEX].linkUrl}
     };
 }

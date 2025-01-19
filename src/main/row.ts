@@ -189,8 +189,7 @@ export function getRowBasecampMapping(row: Row): RowBasecampMapping | null {
  */
 export function toString(row: Row): string {
     return `[${row.startTime}, ${row.endTime}, ${row.who}, ${row.numAttendees}, ${row.what.value}, 
-    ${row.where.value}, ${row.inCharge.value}, ${row.helpers.value},
-    ${row.childcare.value}, ${row.notes.value}]`;
+    ${row.where.value}, ${row.inCharge.value}, ${row.helpers.value}, ${row.notes.value}]`;
 }
 
 /**
@@ -304,10 +303,9 @@ function getBasecampTodoDescription(row: Row): string {
     const time: string = `\n\nWHEN: ${startTime} - ${endTime}`;
     const inCharge: string = `\n\nIN CHARGE: ${row.inCharge.value ?? "N\\A"}`;
     const helpers: string = `\n\nHELPERS:\n${row.helpers.value ?? "N\\A"}`;
-    const childcare: string = `\n\nCHILDCARE: ${row.childcare.value ?? "N\\A"}`;
     const notes: string = `\n\nNOTES: ${row.notes.value ?? "N\\A"}`;
 
-    return location + time + inCharge + helpers + childcare + notes;
+    return location + time + inCharge + helpers + notes;
 }
 
 /**

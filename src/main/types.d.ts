@@ -26,7 +26,6 @@ declare interface Row {
   where: Text,
   inCharge: Text,
   helpers: Text,
-  childcare: Text,
   notes: Text
 }
 
