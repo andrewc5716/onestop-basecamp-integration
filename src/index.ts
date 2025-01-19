@@ -11,6 +11,7 @@ export * from './main/row';
 export * from './main/scan';
 export * from './main/todos';
 export * from './main/schedule';
+export * from './main/utils';
 export * from './main/validation';
 
 // Re-export all the exports from `menu` module into Webpack `globalThis` scope, so they are available at runtime

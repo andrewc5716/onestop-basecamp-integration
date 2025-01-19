@@ -1,6 +1,7 @@
 import { Logger } from 'gasmask';
 import randomstring from "randomstring";
-import { getRandomlyGeneratedScheduleEntry, Mock } from "./testUtils";
+import { getRandomBoolean, getRandomlyGeneratedScheduleEntry, Mock } from "./testUtils";
+import { getBasecampScheduleEntryRequest } from '../src/main/schedule';
 
 global.Logger = Logger;
 
@@ -114,5 +115,74 @@ describe("deleteScheduleEntry", () => {
             "https://3.basecamp.com/4474129/buckets/TEST_PROJECT_ID/recordings/TEST_SCHEDULE_ENTRY_ID/status/trashed.json",
             {}
         );
+    });
+});
+
+describe("getBasecampScheduleEntryRequest", () => {
+    it("should construct a BasecampScheduleEntryRequest object when provided with the required data", () => {
+        const summary: string = randomstring.generate();
+        const startsAt: string = randomstring.generate();
+        const endsAt: string = randomstring.generate();
+        const description: string = randomstring.generate();
+        const participantIds: string[] = Array.from({length: 5}, () => randomstring.generate());
+        const allDay: boolean = getRandomBoolean();
+        const notify: boolean = getRandomBoolean();
+
+        const expectedBasecampScheduleEntryRequest: BasecampScheduleEntryRequest = {
+            summary: summary,
+            starts_at: startsAt,
+            ends_at: endsAt,
+            description: description,
+            participant_ids: participantIds,
+            all_day: allDay,
+            notify: notify,
+        };
+
+        const receivedBasecampScheduleEntryRequest: BasecampScheduleEntryRequest = getBasecampScheduleEntryRequest(summary, startsAt, endsAt, description, participantIds, allDay, notify);
+
+        expect(receivedBasecampScheduleEntryRequest).toStrictEqual(expectedBasecampScheduleEntryRequest);
+    });
+});
+
+describe("getDefaultScheduleIdentifier", () => {
+    it("should return the default schedule identifier object when called", () => {
+        const basecampProjectIdMock: string = randomstring.generate();
+        const basecampScheduleIdMock: string = randomstring.generate();
+
+        jest.mock("../config/environmentVariables", () => ({
+            BASECAMP_PROJECT_ID: basecampProjectIdMock,
+            BASECAMP_SCHEDULE_ID: basecampScheduleIdMock,
+        }));
+
+        const expectedScheduleIdentifier: ScheduleIdentifier = {
+            projectId: basecampProjectIdMock,
+            scheduleId: basecampScheduleIdMock,
+        };
+
+        const { getDefaultScheduleIdentifier } = require("../src/main/schedule");
+        const recevedScheduleIdentifier: ScheduleIdentifier = getDefaultScheduleIdentifier();
+
+        expect(recevedScheduleIdentifier).toStrictEqual(expectedScheduleIdentifier);
+    });
+});
+
+describe("getScheduleEntryIdentifier", () => {
+    it("should construct and return schedule identifier object when called", () => {
+        const basecampProjectIdMock: string = randomstring.generate();
+        const scheduleEntryIdMock: string = randomstring.generate();
+
+        jest.mock("../config/environmentVariables", () => ({
+            BASECAMP_PROJECT_ID: basecampProjectIdMock,
+        }));
+
+        const expectedScheduleEntryIdentifier: ScheduleEntryIdentifier = {
+            projectId: basecampProjectIdMock,
+            scheduleEntryId: scheduleEntryIdMock,
+        };
+
+        const { getScheduleEntryIdentifier } = require("../src/main/schedule");
+        const receivedScheduleEntryIdentifier: ScheduleIdentifier = getScheduleEntryIdentifier(scheduleEntryIdMock);
+
+        expect(receivedScheduleEntryIdentifier).toStrictEqual(expectedScheduleEntryIdentifier);
     });
 });

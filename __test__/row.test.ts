@@ -1,12 +1,14 @@
 // Mock PropertiesService must be imported and set before the row module is imported
 // and attempts to access the global PropertiesService object
-import { PropertiesService } from 'gasmask';
+import { Logger, PropertiesService } from 'gasmask';
+global.Logger = Logger;
 global.PropertiesService = PropertiesService;
 
-import { generateIdForRow, getId, getMetadata, hasId } from "../src/main/row";
+import { generateIdForRow, getId, getMetadata, getSavedScheduleEntryId, hasId, saveRow } from "../src/main/row";
 import { RowMissingIdError } from '../src/main/error/rowMissingIdError';
-import { getRandomlyGeneratedMember, getRandomlyGeneratedMetadata, getRandomlyGeneratedRange, getRandomlyGeneratedRow, Mock } from './testUtils';
+import { getRandomlyGeneratedByteArray, getRandomlyGeneratedMember, getRandomlyGeneratedMetadata, getRandomlyGeneratedRange, getRandomlyGeneratedRoleTodoIdMap, getRandomlyGeneratedRow, getRandomlyGeneratedRowBasecampMapping, Mock } from './testUtils';
 import randomstring from "randomstring";
+import { RowBasecampMappingMissingError } from '../src/main/error/rowBasecampMappingMissingError';
 
 describe("getMetadata", () => {
     it("should return the Metadata object when a single Metadata object is present", () => {
@@ -85,7 +87,7 @@ describe("generateIdForRow", () => {
         const newUUID: string = "aeb39e2f-04f6-42ca-b87b-514f4371b708";
         const getUuidMock: Mock = jest.fn(() => newUUID);
         // Overide the global Google Apps Script Utilities object
-        global.Utilities = {getUuid: getUuidMock}
+        global.Utilities = {getUuid: getUuidMock};
         const metadataMock: Metadata = getRandomlyGeneratedMetadata();
         const setValueMock: Mock = jest.fn();
         metadataMock.setValue = setValueMock;
@@ -103,11 +105,9 @@ describe("generateIdForRow", () => {
 describe('getAttendeesFromRow', () => {
 
     it('should return ministry members instead of all domain members when ministry is populated', () => {
-
-        interface Row {
-            [key: string]: any;
-        }
-        const row: Row = { domain: "INT'L", who: 'IGSM' };
+        const row: Row = getRandomlyGeneratedRow();
+        row.domain = "INT'L";
+        row.who = "IGSM";
 
         const MOCK_GROUPS_MAP = {
             IGSM: ['Jack Zhang', 'Angel Zhang'],
@@ -137,12 +137,9 @@ describe('getAttendeesFromRow', () => {
     });
 
     it('should return all specified domain members when no ministry names are present', () => {
-
-        interface Row {
-            [key: string]: any;
-        }
-
-        const row: Row = { domain: "INT'L", who: "" };
+        const row: Row = getRandomlyGeneratedRow();
+        row.domain = "INT'L";
+        row.who = "";
 
         // Mocked GROUPS_MAP
         const MOCK_GROUPS_MAP = {
@@ -176,12 +173,9 @@ describe('getAttendeesFromRow', () => {
     });
 
     it('should not throw an error when both ministry and domain names are missing', () => {
-
-        interface Row {
-            [key: string]: any;
-        }
-
-        const row: Row = { domain: '', who: '' };
+        const row: Row = getRandomlyGeneratedRow();
+        row.domain = '';
+        row.who = '';
 
         jest.mock('../src/main/propertiesService', () => ({
             loadMapFromScriptProperties: jest.fn((key: string) => {
@@ -200,11 +194,9 @@ describe('getAttendeesFromRow', () => {
     });
 
     it('should apply any filters present in the ministry column', () => {
-        interface Row {
-            [key: string]: any;
-        }
-
-        const row: Row = { domain: "INT'L", who: "IGSM, Bros" };
+        const row: Row = getRandomlyGeneratedRow();
+        row.domain = "INT'L";
+        row.who = "IGSM, Bros";
 
         const MOCK_GROUPS_MAP = {
             IGSM: ['Jack Zhang', 'Angel Zhang'],
@@ -233,11 +225,9 @@ describe('getAttendeesFromRow', () => {
     });
 
     it('should apply any filters present in the domain column', () => {
-        interface Row {
-            [key: string]: any;
-        }
-
-        const row: Row = { domain: "COLLEGE, Sis", who: "" };
+        const row: Row = getRandomlyGeneratedRow();
+        row.domain = "COLLEGE, Sis";
+        row.who = "";
 
         const MOCK_GROUPS_MAP = {
             COLLEGE: ['Andrew Chan', 'Janice Chan', 'Josh Wong', 'Isaac Otero', 'Kevin Lai', 'Joyce Lai', 'Brian Lin', 'James Lee'],
@@ -267,11 +257,9 @@ describe('getAttendeesFromRow', () => {
     });
 
     it('should filter the domain using filters from the ministry column if there are no ministry groups present in the ministry column', () => {
-        interface Row {
-            [key: string]: any;
-        }
-
-        const row: Row = { domain: "CHURCHWIDE", who: "Sis" };
+        const row: Row = getRandomlyGeneratedRow();
+        row.domain = "CHURCHWIDE";
+        row.who = "Sis";
 
         // Mocked GROUPS_MAP
         const MOCK_GROUPS_MAP = {
@@ -292,7 +280,10 @@ describe('getAttendeesFromRow', () => {
 
                 } else if (key === "GROUPS_MAP") {
                     return MOCK_GROUPS_MAP;
-                } 
+
+                } else if(key === "ALIASES_MAP") {
+                    return {};
+                }
             }),
         }));
 
@@ -305,11 +296,11 @@ describe('getAttendeesFromRow', () => {
     
 
     it('should return attendees from the In Charge and Helpers columns when Domain is Rotation', () => {
-        interface Row {
-            [key: string]: any;
-        }
-
-        const row: Row = { domain: "ROTATION", who: "Rotation", inCharge: { value: "Kevin Lai" } as Text, helpers: { value: "Josh Wong, Isaac Otero" } as Text };
+        const row: Row = getRandomlyGeneratedRow();
+        row.domain = "ROTATION";
+        row.who = "Rotation";
+        row.inCharge = { value: "Kevin Lai", hyperlink: null };
+        row.helpers = { value: "Josh Wong, Isaac Otero", hyperlink: null };
 
         const MOCK_GROUPS_MAP = {
             ROTATION: undefined,
@@ -381,7 +372,47 @@ describe("hasId", () => {
 });
 
 describe("saveRow", () => {
+    it("should throw a RowMissingIdError when the row does not have an id", () => {
+        const rowMock: Row = getRandomlyGeneratedRow();
+        const metadataMock: Metadata = getRandomlyGeneratedMetadata();
+        metadataMock.getValue = jest.fn(() => null);
+        rowMock.metadata = metadataMock;
 
+        const roleTodoIdMapMock: RoleTodoIdMap = getRandomlyGeneratedRoleTodoIdMap();
+        const scheduleEntryIdMock: string = randomstring.generate();
+
+        expect(() => saveRow(rowMock, roleTodoIdMapMock, scheduleEntryIdMock)).toThrow(RowMissingIdError);
+    });
+
+    it("should save the row to the document properties when called", () => {
+        const rowMock: Row = getRandomlyGeneratedRow();
+        const metadataMock: Metadata = getRandomlyGeneratedMetadata();
+        const roleTodoIdMapMock: RoleTodoIdMap = getRandomlyGeneratedRoleTodoIdMap();
+        const scheduleEntryIdMock: string = randomstring.generate();
+
+        const rowIdMock: string = randomstring.generate();
+        metadataMock.getValue = jest.fn(() => rowIdMock);
+        rowMock.metadata = metadataMock;
+
+        const rowHashBytesMock: Uint8Array = getRandomlyGeneratedByteArray();
+        const computeDigestMock: Mock = jest.fn(() => rowHashBytesMock);
+        global.Utilities = {
+            computeDigest: computeDigestMock,
+            DigestAlgorithm: { SHA_256: 0 },
+        };
+
+        const setDocumentPropertyMock: Mock = jest.fn();
+        jest.mock("../src/main/propertiesService", () => ({
+            setDocumentProperty: setDocumentPropertyMock,
+            loadMapFromScriptProperties: jest.fn(() => ({})),
+        }));
+
+        const { saveRow } = require("../src/main/row");
+
+        saveRow(rowMock, roleTodoIdMapMock, scheduleEntryIdMock);
+
+        expect(setDocumentPropertyMock).toHaveBeenCalledWith(rowIdMock, expect.any(String));
+    });
 });
 
 describe("hasBeenSaved", () => {
@@ -393,10 +424,6 @@ describe("hasChanged", () => {
 });
 
 describe("getRowBasecampMapping", () => {
-
-});
-
-describe("toString", () => {
 
 });
 
@@ -709,4 +736,139 @@ describe("clearAllRowMetadata", () => {
 
 describe("getRoleTodoIdMap", () => {
 
+});
+
+describe("getSavedScheduleEntryId", () => {
+    it("should throw a RowMissingIdError when the row does not have an id", () => {
+        const getValueMock = jest.fn(() => null);
+        const metataMock: Metadata = getRandomlyGeneratedMetadata();
+        metataMock.getValue = getValueMock;
+        const row: Row = getRandomlyGeneratedRow();
+        row.metadata = metataMock;
+
+        expect(() => getSavedScheduleEntryId(row)).toThrow(RowMissingIdError);
+    });
+
+    it("should throw a RowBasecampMappingMissingError when the row does not have a Basecamp mapping", () => {
+        const rowIdMock: string = randomstring.generate();
+        const getValueMock = jest.fn(() => rowIdMock);
+        const metataMock: Metadata = getRandomlyGeneratedMetadata();
+        metataMock.getValue = getValueMock;
+        const row: Row = getRandomlyGeneratedRow();
+        row.metadata = metataMock;
+
+        jest.mock('../src/main/propertiesService', () => ({
+            getDocumentProperty: jest.fn(() => null),
+        }));
+
+        const { getSavedScheduleEntryId } = require("../src/main/row");
+
+        expect(() => getSavedScheduleEntryId(row)).toThrow(new RowBasecampMappingMissingError("The rowBasecampMapping object is null!"));
+    });
+
+    it("should return the saved schedule entry id when the row has a basecamp mapping", () => {
+        const rowIdMock: string = randomstring.generate();
+        const getValueMock = jest.fn(() => rowIdMock);
+        const metataMock: Metadata = getRandomlyGeneratedMetadata();
+        metataMock.getValue = getValueMock;
+        const row: Row = getRandomlyGeneratedRow();
+        row.metadata = metataMock;
+
+        const rowBasecampMappingMock: RowBasecampMapping = getRandomlyGeneratedRowBasecampMapping();
+        jest.mock('../src/main/propertiesService', () => ({
+            getDocumentProperty: jest.fn(() => JSON.stringify(rowBasecampMappingMock)),
+        }));
+
+        const { getSavedScheduleEntryId } = require("../src/main/row");
+                
+        const receivedScheduleEntryId: string = getSavedScheduleEntryId(row);
+
+        expect(receivedScheduleEntryId).toStrictEqual(rowBasecampMappingMock.scheduleEntryId);
+    });
+});
+
+describe("hasBasecampAttendees", () => {
+    it("should true when there are basecamp attendees for the row", () => {
+        const rowMock: Row = getRandomlyGeneratedRow();
+        rowMock.who = "Rotation";
+        rowMock.inCharge = { value: "John Doe", hyperlink: null };
+        rowMock.helpers = { value: "Jane Smith, Alice Johnson", hyperlink: null };
+
+        jest.mock("../src/main/groups", () => ({
+            GROUP_NAMES: ["UCSD"],
+            GROUPS_MAP: { "UCSD": ["John Doe", "Jane Smith", "Alice Johnson"] },
+        }));
+
+        jest.mock("../src/main/people", () => ({
+            getPersonId: jest.fn(() => randomstring.generate()),
+        }));
+
+        const { hasBasecampAttendees } = require("../src/main/row");
+
+        const hasAttendees: boolean = hasBasecampAttendees(rowMock);
+        expect(hasAttendees).toBe(true);
+    });
+
+    it("should false when there are no basecamp attendees for the row", () => {
+        const rowMock: Row = getRandomlyGeneratedRow();
+        rowMock.who = "Rotation";
+        rowMock.inCharge = { value: "", hyperlink: null };
+        rowMock.helpers = { value: "", hyperlink: null };
+
+        jest.mock("../src/main/groups", () => ({
+            GROUP_NAMES: ["UCSD"],
+            GROUPS_MAP: { "UCSD": ["John Doe", "Jane Smith", "Alice Johnson"] },
+        }));
+
+        jest.mock("../src/main/people", () => ({
+            getPersonId: jest.fn(() => randomstring.generate()),
+        }));
+
+        const { hasBasecampAttendees } = require("../src/main/row");
+
+        const hasAttendees: boolean = hasBasecampAttendees(rowMock);
+        expect(hasAttendees).toBe(false);
+    });
+});
+
+describe("getScheduleEntryRequestForRow", () => {
+    it("should return a schedule entry request when given a row", () => {
+        const rowMock: Row = getRandomlyGeneratedRow();
+        rowMock.domain = "College";
+        rowMock.who = "UCSD";
+        rowMock.inCharge = { value: "John Doe", hyperlink: null };
+        rowMock.helpers = { value: "Jane Smith, Alice Johnson", hyperlink: null };
+
+        jest.mock("../src/main/groups", () => ({
+            GROUP_NAMES: ["UCSD"],
+            GROUPS_MAP: { "UCSD": ["John Doe", "Jane Smith", "Alice Johnson"] },
+            getMembersFromGroups: jest.fn(() => ["John Doe", "Jane Smith", "Alice Johnson"]),
+        }));
+
+        const PEOPLE_MAP: { [name: string]: string } = {
+            "John Doe": "1",
+            "Jane Smith": "2",
+            "Alice Johnson": "3",
+        };  
+
+        jest.mock("../src/main/people", () => ({
+            getPersonId: jest.fn((personName) => PEOPLE_MAP.hasOwnProperty(personName) ? PEOPLE_MAP[personName] : randomstring.generate()),
+        }));
+
+        const { getScheduleEntryRequestForRow } = require("../src/main/row");
+
+        const scheduleEntryRequest: BasecampScheduleEntryRequest = getScheduleEntryRequestForRow(rowMock);
+        expect(scheduleEntryRequest).toBeDefined();
+        expect(scheduleEntryRequest.summary).toContain("UCSD");
+        expect(scheduleEntryRequest.summary).toContain(rowMock.what.value);
+        expect(scheduleEntryRequest.starts_at).toStrictEqual(rowMock.startTime.toISOString());
+        expect(scheduleEntryRequest.ends_at).toStrictEqual(rowMock.endTime.toISOString());
+        expect(scheduleEntryRequest.description).toContain(rowMock.where.value);
+        expect(scheduleEntryRequest.description).toContain(rowMock.inCharge.value);
+        expect(scheduleEntryRequest.description).toContain(rowMock.helpers.value);
+        expect(scheduleEntryRequest.description).toContain(rowMock.notes.value);
+        expect(scheduleEntryRequest.participant_ids).toContain(PEOPLE_MAP["John Doe"]);
+        expect(scheduleEntryRequest.participant_ids).toContain(PEOPLE_MAP["Jane Smith"]);
+        expect(scheduleEntryRequest.participant_ids).toContain(PEOPLE_MAP["Alice Johnson"]);
+    });
 });

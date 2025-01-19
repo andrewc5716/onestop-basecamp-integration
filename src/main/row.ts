@@ -1,13 +1,13 @@
-import { DomainMissingError } from "./error/domainMissingError";
 import { InvalidHashError } from "./error/invalidHashError";
 import { RowBasecampMappingMissingError } from "./error/rowBasecampMappingMissingError";
 import { RowMissingIdError } from "./error/rowMissingIdError";
 import { RowNotSavedError } from "./error/rowNotSavedError";
 import { containsFilter, filterMembers, isFilter, removeFilters } from "./filter";
 import { GROUPS_MAP, getMembersFromGroups, GROUP_NAMES } from "./groups";
-import { ALIASES_MAP, MEMBER_MAP } from "./members";
+import { ALIASES_MAP } from "./members";
 import { getPersonId } from "./people";
-import { deleteAllDocumentProperties, getDocumentProperty, setDocumentProperty } from "./propertiesService";
+import { getDocumentProperty, setDocumentProperty } from "./propertiesService";
+import { getBasecampScheduleEntryRequest } from "./schedule";
 import { getBasecampTodoRequest } from "./todos";
 
 const ROW_ID_KEY: string = "rowId";
@@ -90,15 +90,17 @@ export function hasId(row: Row): boolean {
  * 
  * @param row the row's contents to write
  * @param roleTodoIdMap a map that has role titles as the keys and todo ids as the values
+ * @param scheduleEntryId id of the schedule entry created for this row
  */
-export function saveRow(row: Row, roleTodoIdMap: RoleTodoIdMap): void {
+export function saveRow(row: Row, roleTodoIdMap: RoleTodoIdMap, scheduleEntryId: string): void {
     if(!hasId(row)) {
         throw new RowMissingIdError(`Row does not have an id: ${toString(row)}`);
     }
 
     const rowId: string = getId(row);
     const rowHash: string = toHexString(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, toString(row)));
-    const rowBasecampMapping: RowBasecampMapping = {rowHash: rowHash, roleTodoIdMap: roleTodoIdMap};
+    const tabInfo: TabInfo = { date: row.date };
+    const rowBasecampMapping: RowBasecampMapping = {rowHash: rowHash, roleTodoIdMap: roleTodoIdMap, scheduleEntryId: scheduleEntryId, tabInfo: tabInfo};
 
     setDocumentProperty(rowId, JSON.stringify(rowBasecampMapping));
 }
@@ -243,7 +245,7 @@ export function getBasecampTodoForLeads(row: Row): RoleRequestMap {
         const leadsRequest: BasecampTodoRequest = getBasecampTodoRequest(basecampTodoContent, basecampTodoDescription, leadIds, leadIds, false, basecampDueDate);
         leadsRoleRequestMap[LEAD_ROLE_TITLE] = leadsRequest;
     } else {
-        Logger.log(`${getLeadsNames(row)} do not have any Basecamp ids. row: ${row}`);
+        Logger.log(`${getLeadsNames(row)} do not have any Basecamp ids. row: ${JSON.stringify(row)}`);
     }
 
     return leadsRoleRequestMap;
@@ -256,7 +258,7 @@ export function getBasecampTodoForLeads(row: Row): RoleRequestMap {
  * @returns array of Basecamp ids for the leads of a row
  */
 function getLeadsBasecampIds(row: Row): string[] {
-    const leadNames: string[] = getLeadsNames(row);
+    const leadNames: string[] = getLeadsNames(row).flatMap((name) => ALIASES_MAP.hasOwnProperty(name) ? ALIASES_MAP[name] : name);
     return getBasecampIdsFromPersonNameList(leadNames);
 }
 
@@ -279,7 +281,8 @@ function getBasecampIdsFromPersonNameList(personNameList: string[]): string[] {
  */
 function getLeadsNames(row: Row): string[] {
     return row.inCharge.value.split(COMMA_FORWARD_SLASH_DELIM_REGEX)
-    .map(name => name.trim());
+    .map(name => name.trim())
+    .filter(name => name !== "");
 }
 
 /**
@@ -410,12 +413,9 @@ function getHelpersNames(helpers: string): string[] {
     .map(name => name.trim())
     .filter(name => name !== "");
 
-    //const filters: string[] = helperStrings.filter((helperString) => isFilter(helperString));
-    //const helperStringsWithoutFilters: string[] = helperStrings.filter((helperString) => !isFilter(helperString));
     const helperNames: string[] = helperStrings.flatMap((helperString) => getMemberNamesFromHelperString(helperString));
     // Removes any duplicates
     const uniqueHelperNames: string[] = [...new Set(helperNames)];
-    //const filteredMembers: string[] = filters.length > 0 ? filterMembers(helperNames, filters) : helperNames;
 
     return uniqueHelperNames;
 }
@@ -534,7 +534,7 @@ function splitWhoColumn(row: Row): string[] {
  */
 function getMinistryNames(row: Row): string[] {
     return splitWhoColumn(row)
-        .map(name => name.trim()).filter(value => GROUP_NAMES.includes(value.toUpperCase()));
+        .map(name => name.trim()).filter(value => GROUP_NAMES.includes(value));
 }
 
 /**
@@ -620,7 +620,7 @@ export function getAttendeesFromRow(row: Row): string[] {
 
     } else  {
         // Step 5: Handle Missing Data
-        console.log("ERROR: Unable to get attendees from row becuase both domain and ministry columns are empty!")
+        Logger.log("ERROR: Unable to get attendees from row becuase both domain and ministry columns are empty!")
     }
 
     return attendees;
@@ -651,23 +651,67 @@ function filterDomainAttendees(domainNames: string[], domainFilters: string[]): 
 }
 
 /**
- * Helpful debugging function which clears all row metadata
- */
-export function clearAllRowMetadata(): void {
-    deleteAllDocumentProperties();
-}
-
-/**
  * Gets the roleTodoIdMap object from the RowBasecampMapping object.
  * Used for downstream processing
  * 
  * @param row a list of all the current roles associated with the row including the lead role. This may be identical to the original roles
  * @returns a map that associates role titles with basecamp todo ids
  */
-export function getRoleTodoIdMap(row: Row) {
+export function getRoleTodoIdMap(row: Row): RoleTodoIdMap {
     const savedRowBasecampMapping: RowBasecampMapping | null = getRowBasecampMapping(row);
     if(savedRowBasecampMapping === null) {
         throw new RowBasecampMappingMissingError("The rowBasecampMapping object is null! Unable to proceed with updating the todo!");
     }
     return savedRowBasecampMapping.roleTodoIdMap;
+}
+
+export function getSavedScheduleEntryId(row: Row): string {
+    const savedRowBasecampMapping: RowBasecampMapping | null = getRowBasecampMapping(row);
+    if(savedRowBasecampMapping === null) {
+        throw new RowBasecampMappingMissingError("The rowBasecampMapping object is null!");
+    }
+    return savedRowBasecampMapping.scheduleEntryId;
+}
+
+export function hasBasecampAttendees(row: Row): boolean {
+    return getBasecampIdsFromPersonNameList(getAttendeesFromRow(row)).length > 0;
+}
+
+export function getScheduleEntryRequestForRow(row: Row): BasecampScheduleEntryRequest {
+    const summary: string = getScheduleEntrySummary(row);
+    const startsAt: string = row.startTime.toISOString();
+    const endsAt: string = row.endTime.toISOString();
+    const description: string = getScheduleEntryDescription(row);
+    const participantIds: string[] = getBasecampIdsFromPersonNameList(getAttendeesFromRow(row));
+
+    return getBasecampScheduleEntryRequest(summary, startsAt, endsAt, description, participantIds, false, true);
+}
+
+function getScheduleEntrySummary(row: Row): string {
+    const ministryNames: string[] = getMinistryNames(row);
+    const domainNames: string[] = getDomainNames(row);
+    // Choose the ministry names if possible, otherwise use the domain names
+    const who: string = ministryNames.length > 0 ? ministryNames.join(" ") : domainNames.join(" ");
+
+    return `[${who}] ${row.what.value}`;
+}
+
+function getScheduleEntryDescription(row: Row): string {
+    const location: string = `WHERE: ${row.where.value ?? "N\\A"}`;
+
+    const locales: Intl.LocalesArgument = 'en-us';
+    const options: Intl.DateTimeFormatOptions = {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+    }
+    const startTime: string = row.startTime.toLocaleTimeString(locales, options);
+    const endTime: string = row.endTime.toLocaleTimeString(locales, options);
+
+    const time: string = `\n\nWHEN: ${startTime} - ${endTime}`;
+    const inCharge: string = `\n\nIN CHARGE: ${row.inCharge.value ?? "N\\A"}`;
+    const helpers: string = `\n\nHELPERS:\n${row.helpers.value ?? "N\\A"}`;
+    const notes: string = `\n\nNOTES: ${row.notes.value ?? "N\\A"}`;
+
+    return location + time + inCharge + helpers + notes;
 }

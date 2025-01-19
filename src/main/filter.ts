@@ -65,6 +65,11 @@ export function isFilter(potentialFilter: string): boolean {
 }
 
 /**
+ * A list of all the filters from FILTER_MAP
+ */
+export const FILTER_NAMES: string[] = Object.keys(FILTER_MAP) as string[];
+
+/**
  * Filters an array of group members based on the given list of filters from the Onestop
  * 
  * @param groupMembers array of group members to filter

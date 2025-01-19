@@ -1,10 +1,11 @@
-import { getBasecampUrl, PROJECT_ID, sendPaginatedBasecampGetRequest } from "./basecamp";
+import { BASECAMP_PROJECT_ID } from "../../config/environmentVariables";
+import { getBasecampUrl, sendPaginatedBasecampGetRequest } from "./basecamp";
 import { PersonNameIdMapNotCachedError } from "./error/personNameIdMapNotCachedError";
 import { getScriptProperty, setScriptProperty } from "./propertiesService";
 
 type PersonNameIdMap = {[key: string]: string};
 
-const PEOPLE_PATH: string = `/projects/${PROJECT_ID}/people.json`;
+const PEOPLE_PATH: string = `/projects/${BASECAMP_PROJECT_ID}/people.json`;
 const PEOPLE_MAP_KEY: string = "PEOPLE_MAP";
 
 let cachedPersonNameIdMap: PersonNameIdMap | null = null;

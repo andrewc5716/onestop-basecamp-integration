@@ -1,3 +1,4 @@
+import { BASECAMP_PROJECT_ID, BASECAMP_SCHEDULE_ID } from "../../config/environmentVariables";
 import { getBasecampProjectUrl, sendBasecampPostRequest, sendBasecampPutRequest } from "./basecamp";
 
 const SCHEDULES_PATH: string = '/schedules/';
@@ -40,6 +41,32 @@ export function updateScheduleEntry(request: BasecampScheduleEntryRequest, sched
 export function deleteScheduleEntry(scheduleEntryIdentifier: ScheduleEntryIdentifier): void {
     Logger.log(`Deleting schedule entry: "${scheduleEntryIdentifier.scheduleEntryId}"`);
     sendBasecampPutRequest(getDeleteScheduleEntryUrl(scheduleEntryIdentifier), {});
+}
+
+export function getBasecampScheduleEntryRequest(summary: string, startsAt: string, endsAt: string, description: string, participantIds: string[], allDay: boolean, notify: boolean): BasecampScheduleEntryRequest {
+    return {
+        summary: summary,
+        starts_at: startsAt,
+        ends_at: endsAt,
+        description: description,
+        participant_ids: participantIds,
+        all_day: allDay,
+        notify: notify,
+    };
+}
+
+export function getDefaultScheduleIdentifier(): ScheduleIdentifier {
+    return {
+        projectId: BASECAMP_PROJECT_ID,
+        scheduleId: BASECAMP_SCHEDULE_ID,
+    };
+}
+
+export function getScheduleEntryIdentifier(scheduleEntryId: string): ScheduleEntryIdentifier {
+    return {
+        projectId: BASECAMP_PROJECT_ID,
+        scheduleEntryId: scheduleEntryId,
+    }
 }
 
 function getCreateScheduleEntryUrl(scheduleIdentifier: ScheduleIdentifier): string {

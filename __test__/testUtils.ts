@@ -1,4 +1,5 @@
 import randomstring from "randomstring";
+import { randomBytes } from 'crypto';
 
 const BOOLEAN_UPPERBOUND: number = 2;
 
@@ -24,6 +25,7 @@ export function getRandomlyGeneratedMetadata(): Metadata {
 
 export function getRandomlyGeneratedRow(): Row {
     return {
+        date: new Date(),
         metadata: getRandomlyGeneratedMetadata(),
         startTime: new Date(),
         endTime: new Date(),
@@ -325,7 +327,7 @@ function getRandomNumber(upperBound: number = Number.MAX_SAFE_INTEGER): number {
     return Math.floor(Math.random() * upperBound);
 }
 
-function getRandomBoolean(): boolean {
+export function getRandomBoolean(): boolean {
     return getRandomNumber(BOOLEAN_UPPERBOUND) ? true: false;
 }
 
@@ -338,5 +340,63 @@ export function getRandomlyGeneratedScheduleEntry(): BasecampScheduleEntryReques
         participant_ids: [randomstring.generate()],
         all_day: getRandomBoolean(),
         notify: getRandomBoolean()
+    }
+}
+
+export function getRandomlyGeneratedRoleTodoIdMap(numRoles: number = 10): RoleTodoIdMap {
+    const roleTodoIdMap: RoleTodoIdMap = {};
+    for(let i = 0; i < numRoles; i++) {
+        roleTodoIdMap[randomstring.generate()] = randomstring.generate();
+    }
+
+    return roleTodoIdMap;
+}
+
+export function getRandomlyGeneratedByteArray(numBytes: number = 100): Uint8Array {
+    return Uint8Array.from(randomBytes(numBytes));
+}
+
+export function getRandomlyGeneratedRowBasecampMapping(): RowBasecampMapping {
+    return {
+        rowHash: randomstring.generate(),
+        roleTodoIdMap: getRandomlyGeneratedRoleTodoIdMap(),
+        scheduleEntryId: randomstring.generate(),
+        tabInfo: { date: new Date() },
+    };
+}
+
+export function getRandomlyGeneratedRoleRequestMap(numRoles: number = 10): RoleRequestMap {
+    const roleRequestMap: RoleRequestMap = {};
+    for(let i = 0; i < numRoles; i++) {
+        roleRequestMap[randomstring.generate()] = getRandomlyGeneratedBasecampTodoRequest();
+    }
+
+    return roleRequestMap;
+}
+
+export function getRandomlyGeneratedBasecampTodoRequest(numAssignees: number = 5): BasecampTodoRequest {
+    const ids: string[] = Array.from({length: numAssignees}, () => randomstring.generate());
+
+    return {
+        content: randomstring.generate(),
+        description: randomstring.generate(),
+        assignee_ids: ids,
+        completion_subscriber_ids: ids,
+        notify: getRandomBoolean(),
+        due_on: randomstring.generate(),
+    };
+}
+
+export function getRandomlyGeneratedScheduleIdentifier(): ScheduleIdentifier {
+    return {
+        projectId: randomstring.generate(),
+        scheduleId: randomstring.generate(),
+    }
+}
+
+export function getRandomlyGeneratedScheduleEntryIdentifier(): ScheduleEntryIdentifier {
+    return {
+        projectId: randomstring.generate(),
+        scheduleEntryId: randomstring.generate(),
     }
 }
