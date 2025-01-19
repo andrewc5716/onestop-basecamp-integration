@@ -47,26 +47,32 @@ export function importOnestopToBasecamp(): void {
 function processExistingRow(row: Row): void {
 
     if(hasChanged(row)) {
-
-        // Handles Todos
-        const currentRoleRequestMap: RoleRequestMap = getBasecampTodoRequestsForRow(row);
-        const lastSavedRoleTodoIdMap: RoleTodoIdMap  = getRoleTodoIdMap(row);
-
-        deleteObsoleteTodos(currentRoleRequestMap, lastSavedRoleTodoIdMap);
-
-        const newRoleTodoIdMap: RoleTodoIdMap = createTodosForNewRoles(currentRoleRequestMap, lastSavedRoleTodoIdMap);
-        const existingRoleTodoIdMap: RoleTodoIdMap = updateTodosForExistingRoles(currentRoleRequestMap, lastSavedRoleTodoIdMap);
-
-        const updatedRoleTodoIdMap: RoleTodoIdMap = {...existingRoleTodoIdMap, ...newRoleTodoIdMap};
-
-        // Handles Schedule Entries
-        const scheduleEntryId: string = getSavedScheduleEntryId(row);
-        const scheduleEntryRequest: BasecampScheduleEntryRequest = getScheduleEntryRequestForRow(row);
-        const scheduleEntryIdentifier: ScheduleEntryIdentifier = getScheduleEntryIdentifier(scheduleEntryId);
-        updateScheduleEntry(scheduleEntryRequest, scheduleEntryIdentifier);
+        const updatedRoleTodoIdMap: RoleTodoIdMap = handleTodosForExistingRow(row);
+        const scheduleEntryId: string = handleScheduleEntryForExistingRow(row);
 
         saveRow(row, updatedRoleTodoIdMap, scheduleEntryId);
     }
+}
+
+function handleTodosForExistingRow(row: Row): RoleTodoIdMap {
+    const currentRoleRequestMap: RoleRequestMap = getBasecampTodoRequestsForRow(row);
+    const lastSavedRoleTodoIdMap: RoleTodoIdMap  = getRoleTodoIdMap(row);
+
+    deleteObsoleteTodos(currentRoleRequestMap, lastSavedRoleTodoIdMap);
+
+    const newRoleTodoIdMap: RoleTodoIdMap = createTodosForNewRoles(currentRoleRequestMap, lastSavedRoleTodoIdMap);
+    const existingRoleTodoIdMap: RoleTodoIdMap = updateTodosForExistingRoles(currentRoleRequestMap, lastSavedRoleTodoIdMap);
+
+    return {...existingRoleTodoIdMap, ...newRoleTodoIdMap};
+}
+
+function handleScheduleEntryForExistingRow(row: Row): string {
+    const scheduleEntryId: string = getSavedScheduleEntryId(row);
+    const scheduleEntryRequest: BasecampScheduleEntryRequest = getScheduleEntryRequestForRow(row);
+    const scheduleEntryIdentifier: ScheduleEntryIdentifier = getScheduleEntryIdentifier(scheduleEntryId);
+    updateScheduleEntry(scheduleEntryRequest, scheduleEntryIdentifier);
+
+    return scheduleEntryId;
 }
 
 /**
