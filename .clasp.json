@@ -1,14 +1,4 @@
 {
-<<<<<<< HEAD
-<<<<<<< HEAD
-  "scriptId": "1wjCZWISevP9KgxxiNM9OPP9Aq3VnGIxVfS6BTj586WhfrKWTg8rRmvgq",
-  "rootDir": "./build"
-=======
-    "scriptId": "1N22pZ29WY4DF-KV-JZ7jLh92f44pWrgL0rUqLviBbQ8ECZCEMbpvxi9V",
-    "rootDir": "./build"
->>>>>>> 58ef331 (fix function rename and add back clasp.json)
-=======
   "scriptId": "1N22pZ29WY4DF-KV-JZ7jLh92f44pWrgL0rUqLviBbQ8ECZCEMbpvxi9V",
   "rootDir": "./build"
->>>>>>> 22f386c (fix identationsP)
 }
