@@ -19,6 +19,7 @@ describe("deleteAllRowMetadata", () => {
 
         jest.mock("../src/main/propertiesService", () => ({
             deleteAllDocumentProperties: jest.fn(),
+            loadMapFromScriptProperties: jest.fn(() => ({})),
         }));
 
         const { deleteAllRowMetadata } = require("../src/main/utils");
@@ -50,6 +51,7 @@ describe("deleteAllRowMetadataAndDocumentProperties", () => {
         const deleteAllDocumentPropertiesMock: Mock = jest.fn();
         jest.mock("../src/main/propertiesService", () => ({
             deleteAllDocumentProperties: deleteAllDocumentPropertiesMock,
+            loadMapFromScriptProperties: jest.fn(() => ({})),
         }));
 
         const { deleteAllRowMetadataAndDocumentProperties } = require("../src/main/utils");
@@ -59,5 +61,11 @@ describe("deleteAllRowMetadataAndDocumentProperties", () => {
         expect(metadataRemoveMock1).toHaveBeenCalledTimes(1);
         expect(metadataRemoveMock2).toHaveBeenCalledTimes(1);
         expect(deleteAllDocumentPropertiesMock).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe("loadDataFromOnestopIntoScriptProperties", () => {
+    it("should when", () => {
+
     });
 });

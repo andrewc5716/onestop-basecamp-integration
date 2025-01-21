@@ -1,7 +1,8 @@
 import { GROUPS_MAP } from "./groups";
-import { ALIASES_MAP, MEMBER_MAP } from "./members";
+import { MEMBER_MAP } from "./members";
 import { removeFilters } from "./filter";
 import { normalizePersonName } from "./people";
+import { ALIASES_MAP } from "./aliases";
 
 const NEW_LINE_DELIM: string = "\n";
 const COLON_DELIM: string = ":";
