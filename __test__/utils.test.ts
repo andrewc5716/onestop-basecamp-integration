@@ -64,7 +64,7 @@ describe("deleteAllRowMetadataAndDocumentProperties", () => {
     });
 });
 
-describe("loadDataFromOnestopIntoScriptProperties", () => {
+describe("loadMembersAndGroupsFromOnestopIntoScriptProperties", () => {
     it("should when", () => {
 
     });

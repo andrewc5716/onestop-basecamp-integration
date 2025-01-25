@@ -18,7 +18,7 @@ export function deleteAllRowMetadataAndDocumentProperties(): void {
     deleteAllDocumentProperties();
 }
 
-export function loadDataFromOnestopIntoScriptProperties(): void {
+export function loadMembersAndGroupsFromOnestopIntoScriptProperties(): void {
     const membersAliasMap: AliasMap = loadMembersFromOnestopIntoScriptProperties();
     const groupAliasMap: AliasMap = loadGroupsFromOnestopIntoScriptProperties();
     const combinedAliasMaps: AliasMap = mergeAliasMaps(membersAliasMap, groupAliasMap);
