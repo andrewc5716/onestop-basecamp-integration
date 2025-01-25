@@ -82,8 +82,8 @@ export function getActiveDailyTabs(spreadsheetTabs: Sheet[]): Sheet[] {
  */
 export function getRowsWithEvents(spreadsheetTab: Sheet): Row[] {
     const dataRange: Range = spreadsheetTab.getDataRange();
-    const cellData = getCellData(dataRange);
-    const currentDate = getDateOfDailyTab(cellData);
+    const cellData: CellData[][] = getCellData(dataRange);
+    const currentDate: Date = getDateOfDailyTab(cellData);
 
     const rows: Row[] = [];
     for(let i = 0; i < cellData.length; i++) {
@@ -150,31 +150,33 @@ function getCellData(dataRange: Range): CellData[][] {
     const numCols = dataRange.getNumColumns();
 
     for(let i = 0; i < numRows; i++) {
-        cellData[i] = [];
-        populateColumnData(i, cellData, numCols, cellRichTextData, cellValues);
+        cellData[i] = getColumnData(numCols, cellRichTextData[i], cellValues[i]);
     }
 
     return cellData;
 }
 
 /**
- * Helper function for the getCellData function that given a row, populates the column data for that particular row
+ * Helper function for the getCellData function that given a row, returns the column data for that particular row
  * 
- * @param currentRow the current row index being processed
- * @param cellData output matrix where the column data is to be populated
  * @param numCols number of columns in the cell data matrix
  * @param cellRichTextData rich text data that is to be used to fetch the potential hyperlink urls for cells in this row
  * @param cellValues actual data values that is to be used to populate the cell data matrix
  */
-function populateColumnData(currentRow: number, cellData: CellData[][], numCols: number, cellRichTextData: RichTextValue[][], cellValues: any[][]) {
+function getColumnData(numCols: number, cellRichTextData: RichTextValue[], cellValues: any[]): CellData[] {
+    const columnData: CellData[] = [];
+
     for(let j = 0; j < numCols; j++) {
-        const textStyle: TextStyle = cellRichTextData[currentRow][j].getTextStyle();
-        cellData[currentRow][j] = {
-            value: cellValues[currentRow][j],
-            linkUrl: cellRichTextData[currentRow][j].getLinkUrl(),
+        const textStyle: TextStyle = cellRichTextData[j].getTextStyle();
+        const newColumnData: CellData = {
+            value: cellValues[j],
+            linkUrl: cellRichTextData[j].getLinkUrl(),
             strikethrough: getCellStrikethrough(textStyle)
-        }
+        };
+        columnData.push(newColumnData);
     }
+
+    return columnData;
 }
 
 /**
