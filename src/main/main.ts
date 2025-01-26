@@ -89,10 +89,8 @@ function processNewRow(row: Row): void {
     const scheduleEntryRequest: BasecampScheduleEntryRequest = getScheduleEntryRequestForRow(row);
     const scheduleEntryId: string = createScheduleEntry(scheduleEntryRequest, getDefaultScheduleIdentifier());
 
-    if(Object.keys(roleTodoIdMap).length > 0 && scheduleEntryId !== "") {
-        generateIdForRow(row);
-        saveRow(row, roleTodoIdMap, scheduleEntryId);
-    }
+    generateIdForRow(row);
+    saveRow(row, roleTodoIdMap, scheduleEntryId);
 }
 
 function deleteOldRows(processedRowIds: string[]): void {
