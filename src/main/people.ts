@@ -7,6 +7,7 @@ type PersonNameIdMap = {[key: string]: string};
 
 const PEOPLE_PATH: string = `/projects/${BASECAMP_PROJECT_ID}/people.json`;
 const PEOPLE_MAP_KEY: string = "PEOPLE_MAP";
+const REMOVE_PARENTHESES_REGEX: RegExp = /\(.*?\)/g;
 
 let cachedPersonNameIdMap: PersonNameIdMap | null = null;
 
@@ -93,12 +94,9 @@ function getPersonIdFromCache(personName: string): string | undefined {
 /**
  * Normalizes a person name removing any city in parenthesis if found, and also removes middle names
  * 
- * @param rawPersonName person name that may include city in parenthesis or middle names, e.g. Andrew Chan (Sd)
- * @returns the person's first and last name only, e.g. Andrew Chan
+ * @param rawPersonName person name that may include city in parenthesis, e.g. Andrew Chan (Sd)
+ * @returns the person's name without parentheses
  */
 export function normalizePersonName(rawPersonName: string): string {
-    const parenthesisIndex = rawPersonName.indexOf('(');
-    const nameWithoutParenthesis = parenthesisIndex === -1 ? rawPersonName : rawPersonName.slice(0, parenthesisIndex);
-    const fullName = nameWithoutParenthesis.trim().split(' ');
-    return `${fullName[0]} ${fullName[fullName.length - 1]}`;
+    return rawPersonName.replace(REMOVE_PARENTHESES_REGEX, '').toLowerCase().trim();
 }
