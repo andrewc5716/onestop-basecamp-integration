@@ -302,40 +302,44 @@ function getBasecampTodoDescription(row: Row): string {
     const startTime: string = row.startTime.toLocaleTimeString(locales, options);
     const endTime: string = row.endTime.toLocaleTimeString(locales, options);
 
-    const time: string = wrapWithPreTag(`WHEN: ${startTime} - ${endTime}`);
+    const time: string = `WHEN: ${startTime} - ${endTime}`;
     const inCharge: string = getRichTextFromText("IN CHARGE", row.inCharge);
     const helpers: string = getRichTextFromText("HELPERS", row.helpers);
     const notes: string = getRichTextFromText("NOTES", row.notes);
 
-    return wrapWithDivTag(location + time + inCharge + helpers + notes);
+    return wrapWithDivTag(combineWithBreakTags([location, time, inCharge, helpers, notes]));
 }
 
 function getRichTextFromText(prefix: string, text: Text): string {
     if(text.tokens.length === 1) {
-        return wrapWithPreTag(`${prefix}: ${text.value}`);
+        return `${prefix}: ${replaceNewLinesWithBreakTags(text.value)}`;
     }
 
     const textTokens: TextData[] = text.tokens;
-    let richText: string = "";
+    let richText: string = `${prefix}: `;
     for(const token of textTokens) {
         if(token.hyperlink !== null) {
-            richText += `<a href="${token.hyperlink}">${token.value}</a>`;
+            richText += `<a href="${token.hyperlink}">${replaceNewLinesWithBreakTags(token.value)}</a>`;
         } else if(token.strikethrough) {
-            richText += `<strike>${token.value}</strike>`;
+            richText += `<strike>${replaceNewLinesWithBreakTags(token.value)}</strike>`;
         } else {
-            richText += token.value;
+            richText += replaceNewLinesWithBreakTags(token.value);
         }
     }
 
-    return wrapWithPreTag(richText);
+    return richText;
 }
 
 function wrapWithDivTag(text: string): string {
     return `<div>${text}</div>`;
 }
 
-function wrapWithPreTag(text: string): string {
-    return `<pre>${text}</pre>`;
+function combineWithBreakTags(stringsToCombine: string[]): string {
+    return stringsToCombine.join("<br>");
+}
+
+function replaceNewLinesWithBreakTags(text: string): string {
+    return text.replace(NEW_LINE_DELIM, "<br>");
 }
 
 /**
@@ -733,10 +737,10 @@ function getScheduleEntryDescription(row: Row): string {
     const startTime: string = row.startTime.toLocaleTimeString(locales, options);
     const endTime: string = row.endTime.toLocaleTimeString(locales, options);
 
-    const time: string = wrapWithPreTag(`WHEN: ${startTime} - ${endTime}`);
+    const time: string = `WHEN: ${startTime} - ${endTime}`;
     const inCharge: string = getRichTextFromText("IN CHARGE", row.inCharge);
     const helpers: string = getRichTextFromText("HELPERS", row.helpers);
     const notes: string = getRichTextFromText("NOTES", row.notes);
 
-    return wrapWithDivTag(location + time + inCharge + helpers + notes);
+    return wrapWithDivTag(combineWithBreakTags([location, time, inCharge, helpers, notes]));
 }
