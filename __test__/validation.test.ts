@@ -1,14 +1,14 @@
 import { PropertiesService } from 'gasmask';
 global.PropertiesService = PropertiesService;
-import {isHelperCellValid} from "../src/main/validation";
+import {validateHelperCellText, validateLeadCellText} from "../src/main/validation";
 
-describe("isHelperCellValid", () => {
+describe("validateHelperCellText", () => {
     it("should allow empty", () => {
-        expect(isHelperCellValid("")).toBeTruthy();
+        expect(validateHelperCellText("")).toBe("");
     });
 
     it("should reject undefined helper", () => {
-        expect(isHelperCellValid("undefined")).toBeFalsy();
+        expect(validateHelperCellText("undefined")).toBe("Invalid identifier(s): undefined");
     })
 
     it("should allow a group name", () => {
@@ -22,9 +22,9 @@ describe("isHelperCellValid", () => {
                 return {};
             }),
         }));
-        const { isHelperCellValid } = require("../src/main/validation");
+        const { validateHelperCellText } = require("../src/main/validation");
 
-        expect(isHelperCellValid("HG2")).toBeTruthy();
+        expect(validateHelperCellText("HG2")).toBe("");
     });
 
     it("should allow an alias", () => {
@@ -38,9 +38,9 @@ describe("isHelperCellValid", () => {
                 return {};
             }),
         }));
-        const { isHelperCellValid } = require("../src/main/validation");
+        const { validateHelperCellText } = require("../src/main/validation");
 
-        expect(isHelperCellValid("Andrew/Janice")).toBeTruthy();
+        expect(validateHelperCellText("Andrew/Janice")).toBe("");
     });
 
     it("should allow a valid member name", () => {
@@ -54,9 +54,9 @@ describe("isHelperCellValid", () => {
                 return {};
             }),
         }));
-        const { isHelperCellValid } = require("../src/main/validation");
+        const { validateHelperCellText } = require("../src/main/validation");
 
-        expect(isHelperCellValid("Andrew Chan")).toBeTruthy();
+        expect(validateHelperCellText("Andrew Chan")).toBe("");
     });
 
     it("should allow a valid member name with city", () => {
@@ -70,9 +70,9 @@ describe("isHelperCellValid", () => {
                 return {};
             }),
         }));
-        const { isHelperCellValid } = require("../src/main/validation");
+        const { validateHelperCellText } = require("../src/main/validation");
 
-        expect(isHelperCellValid("Andrew Chan (Sd)")).toBeTruthy();
+        expect(validateHelperCellText("Andrew Chan (Sd)")).toBe("");
     });
 
     it("should allow for role text", () => {
@@ -86,9 +86,9 @@ describe("isHelperCellValid", () => {
                 return {};
             }),
         }));
-        const { isHelperCellValid } = require("../src/main/validation");
+        const { validateHelperCellText } = require("../src/main/validation");
 
-        expect(isHelperCellValid("Food: Andrew Chan")).toBeTruthy();
+        expect(validateHelperCellText("Food: Andrew Chan")).toBe("");
     });
 
     it("should allow for filters", () => {
@@ -102,9 +102,29 @@ describe("isHelperCellValid", () => {
                 return {};
             }),
         }));
-        const { isHelperCellValid } = require("../src/main/validation");
+        const { validateHelperCellText } = require("../src/main/validation");
 
-        expect(isHelperCellValid("HG2 Bros")).toBeTruthy();
+        expect(validateHelperCellText("HG2 Bros")).toBe("");
+    });
+
+    it("should report helper identifiers with invalid filters", () => {
+        jest.mock('../src/main/propertiesService', () => ({
+            loadMapFromScriptProperties: jest.fn((key: string) => {
+                if (key === "GROUPS_MAP") {
+                    return {
+                        "SDSU": ['Josh Wong']
+                    }
+                } else if (key === "MEMBER_MAP") {
+                    return {
+                        "Josh Wong": {"gender": "Male"}
+                    }
+                } 
+                return {};
+            }),
+        }));
+        const { validateHelperCellText } = require("../src/main/validation");
+
+        expect(validateHelperCellText("SDSU Brs")).toBe("Invalid identifier(s): SDSU Brs");
     });
 
     it("should allow for multiple lines", () => {
@@ -120,9 +140,9 @@ describe("isHelperCellValid", () => {
                 return {};
             }),
         }));
-        const { isHelperCellValid } = require("../src/main/validation");
+        const { validateHelperCellText } = require("../src/main/validation");
 
-        expect(isHelperCellValid("Andrew Chan\nJanice Chan\nJosh Wong")).toBeTruthy();
+        expect(validateHelperCellText("Andrew Chan\nJanice Chan\nJosh Wong")).toBe("");
     });
 
     it("should allow for comma separated list", () => {
@@ -138,9 +158,9 @@ describe("isHelperCellValid", () => {
                 return {};
             }),
         }));
-        const { isHelperCellValid } = require("../src/main/validation");
+        const { validateHelperCellText } = require("../src/main/validation");
 
-        expect(isHelperCellValid("Andrew Chan, Janice Chan, Josh Wong")).toBeTruthy();
+        expect(validateHelperCellText("Andrew Chan, Janice Chan, Josh Wong")).toBe("");
     });
 
     it("should allow for empty entries between commas", () => {
@@ -155,9 +175,9 @@ describe("isHelperCellValid", () => {
                 return {};
             }),
         }));
-        const { isHelperCellValid } = require("../src/main/validation");
+        const { validateHelperCellText } = require("../src/main/validation");
 
-        expect(isHelperCellValid(",,,,Andrew Chan,,,Janice Chan,,,")).toBeTruthy();
+        expect(validateHelperCellText(",,,,Andrew Chan,,,Janice Chan,,,")).toBe("");
     });
 
     it("should allow for mixing groups, aliases, and members", () => {
@@ -180,9 +200,9 @@ describe("isHelperCellValid", () => {
                 return {};
             }),
         }));
-        const { isHelperCellValid } = require("../src/main/validation");
+        const { validateHelperCellText } = require("../src/main/validation");
 
-        expect(isHelperCellValid("SDSU, Jack/Angel\nFood: Andrew Chan\nJanice Chan")).toBeTruthy();
+        expect(validateHelperCellText("SDSU, Jack/Angel\nFood: Andrew Chan\nJanice Chan")).toBe("");
     });
 
     it("should allow the word staff", () => {
@@ -196,8 +216,191 @@ describe("isHelperCellValid", () => {
                 return {};
             }),
         }));
-        const { isHelperCellValid } = require("../src/main/validation");
+        const { validateHelperCellText } = require("../src/main/validation");
 
-        expect(isHelperCellValid("SDSU staff")).toBeTruthy();
+        expect(validateHelperCellText("SDSU staff")).toBe("");
+    });
+
+    it("should report invalid helper identifiers in the presence of valid helper identifiers", () => {
+        jest.mock('../src/main/propertiesService', () => ({
+            loadMapFromScriptProperties: jest.fn((key: string) => {
+                if (key === "GROUPS_MAP") {
+                    return {
+                        "SDSU": ['Josh Wong']
+                    }
+                } else if (key === "ALIASES_MAP") {
+                    return {
+                        "Jack/Angel": ['Jack Zhang', 'Angel Zhang']
+                    }
+                } else if (key === "MEMBER_MAP") {
+                    return {
+                        "Andrew Chan": {"gender": "Male"},
+                        "Janice Chan": {"gender": "Female"},
+                    }
+                } 
+                return {};
+            }),
+        }));
+        const { validateHelperCellText } = require("../src/main/validation");
+
+        expect(validateHelperCellText("SDSU, Jack/Angel, Josh/Isaac\nFood: Andrew Chan\nJanice Chan")).toBe("Invalid identifier(s): Josh/Isaac");
+    });
+
+    it("should report helper identifiers with invalid filters", () => {
+        jest.mock('../src/main/propertiesService', () => ({
+            loadMapFromScriptProperties: jest.fn((key: string) => {
+                if (key === "GROUPS_MAP") {
+                    return {
+                        "SDSU": ['Josh Wong']
+                    }
+                } else if (key === "MEMBER_MAP") {
+                    return {
+                        "Josh Wong": {"gender": "Male"}
+                    }
+                } 
+                return {};
+            }),
+        }));
+        const { validateHelperCellText } = require("../src/main/validation");
+
+        expect(validateHelperCellText("SDSU Brs")).toBe("Invalid identifier(s): SDSU Brs");
+    });
+});
+
+describe("validateLeadCellText", ()=> {
+    it("should allow empty", () => {
+        expect(validateLeadCellText("")).toBe("");
+    });
+
+    it("should reject undefined lead", () => {
+        expect(validateLeadCellText("undefined")).toBe("Invalid identifier(s): undefined");
+    })
+
+    it("should reject a group name", () => {
+        jest.mock('../src/main/propertiesService', () => ({
+            loadMapFromScriptProperties: jest.fn((key: string) => {
+                if (key === "GROUPS_MAP") {
+                    return {
+                        "HG2": ['Andrew Chan', 'Janice Chan']
+                    }
+                } 
+                return {};
+            }),
+        }));
+        const { validateHelperCellText } = require("../src/main/validation");
+
+        expect(validateHelperCellText("HG2")).toBe("");
+    });
+
+    it("should allow an alias", () => {
+        jest.mock('../src/main/propertiesService', () => ({
+            loadMapFromScriptProperties: jest.fn((key: string) => {
+                if (key === "ALIASES_MAP") {
+                    return {
+                        "Andrew/Janice": ['Andrew Chan', 'Janice Chan']
+                    }
+                } 
+                return {};
+            }),
+        }));
+        const { validateHelperCellText } = require("../src/main/validation");
+
+        expect(validateHelperCellText("Andrew/Janice")).toBe("");
+    });
+
+    it("should allow for comma separated list", () => {
+        jest.mock('../src/main/propertiesService', () => ({
+            loadMapFromScriptProperties: jest.fn((key: string) => {
+                if (key === "MEMBER_MAP") {
+                    return {
+                        "Andrew Chan": {"gender": "Male"},
+                        "Janice Chan": {"gender": "Female"},
+                        "Josh Wong": {"gender": "Male"}
+                    }
+                } 
+                return {};
+            }),
+        }));
+        const { validateHelperCellText } = require("../src/main/validation");
+
+        expect(validateHelperCellText("Andrew Chan, Janice Chan, Josh Wong")).toBe("");
+    });
+
+    it("should allow for separated list", () => {
+        jest.mock('../src/main/propertiesService', () => ({
+            loadMapFromScriptProperties: jest.fn((key: string) => {
+                if (key === "MEMBER_MAP") {
+                    return {
+                        "Andrew Chan": {"gender": "Male"},
+                        "Janice Chan": {"gender": "Female"},
+                        "Josh Wong": {"gender": "Male"}
+                    }
+                } 
+                return {};
+            }),
+        }));
+        const { validateHelperCellText } = require("../src/main/validation");
+
+        expect(validateHelperCellText("Andrew Chan, Janice Chan, Josh Wong")).toBe("");
+    });
+
+    it("should allow for multiple lines", () => {
+        jest.mock('../src/main/propertiesService', () => ({
+            loadMapFromScriptProperties: jest.fn((key: string) => {
+                if (key === "MEMBER_MAP") {
+                    return {
+                        "Andrew Chan": {"gender": "Male"},
+                        "Janice Chan": {"gender": "Female"},
+                        "Josh Wong": {"gender": "Male"}
+                    }
+                } 
+                return {};
+            }),
+        }));
+        const { validateHelperCellText } = require("../src/main/validation");
+
+        expect(validateHelperCellText("Andrew Chan\nJanice Chan\nJosh Wong")).toBe("");
+    });
+
+    it("should allow for empty entries between commas", () => {
+        jest.mock('../src/main/propertiesService', () => ({
+            loadMapFromScriptProperties: jest.fn((key: string) => {
+                if (key === "MEMBER_MAP") {
+                    return {
+                        "Andrew Chan": {"gender": "Male"},
+                        "Janice Chan": {"gender": "Female"},
+                    }
+                } 
+                return {};
+            }),
+        }));
+        const { validateHelperCellText } = require("../src/main/validation");
+
+        expect(validateHelperCellText(",,,,Andrew Chan,,,Janice Chan,,,")).toBe("");
+    });
+
+    it("should report invalid aliases, and members", () => {
+        jest.mock('../src/main/propertiesService', () => ({
+            loadMapFromScriptProperties: jest.fn((key: string) => {
+                if (key === "GROUPS_MAP") {
+                    return {
+                        "SDSU": ['Josh Wong']
+                    }
+                } else if (key === "ALIASES_MAP") {
+                    return {
+                        "Jack/Angel": ['Jack Zhang', 'Angel Zhang']
+                    }
+                } else if (key === "MEMBER_MAP") {
+                    return {
+                        "Andrew Chan": {"gender": "Male"},
+                        "Janice Chan": {"gender": "Female"},
+                    }
+                } 
+                return {};
+            }),
+        }));
+        const { validateHelperCellText } = require("../src/main/validation");
+
+        expect(validateHelperCellText("SDSU, Jack/Angel\nFood: Andrew Chan\nJanice Chan")).toBe("");
     });
 });

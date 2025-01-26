@@ -8,15 +8,40 @@ const COLON_DELIM: string = ":";
 const COMMA_DELIMITER: string = ",";
 const STAFF_REGEX: RegExp = /\bstaff\b/gi;
 
-export function isHelperCellValid(helperCellText: string): boolean {
+export function validateHelperCellText(helperCellText: string): string {
     const helperLines: string[] = helperCellText.split(NEW_LINE_DELIM);
-    return helperLines.every(isHelperLineValid);
+
+    let invalidHelperTokens: string[] = [];
+
+    helperLines.forEach((helperLine) => {
+        invalidHelperTokens = [...invalidHelperTokens, ...getInvalidHelperTokens(helperLine)]
+    });
+
+    if(invalidHelperTokens.length > 0) {
+        return generateValidationMessage(invalidHelperTokens);
+
+    } else {
+        return "";
+    }
 }
 
-function isHelperLineValid(helperLine: string): boolean {
+function generateValidationMessage(invalidHelperTokens: string[]): string {
+    return `Invalid identifier(s): ${invalidHelperTokens.join(', ')}`
+}
+
+function getInvalidHelperTokens(helperLine: string): string[] {
     const helperList: string = removeRoleTextFromHelperLine(helperLine);
     const helpers: string[] = helperList.split(COMMA_DELIMITER);
-    return helpers.every(isHelperTokenValid);
+
+    const invalidHelperTokens: string[] = [];
+
+    helpers.forEach((helper) => {
+        if(!isHelperTokenValid(helper)) {
+            invalidHelperTokens.push(helper.trim());
+        }
+    })
+
+    return invalidHelperTokens;
 }
 
 function removeRoleTextFromHelperLine(helperLine: string): string {
