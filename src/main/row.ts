@@ -1,10 +1,10 @@
+import { ALIASES_MAP } from "./aliases";
 import { InvalidHashError } from "./error/invalidHashError";
 import { RowBasecampMappingMissingError } from "./error/rowBasecampMappingMissingError";
 import { RowMissingIdError } from "./error/rowMissingIdError";
 import { RowNotSavedError } from "./error/rowNotSavedError";
 import { containsFilter, filterMembers, isFilter, removeFilters } from "./filter";
 import { GROUPS_MAP, getMembersFromGroups, GROUP_NAMES } from "./groups";
-import { ALIASES_MAP } from "./members";
 import { getPersonId } from "./people";
 import { getDocumentProperty, setDocumentProperty } from "./propertiesService";
 import { getBasecampScheduleEntryRequest } from "./schedule";
