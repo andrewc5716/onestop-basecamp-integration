@@ -317,9 +317,11 @@ export function getRandomlyGeneratedCellValues(numRows: number = 5, numColumns: 
 }
 
 export function getRandomlyGeneratedText(numTokens: number = 5): Text {
+    const tokens: TextData[] = Array.from({length: numTokens}, () => getRandomlyGeneratedTextData());
+
     return {
-        value: randomstring.generate(),
-        tokens: Array.from({length: numTokens}, () => getRandomlyGeneratedTextData()),
+        value: tokens.map(token => token.value).join(""),
+        tokens: tokens,
     }
 }
 

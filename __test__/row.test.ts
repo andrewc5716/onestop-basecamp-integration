@@ -881,10 +881,10 @@ describe("getScheduleEntryRequestForRow", () => {
         expect(scheduleEntryRequest.summary).toContain(rowMock.what.value);
         expect(scheduleEntryRequest.starts_at).toStrictEqual(rowMock.startTime.toISOString());
         expect(scheduleEntryRequest.ends_at).toStrictEqual(rowMock.endTime.toISOString());
-        expect(scheduleEntryRequest.description).toContain(rowMock.where.value);
+        rowMock.where.tokens.forEach((token) => expect(scheduleEntryRequest.description).toContain(token.value));
         expect(scheduleEntryRequest.description).toContain(rowMock.inCharge.value);
         expect(scheduleEntryRequest.description).toContain(rowMock.helpers.value);
-        expect(scheduleEntryRequest.description).toContain(rowMock.notes.value);
+        rowMock.notes.tokens.forEach((token) => expect(scheduleEntryRequest.description).toContain(token.value));
         expect(scheduleEntryRequest.participant_ids).toContain(PEOPLE_MAP["John Doe"]);
         expect(scheduleEntryRequest.participant_ids).toContain(PEOPLE_MAP["Jane Smith"]);
         expect(scheduleEntryRequest.participant_ids).toContain(PEOPLE_MAP["Alice Johnson"]);
