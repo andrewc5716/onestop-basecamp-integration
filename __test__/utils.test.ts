@@ -1,4 +1,4 @@
-import { getRandomlyGeneratedRow, Mock } from "./testUtils";
+import { getRandomlyGeneratedAliasMap, getRandomlyGeneratedRow, Mock } from "./testUtils";
 
 describe("deleteAllRowMetadata", () => {
     it("should delete all row metadata when called", () => {
@@ -65,7 +65,34 @@ describe("deleteAllRowMetadataAndDocumentProperties", () => {
 });
 
 describe("loadMembersAndGroupsFromOnestopIntoScriptProperties", () => {
-    it("should when", () => {
+    it("should load members and groups and aliases into script properties when called", () => {
+        const membersAliasMapMock: AliasMap = getRandomlyGeneratedAliasMap();
+        const groupAliasMapMock: AliasMap = getRandomlyGeneratedAliasMap();
+        const combinedAliasMapsMock: AliasMap = {...membersAliasMapMock, ...groupAliasMapMock};
 
+        jest.mock("../src/main/members", () => ({
+            loadMembersFromOnestopIntoScriptProperties: jest.fn(() => membersAliasMapMock),
+        }));
+
+        jest.mock("../src/main/groups", () => ({
+            loadGroupsFromOnestopIntoScriptProperties: jest.fn(() => groupAliasMapMock),
+        }));
+
+        const mergeAliasMapsMock: Mock = jest.fn(() => combinedAliasMapsMock);
+        const saveAliasMapMock: Mock = jest.fn();
+        jest.mock("../src/main/aliases", () => ({
+            mergeAliasMaps: mergeAliasMapsMock,
+            saveAliasMap: saveAliasMapMock,
+        }));
+
+        jest.mock("../src/main/propertiesService", () => ({
+            loadMapFromScriptProperties: jest.fn(() => ({})),
+        }));
+
+        const { loadMembersAndGroupsFromOnestopIntoScriptProperties } = require("../src/main/utils");
+        loadMembersAndGroupsFromOnestopIntoScriptProperties();
+
+        expect(mergeAliasMapsMock).toHaveBeenCalledWith(membersAliasMapMock, groupAliasMapMock);
+        expect(saveAliasMapMock).toHaveBeenCalledWith(combinedAliasMapsMock);
     });
 });
