@@ -292,8 +292,7 @@ function getLeadsNames(row: Row): string[] {
  * @returns Basecamp Todo description
  */
 function getBasecampTodoDescription(row: Row): string {
-    const location: string = `WHERE: ${row.where.value ?? "N\\A"}`;
-
+    const location: string = getRichTextFromText("WHERE", row.where);
     const locales: Intl.LocalesArgument = 'en-us';
     const options: Intl.DateTimeFormatOptions = {
         hour: 'numeric',
@@ -303,12 +302,44 @@ function getBasecampTodoDescription(row: Row): string {
     const startTime: string = row.startTime.toLocaleTimeString(locales, options);
     const endTime: string = row.endTime.toLocaleTimeString(locales, options);
 
-    const time: string = `\n\nWHEN: ${startTime} - ${endTime}`;
-    const inCharge: string = `\n\nIN CHARGE: ${row.inCharge.value ?? "N\\A"}`;
-    const helpers: string = `\n\nHELPERS:\n${row.helpers.value ?? "N\\A"}`;
-    const notes: string = `\n\nNOTES: ${row.notes.value ?? "N\\A"}`;
+    const time: string = `WHEN: ${startTime} - ${endTime}`;
+    const inCharge: string = getRichTextFromText("IN CHARGE", row.inCharge);
+    const helpers: string = getRichTextFromText("HELPERS", row.helpers);
+    const notes: string = getRichTextFromText("NOTES", row.notes);
 
-    return location + time + inCharge + helpers + notes;
+    return wrapWithDivTag(combineWithBreakTags([location, time, inCharge, helpers, notes]));
+}
+
+function getRichTextFromText(prefix: string, text: Text): string {
+    if(text.tokens.length === 1) {
+        return `${prefix}: ${replaceNewLinesWithBreakTags(text.value)}`;
+    }
+
+    const textTokens: TextData[] = text.tokens;
+    let richText: string = `${prefix}: `;
+    for(const token of textTokens) {
+        if(token.hyperlink !== null) {
+            richText += `<a href="${token.hyperlink}">${replaceNewLinesWithBreakTags(token.value)}</a>`;
+        } else if(token.strikethrough) {
+            richText += `<strike>${replaceNewLinesWithBreakTags(token.value)}</strike>`;
+        } else {
+            richText += replaceNewLinesWithBreakTags(token.value);
+        }
+    }
+
+    return richText;
+}
+
+function wrapWithDivTag(text: string): string {
+    return `<div>${text}</div>`;
+}
+
+function combineWithBreakTags(stringsToCombine: string[]): string {
+    return stringsToCombine.join("<br>");
+}
+
+function replaceNewLinesWithBreakTags(text: string): string {
+    return text.replace(NEW_LINE_DELIM, "<br>");
 }
 
 /**
@@ -343,8 +374,7 @@ export function getBasecampTodosForHelpers(row: Row): RoleRequestMap {
         const roleTitle: string = helperGroup.role ? `${helperGroup.role} Helper` : "Helper";
         const basecampTodoContent: string = `${roleTitle}: ${row.what.value}`;
         const basecampTodoDescription: string = getBasecampTodoDescription(row);
-        const helperIds: string[] = helperGroup.helperIds.filter(id => !leadIds.includes(id));
-        const assigneeIds: string[] = leadIds.concat(helperIds);
+        const assigneeIds = helperGroup.helperIds.filter(id => !leadIds.includes(id));
         const basecampDueDate: string = getBasecampDueDate(row);
 
         if(assigneeIds.length > 0) {
@@ -697,8 +727,7 @@ function getScheduleEntrySummary(row: Row): string {
 }
 
 function getScheduleEntryDescription(row: Row): string {
-    const location: string = `WHERE: ${row.where.value ?? "N\\A"}`;
-
+    const location: string = getRichTextFromText("WHERE", row.where);
     const locales: Intl.LocalesArgument = 'en-us';
     const options: Intl.DateTimeFormatOptions = {
         hour: 'numeric',
@@ -708,10 +737,10 @@ function getScheduleEntryDescription(row: Row): string {
     const startTime: string = row.startTime.toLocaleTimeString(locales, options);
     const endTime: string = row.endTime.toLocaleTimeString(locales, options);
 
-    const time: string = `\n\nWHEN: ${startTime} - ${endTime}`;
-    const inCharge: string = `\n\nIN CHARGE: ${row.inCharge.value ?? "N\\A"}`;
-    const helpers: string = `\n\nHELPERS:\n${row.helpers.value ?? "N\\A"}`;
-    const notes: string = `\n\nNOTES: ${row.notes.value ?? "N\\A"}`;
+    const time: string = `WHEN: ${startTime} - ${endTime}`;
+    const inCharge: string = getRichTextFromText("IN CHARGE", row.inCharge);
+    const helpers: string = getRichTextFromText("HELPERS", row.helpers);
+    const notes: string = getRichTextFromText("NOTES", row.notes);
 
-    return location + time + inCharge + helpers + notes;
+    return wrapWithDivTag(combineWithBreakTags([location, time, inCharge, helpers, notes]));
 }
