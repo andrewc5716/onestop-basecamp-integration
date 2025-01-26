@@ -316,11 +316,19 @@ export function getRandomlyGeneratedCellValues(numRows: number = 5, numColumns: 
     );
 }
 
-function getRandomlyGeneratedText(): Text {
+export function getRandomlyGeneratedText(numTokens: number = 5): Text {
     return {
         value: randomstring.generate(),
-        hyperlink: randomstring.generate()
+        tokens: Array.from({length: numTokens}, () => getRandomlyGeneratedTextData()),
     }
+}
+
+function getRandomlyGeneratedTextData(): TextData {
+    return {
+        value: randomstring.generate(),
+        hyperlink: randomstring.generate(),
+        strikethrough: getRandomBoolean(),
+    };
 }
 
 function getRandomNumber(upperBound: number = Number.MAX_SAFE_INTEGER): number {

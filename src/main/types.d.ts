@@ -10,9 +10,15 @@ type Sheet = GoogleAppsScript.Spreadsheet.Sheet;
 type Range = GoogleAppsScript.Spreadsheet.Range;
 type Metadata = GoogleAppsScript.Spreadsheet.DeveloperMetadata;
 
+declare interface TextData {
+  value: string,
+  hyperlink: string | null,
+  strikethrough: boolean,
+}
+
 declare interface Text {
-  readonly value: string,
-  readonly hyperlink: string | null
+  value: string,
+  tokens: TextData[],
 }
 
 declare interface Row {
