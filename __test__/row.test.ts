@@ -6,7 +6,7 @@ global.PropertiesService = PropertiesService;
 
 import { generateIdForRow, getId, getMetadata, getSavedScheduleEntryId, hasId, saveRow } from "../src/main/row";
 import { RowMissingIdError } from '../src/main/error/rowMissingIdError';
-import { getRandomlyGeneratedByteArray, getRandomlyGeneratedMember, getRandomlyGeneratedMetadata, getRandomlyGeneratedRange, getRandomlyGeneratedRoleTodoIdMap, getRandomlyGeneratedRow, getRandomlyGeneratedRowBasecampMapping, Mock } from './testUtils';
+import { getRandomlyGeneratedByteArray, getRandomlyGeneratedMember, getRandomlyGeneratedMetadata, getRandomlyGeneratedRange, getRandomlyGeneratedRoleTodoIdMap, getRandomlyGeneratedRow, getRandomlyGeneratedRowBasecampMapping, getRandomlyGeneratedText, Mock } from './testUtils';
 import randomstring from "randomstring";
 import { RowBasecampMappingMissingError } from '../src/main/error/rowBasecampMappingMissingError';
 
@@ -299,8 +299,10 @@ describe('getAttendeesFromRow', () => {
         const row: Row = getRandomlyGeneratedRow();
         row.domain = "ROTATION";
         row.who = "Rotation";
-        row.inCharge = { value: "Kevin Lai", hyperlink: null };
-        row.helpers = { value: "Josh Wong, Isaac Otero", hyperlink: null };
+        row.inCharge = getRandomlyGeneratedText(1);
+        row.inCharge.value = "Kevin Lai";
+        row.helpers = getRandomlyGeneratedText(1);
+        row.helpers.value = "Josh Wong, Isaac Otero";
 
         const MOCK_GROUPS_MAP = {
             ROTATION: undefined,
@@ -443,7 +445,8 @@ describe("getHelperGroups", () => {
     it("should return an empty array when the row has not helpers value specified", () => {
         const rowMock: Row = getRandomlyGeneratedRow();
         const helpersValueMock: string = "";
-        rowMock.helpers = { value: helpersValueMock, hyperlink: null };
+        rowMock.helpers = getRandomlyGeneratedText(1);
+        rowMock.helpers.value = helpersValueMock;
 
         const { getHelperGroups } = require("../src/main/row");
 
@@ -455,7 +458,8 @@ describe("getHelperGroups", () => {
     it("should return a HelperGroup corresponding to each role when there are multiple roles", () => {
         const rowMock: Row = getRandomlyGeneratedRow();
         const helpersValueMock: string = "Food: John Doe, Jane Smith\nTech: Alice Johnson, Bob Brown";
-        rowMock.helpers = { value: helpersValueMock, hyperlink: null };
+        rowMock.helpers = getRandomlyGeneratedText(1);
+        rowMock.helpers.value = helpersValueMock;
 
         const memberMapMock: MemberMap = {};
         memberMapMock["John Doe"] = getRandomlyGeneratedMember();
@@ -502,7 +506,8 @@ describe("getHelperGroups", () => {
     it("should expand groups into their members when a group is included in the list of helpers", () => {
         const rowMock: Row = getRandomlyGeneratedRow();
         const helpersValueMock: string = "Food: Jane Smith, Alice Johnson, UCSD";
-        rowMock.helpers = { value: helpersValueMock, hyperlink: null };
+        rowMock.helpers = getRandomlyGeneratedText(1);
+        rowMock.helpers.value = helpersValueMock;
 
         const memberMapMock: MemberMap = {};
         memberMapMock["John Doe"] = getRandomlyGeneratedMember();
@@ -548,7 +553,8 @@ describe("getHelperGroups", () => {
     it("should expand aliases into their members when an alias is included in the list of helpers", () => {
         const rowMock: Row = getRandomlyGeneratedRow();
         const helpersValueMock: string = "Food: John/Jane, Alice Johnson, Bob Brown";
-        rowMock.helpers = { value: helpersValueMock, hyperlink: null };
+        rowMock.helpers = getRandomlyGeneratedText(1);
+        rowMock.helpers.value = helpersValueMock;
 
         const memberMapMock: MemberMap = {};
         memberMapMock["John Doe"] = getRandomlyGeneratedMember();
@@ -569,6 +575,9 @@ describe("getHelperGroups", () => {
 
         jest.mock("../src/main/members", () => ({
             MEMBER_MAP: memberMapMock,
+        }));
+
+        jest.mock("../src/main/aliases", () => ({
             ALIASES_MAP: { "John/Jane": ["John Doe", "Jane Smith"] },
         }));
 
@@ -594,7 +603,8 @@ describe("getHelperGroups", () => {
     it("should expand groups and apply individual filters when a filter is only applied to a specific helper", () => {
         const rowMock: Row = getRandomlyGeneratedRow();
         const helpersValueMock: string = "Food: Bob Brown, Alice Johnson, UCSD Bros";
-        rowMock.helpers = { value: helpersValueMock, hyperlink: null };
+        rowMock.helpers = getRandomlyGeneratedText(1);
+        rowMock.helpers.value = helpersValueMock;
 
         const memberMapMock: MemberMap = {};
         memberMapMock["John Doe"] = getRandomlyGeneratedMember();
@@ -640,7 +650,8 @@ describe("getHelperGroups", () => {
     it("should remove any duplicate names when helpers are specified more than once", () => {
         const rowMock: Row = getRandomlyGeneratedRow();
         const helpersValueMock: string = "Food: Bob Brown, Alice Johnson, Bob Brown, UCSD";
-        rowMock.helpers = { value: helpersValueMock, hyperlink: null };
+        rowMock.helpers = getRandomlyGeneratedText(1);
+        rowMock.helpers.value = helpersValueMock;
 
         const memberMapMock: MemberMap = {};
         memberMapMock["John Doe"] = getRandomlyGeneratedMember();
@@ -686,7 +697,8 @@ describe("getHelperGroups", () => {
     it("should return the group members when there is no role specified", () => {
         const rowMock: Row = getRandomlyGeneratedRow();
         const helpersValueMock: string = "John Doe, Jane Smith, Alice Johnson, Bob Brown";
-        rowMock.helpers = { value: helpersValueMock, hyperlink: null };
+        rowMock.helpers = getRandomlyGeneratedText(1);
+        rowMock.helpers.value = helpersValueMock;
 
         const memberMapMock: MemberMap = {};
         memberMapMock["John Doe"] = getRandomlyGeneratedMember();
@@ -791,8 +803,10 @@ describe("hasBasecampAttendees", () => {
     it("should true when there are basecamp attendees for the row", () => {
         const rowMock: Row = getRandomlyGeneratedRow();
         rowMock.who = "Rotation";
-        rowMock.inCharge = { value: "John Doe", hyperlink: null };
-        rowMock.helpers = { value: "Jane Smith, Alice Johnson", hyperlink: null };
+        rowMock.inCharge = getRandomlyGeneratedText(1);
+        rowMock.inCharge.value = "John Doe";
+        rowMock.helpers = getRandomlyGeneratedText(1);
+        rowMock.helpers.value = "Jane Smith, Alice Johnson";
 
         jest.mock("../src/main/groups", () => ({
             GROUP_NAMES: ["UCSD"],
@@ -812,8 +826,10 @@ describe("hasBasecampAttendees", () => {
     it("should false when there are no basecamp attendees for the row", () => {
         const rowMock: Row = getRandomlyGeneratedRow();
         rowMock.who = "Rotation";
-        rowMock.inCharge = { value: "", hyperlink: null };
-        rowMock.helpers = { value: "", hyperlink: null };
+        rowMock.inCharge = getRandomlyGeneratedText(1);
+        rowMock.inCharge.value = "";
+        rowMock.helpers = getRandomlyGeneratedText(1);
+        rowMock.helpers.value = "";
 
         jest.mock("../src/main/groups", () => ({
             GROUP_NAMES: ["UCSD"],
@@ -836,8 +852,10 @@ describe("getScheduleEntryRequestForRow", () => {
         const rowMock: Row = getRandomlyGeneratedRow();
         rowMock.domain = "College";
         rowMock.who = "UCSD";
-        rowMock.inCharge = { value: "John Doe", hyperlink: null };
-        rowMock.helpers = { value: "Jane Smith, Alice Johnson", hyperlink: null };
+        rowMock.inCharge = getRandomlyGeneratedText(1);
+        rowMock.inCharge.value = "John Doe";
+        rowMock.helpers = getRandomlyGeneratedText(1);
+        rowMock.helpers.value = "Jane Smith, Alice Johnson";
 
         jest.mock("../src/main/groups", () => ({
             GROUP_NAMES: ["UCSD"],
@@ -863,10 +881,10 @@ describe("getScheduleEntryRequestForRow", () => {
         expect(scheduleEntryRequest.summary).toContain(rowMock.what.value);
         expect(scheduleEntryRequest.starts_at).toStrictEqual(rowMock.startTime.toISOString());
         expect(scheduleEntryRequest.ends_at).toStrictEqual(rowMock.endTime.toISOString());
-        expect(scheduleEntryRequest.description).toContain(rowMock.where.value);
+        rowMock.where.tokens.forEach((token) => expect(scheduleEntryRequest.description).toContain(token.value));
         expect(scheduleEntryRequest.description).toContain(rowMock.inCharge.value);
         expect(scheduleEntryRequest.description).toContain(rowMock.helpers.value);
-        expect(scheduleEntryRequest.description).toContain(rowMock.notes.value);
+        rowMock.notes.tokens.forEach((token) => expect(scheduleEntryRequest.description).toContain(token.value));
         expect(scheduleEntryRequest.participant_ids).toContain(PEOPLE_MAP["John Doe"]);
         expect(scheduleEntryRequest.participant_ids).toContain(PEOPLE_MAP["Jane Smith"]);
         expect(scheduleEntryRequest.participant_ids).toContain(PEOPLE_MAP["Alice Johnson"]);

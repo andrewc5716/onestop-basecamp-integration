@@ -26,8 +26,7 @@ const MIN_IN_HOUR: number = 60;
 
 interface CellData {
     readonly value: any,
-    readonly linkUrl: string | null,
-    readonly strikethrough: boolean
+    readonly richTextValue: RichTextValue,
 }
 
 /**
@@ -82,8 +81,8 @@ export function getActiveDailyTabs(spreadsheetTabs: Sheet[]): Sheet[] {
  */
 export function getRowsWithEvents(spreadsheetTab: Sheet): Row[] {
     const dataRange: Range = spreadsheetTab.getDataRange();
-    const cellData = getCellData(dataRange);
-    const currentDate = getDateOfDailyTab(cellData);
+    const cellData: CellData[][] = getCellData(dataRange);
+    const currentDate: Date = getDateOfDailyTab(cellData);
 
     const rows: Row[] = [];
     for(let i = 0; i < cellData.length; i++) {
@@ -150,31 +149,31 @@ function getCellData(dataRange: Range): CellData[][] {
     const numCols = dataRange.getNumColumns();
 
     for(let i = 0; i < numRows; i++) {
-        cellData[i] = [];
-        populateColumnData(i, cellData, numCols, cellRichTextData, cellValues);
+        cellData[i] = getColumnData(numCols, cellRichTextData[i], cellValues[i]);
     }
 
     return cellData;
 }
 
 /**
- * Helper function for the getCellData function that given a row, populates the column data for that particular row
+ * Helper function for the getCellData function that given a row, returns the column data for that particular row
  * 
- * @param currentRow the current row index being processed
- * @param cellData output matrix where the column data is to be populated
  * @param numCols number of columns in the cell data matrix
  * @param cellRichTextData rich text data that is to be used to fetch the potential hyperlink urls for cells in this row
  * @param cellValues actual data values that is to be used to populate the cell data matrix
  */
-function populateColumnData(currentRow: number, cellData: CellData[][], numCols: number, cellRichTextData: RichTextValue[][], cellValues: any[][]) {
+function getColumnData(numCols: number, cellRichTextData: RichTextValue[], cellValues: any[]): CellData[] {
+    const columnData: CellData[] = [];
+
     for(let j = 0; j < numCols; j++) {
-        const textStyle: TextStyle = cellRichTextData[currentRow][j].getTextStyle();
-        cellData[currentRow][j] = {
-            value: cellValues[currentRow][j],
-            linkUrl: cellRichTextData[currentRow][j].getLinkUrl(),
-            strikethrough: getCellStrikethrough(textStyle)
-        }
+        const newColumnData: CellData = {
+            value: cellValues[j],
+            richTextValue: cellRichTextData[j],
+        };
+        columnData.push(newColumnData);
     }
+
+    return columnData;
 }
 
 /**
@@ -228,11 +227,11 @@ function isRowStrikethrough(rowData: CellData[]): boolean {
     // Need to skip the time columns because their strikethrough values are incorrectly returned by the TextStyle object
     const nonEmptyCells: CellData[] = rowData.filter((cellData, index) => cellData.value !== "" && index > END_TIME_COL_INDEX);
 
-    // Extracts only the strikethrough values from the CellData objects
-    const strikethroughValues = nonEmptyCells.map((cellData) => cellData.strikethrough);
-
     // Incrementally ands all of the strikethrough values together
-    return strikethroughValues.reduce((curr, next) => curr && next, true);
+    return nonEmptyCells.every((cellData) => {
+        const runs: RichTextValue[] = cellData.richTextValue.getRuns();
+        return runs.every((run) => run.getTextStyle().isStrikethrough())
+    });
 }
 
 /**
@@ -255,11 +254,11 @@ function constructRow(rowRange: Range, rowData: CellData[], currentDate: Date): 
         domain: rowData[DOMAIN_COL_INDEX].value,
         who: rowData[WHO_COL_INDEX].value,
         numAttendees: rowData[NUM_ATTENDEES_COL_INDEX].value,
-        what: {value: rowData[WHAT_COL_INDEX].value, hyperlink: rowData[WHAT_COL_INDEX].linkUrl},
-        where: {value: rowData[WHERE_COL_INDEX].value, hyperlink: rowData[WHERE_COL_INDEX].linkUrl},
-        inCharge: {value: rowData[IN_CHARGE_COL_INDEX].value, hyperlink: rowData[IN_CHARGE_COL_INDEX].linkUrl},
-        helpers: {value: rowData[HELPERS_COL_INDEX].value, hyperlink: rowData[HELPERS_COL_INDEX].linkUrl},
-        notes: {value: rowData[NOTES_COL_INDEX].value, hyperlink: rowData[NOTES_COL_INDEX].linkUrl}
+        what: constructText(rowData[WHAT_COL_INDEX]),
+        where: constructText(rowData[WHERE_COL_INDEX]),
+        inCharge: constructText(rowData[IN_CHARGE_COL_INDEX]),
+        helpers: constructText(rowData[HELPERS_COL_INDEX]),
+        notes: constructText(rowData[NOTES_COL_INDEX]),
     };
 }
 
@@ -287,6 +286,20 @@ function constructDate(currentDate: Date, currentTime: Date): Date {
     combinedDate.setFullYear(currentDate.getFullYear());
 
     return combinedDate;
+}
+
+function constructText(cellData: CellData): Text {
+    const runs: RichTextValue[] = cellData.richTextValue.getRuns();
+    const tokens: TextData[] = runs.map((run) => ({
+        value: run.getText(),
+        hyperlink: run.getLinkUrl(),
+        strikethrough: run.getTextStyle().isStrikethrough() ?? false,
+    }));
+
+    return {
+        value: cellData.value,
+        tokens: tokens,
+    };
 }
 
 /**

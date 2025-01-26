@@ -10,9 +10,15 @@ type Sheet = GoogleAppsScript.Spreadsheet.Sheet;
 type Range = GoogleAppsScript.Spreadsheet.Range;
 type Metadata = GoogleAppsScript.Spreadsheet.DeveloperMetadata;
 
+declare interface TextData {
+  value: string,
+  hyperlink: string | null,
+  strikethrough: boolean,
+}
+
 declare interface Text {
-  readonly value: string,
-  readonly hyperlink: string | null
+  value: string,
+  tokens: TextData[],
 }
 
 declare interface Row {
@@ -144,8 +150,14 @@ type MemberMap = { [key: string]: Member };
 // Maps an alias to an array of member names that the alias corresponds to
 type AliasMap = { [key: string]: string[] };
 
+declare interface Group {
+  name: string,
+  members: string[],
+  aliases: string[],
+}
+
 // Maps a group name to an array of group member names
-type GroupsMap = { [key: string]: string[] }
+type GroupsMap = { [key: string]: string[] };
 
 // function used to filter groups of members; meant to be used with the array filter() function
 type FilterFunction = (memberName: string) => boolean;

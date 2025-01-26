@@ -1,3 +1,4 @@
+import { mergeAliasMaps } from "./aliases";
 import { loadMapFromScriptProperties, setScriptProperty } from "./propertiesService";
 import { getCellValues } from "./scan";
 
@@ -14,22 +15,20 @@ const WIFE_COLUMN_INDEX: number = 1;
 const COUPLES_ALIASES_COLUMN_INDEX: number = 2;
 const COMMA_DELIMITER: string = ",";
 const MEMBER_MAP_KEY: string = "MEMBER_MAP";
-const ALIASES_MAP_KEY: string = "ALIASES_MAP";
-
 
 export const MEMBER_MAP: MemberMap = loadMapFromScriptProperties(MEMBER_MAP_KEY) as MemberMap;
-export const ALIASES_MAP: AliasMap = loadMapFromScriptProperties(ALIASES_MAP_KEY) as AliasMap;
 
 /**
  * Loads data from the Members and Couples tables on the Onestop into the script properties
  */
-export function loadMembersFromOnestopIntoScriptProperties(): void {
+export function loadMembersFromOnestopIntoScriptProperties(): AliasMap {
     const { memberMap: memberMap, alternateNamesMap: alternateNamesMap } = loadMembersFromOnestop();
     const coupleAliases: AliasMap = loadCouplesFromOnestop();
     const combinedAliases: AliasMap = mergeAliasMaps(alternateNamesMap, coupleAliases);
 
     setScriptProperty(MEMBER_MAP_KEY, JSON.stringify(memberMap));
-    setScriptProperty(ALIASES_MAP_KEY, JSON.stringify(combinedAliases));
+
+    return combinedAliases;
 }
 
 function loadMembersFromOnestop(): { memberMap: MemberMap, alternateNamesMap: AliasMap } {
@@ -95,20 +94,4 @@ function loadCouplesFromOnestop(): AliasMap {
     }
 
     return aliasMap;
-}
-
-function mergeAliasMaps(firstAliasMap: AliasMap, secondAliasMap: AliasMap): AliasMap {
-    const finalAliasMap: AliasMap = firstAliasMap;
-
-    const aliases: string[] = Object.keys(secondAliasMap);
-    for(const alias of aliases) {
-        if(finalAliasMap.hasOwnProperty(alias)) {
-            Logger.log(`Warning: ${alias} is being used as both an alternate name and a couples' alias`);
-            finalAliasMap[alias] = finalAliasMap[alias].concat(secondAliasMap[alias]);
-        } else {
-            finalAliasMap[alias] = secondAliasMap[alias];
-        }
-    }
-
-    return finalAliasMap;
 }

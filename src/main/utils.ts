@@ -1,5 +1,8 @@
 // Utilities module that provides some helpful functions for developing/debugging Google Apps Script
 
+import { mergeAliasMaps, saveAliasMap } from "./aliases";
+import { loadGroupsFromOnestopIntoScriptProperties } from "./groups";
+import { loadMembersFromOnestopIntoScriptProperties } from "./members";
 import { deleteAllDocumentProperties } from "./propertiesService";
 import { getEventRowsFromSpreadsheet } from "./scan";
 
@@ -13,4 +16,11 @@ export function deleteAllRowMetadata(): void {
 export function deleteAllRowMetadataAndDocumentProperties(): void {
     deleteAllRowMetadata();
     deleteAllDocumentProperties();
+}
+
+export function loadMembersAndGroupsFromOnestopIntoScriptProperties(): void {
+    const membersAliasMap: AliasMap = loadMembersFromOnestopIntoScriptProperties();
+    const groupAliasMap: AliasMap = loadGroupsFromOnestopIntoScriptProperties();
+    const combinedAliasMaps: AliasMap = mergeAliasMaps(membersAliasMap, groupAliasMap);
+    saveAliasMap(combinedAliasMaps);
 }
