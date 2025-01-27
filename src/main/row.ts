@@ -5,7 +5,7 @@ import { RowMissingIdError } from "./error/rowMissingIdError";
 import { RowNotSavedError } from "./error/rowNotSavedError";
 import { containsFilter, filterMembers, isFilter, removeFilters } from "./filter";
 import { GROUPS_MAP, getMembersFromGroups, GROUP_NAMES } from "./groups";
-import { getPersonId } from "./people";
+import { getPersonId, normalizePersonName } from "./people";
 import { getDocumentProperty, setDocumentProperty } from "./propertiesService";
 import { getBasecampScheduleEntryRequest } from "./schedule";
 import { getBasecampTodoRequest } from "./todos";
@@ -281,7 +281,7 @@ function getBasecampIdsFromPersonNameList(personNameList: string[]): string[] {
  */
 function getLeadsNames(row: Row): string[] {
     return row.inCharge.value.split(COMMA_FORWARD_SLASH_DELIM_REGEX)
-    .map(name => name.trim())
+    .map(name => normalizePersonName(name))
     .filter(name => name !== "");
 }
 
@@ -440,10 +440,10 @@ export function getHelperGroups(row: Row): HelperGroup[] {
  */
 function getHelpersNames(helpers: string): string[] {
     const helperStrings: string[] = helpers.split(COMMA_DELIMITER)
-    .map(name => name.trim())
+    .map(name => normalizePersonName(name))
     .filter(name => name !== "");
 
-    const helperNames: string[] = helperStrings.flatMap((helperString) => getMemberNamesFromHelperString(helperString));
+    const helperNames: string[] = helperStrings.flatMap((helperString) => getMemberNamesFromHelperIdentifier(helperString));
     // Removes any duplicates
     const uniqueHelperNames: string[] = [...new Set(helperNames)];
 
@@ -451,12 +451,12 @@ function getHelpersNames(helpers: string): string[] {
 }
 
 /**
- * Retrieves an array of member names from a helper string
+ * Retrieves an array of member names from a single helper identifier (person/alias/group)
  * 
- * @param helperString string to transform into helper names
+ * @param helperIdentifier string identifier of person/alias/group to transform into member names
  * @returns an array of member names
  */
-function getMemberNamesFromHelperString(helperString: string): string[] {
+function getMemberNamesFromHelperIdentifier(helperString: string): string[] {
     let helperToken: string = helperString;
     let filters: string[] = [];
     let members: string[] = [];
@@ -532,7 +532,8 @@ function getAllHelperNames(row: Row): string[] {
  */
 function getDomainNames(row: Row): string[] {
     return row.domain.split(COMMA_FORWARD_SLASH_DELIM_REGEX)
-    .map(value => value.trim()).filter(value => GROUP_NAMES.includes(value));
+    .map(value => value.toLowerCase().trim())
+    .filter(value => GROUP_NAMES.includes(value));
 }
 
 /**
@@ -543,7 +544,7 @@ function getDomainNames(row: Row): string[] {
  */
 function getDomainFilters(row: Row): string[] {
     return row.domain.split(COMMA_FORWARD_SLASH_DELIM_REGEX)
-    .map(value => value.trim()).filter(value => isFilter(value));
+    .map(value => value.toLowerCase().trim()).filter(value => isFilter(value));
 }
 
 /**
@@ -564,7 +565,8 @@ function splitWhoColumn(row: Row): string[] {
  */
 function getMinistryNames(row: Row): string[] {
     return splitWhoColumn(row)
-        .map(name => name.trim()).filter(value => GROUP_NAMES.includes(value));
+        .map(name => name.toLowerCase().trim())
+        .filter(value => GROUP_NAMES.includes(value));
 }
 
 /**
@@ -575,7 +577,8 @@ function getMinistryNames(row: Row): string[] {
  */
 function getMinistryFilters(row: Row): string[] {
     return splitWhoColumn(row)
-    .map(name => name.trim()).filter(value => isFilter(value));;
+    .map(name => name.toLowerCase().trim())
+    .filter(value => isFilter(value));;
 }
 
 /**
@@ -719,9 +722,11 @@ export function getScheduleEntryRequestForRow(row: Row): BasecampScheduleEntryRe
 
 function getScheduleEntrySummary(row: Row): string {
     const ministryNames: string[] = getMinistryNames(row);
+    const uppercaseMinistryNames: string[] = ministryNames.map(name => name.toUpperCase());
     const domainNames: string[] = getDomainNames(row);
+    const uppercaseDomainNames: string[] = domainNames.map(name => name.toUpperCase());
     // Choose the ministry names if possible, otherwise use the domain names
-    const who: string = ministryNames.length > 0 ? ministryNames.join(" ") : domainNames.join(" ");
+    const who: string = uppercaseMinistryNames.length > 0 ? uppercaseMinistryNames.join(" ") : uppercaseDomainNames.join(" ");
 
     return `[${who}] ${row.what.value}`;
 }

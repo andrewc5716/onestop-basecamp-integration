@@ -62,9 +62,9 @@ describe("loadGroupsFromOnestopIntoScriptProperties", () => {
         loadGroupsFromOnestopIntoScriptProperties();
 
         const expectedMap: GroupsMap = {
-            IGSM: ["John Doe", "Jane Smith"],
-            A2K: ["Alice Johnson", "Bob Brown"],
-            IUSM: ["Charlie Davis", "Emily Clark"],
+            igsm: ["john doe", "jane smith"],
+            a2k: ["alice johnson", "bob brown"],
+            iusm: ["charlie davis", "emily clark"],
         };
 
         expect(setScriptPropertyMock).toHaveBeenCalledWith("GROUPS_MAP", JSON.stringify(expectedMap));
@@ -115,7 +115,7 @@ describe("loadGroupsFromOnestopIntoScriptProperties", () => {
         loadGroupsFromOnestopIntoScriptProperties();
 
         const expectedMap: GroupsMap = {
-            IGSM: []
+            igsm: []
         };
 
         expect(setScriptPropertyMock).toHaveBeenCalledWith("GROUPS_MAP", JSON.stringify(expectedMap));
@@ -148,8 +148,8 @@ describe("loadGroupsFromOnestopIntoScriptProperties", () => {
         loadGroupsFromOnestopIntoScriptProperties();
 
         const expectedMap: GroupsMap = {
-            IGSM: ["John Doe", "Jane Smith", "Charlie Davis", "Emily Clark"],
-            A2K: ["Alice Johnson", "Bob Brown"],
+            igsm: ["john doe", "jane smith", "charlie davis", "emily clark"],
+            a2k: ["alice johnson", "bob brown"],
         };
 
         expect(setScriptPropertyMock).toHaveBeenCalledWith("GROUPS_MAP", JSON.stringify(expectedMap));
@@ -191,13 +191,13 @@ describe("loadGroupsFromOnestopIntoScriptProperties", () => {
         loadGroupsFromOnestopIntoScriptProperties();
 
         const expectedMap: GroupsMap = {
-            HG1: ["John Doe", "Jane Smith"],
-            HG2: ["Alice Johnson", "Bob Brown"],
-            SDSU: ["Charlie Davis", "Emily Clark"],
-            A2K: ["Frank Miller", "Grace Wilson"],
-            Community: ["Frank Miller", "Grace Wilson"],
-            UCSD: ["John Doe", "Jane Smith", "Alice Johnson", "Bob Brown"],
-            College: ["John Doe", "Jane Smith", "Alice Johnson", "Bob Brown", "Charlie Davis", "Emily Clark"],
+            hg1: ["john doe", "jane smith"],
+            hg2: ["alice johnson", "bob brown"],
+            sdsu: ["charlie davis", "emily clark"],
+            a2k: ["frank miller", "grace wilson"],
+            community: ["frank miller", "grace wilson"],
+            ucsd: ["john doe", "jane smith", "alice johnson", "bob brown"],
+            college: ["john doe", "jane smith", "alice johnson", "bob brown", "charlie davis", "emily clark"],
         };
 
         expect(setScriptPropertyMock).toHaveBeenCalledWith("GROUPS_MAP", JSON.stringify(expectedMap));
@@ -236,11 +236,11 @@ describe("loadGroupsFromOnestopIntoScriptProperties", () => {
         loadGroupsFromOnestopIntoScriptProperties();
 
         const expectedMap: GroupsMap = {
-            HG1: ["John Doe", "Jane Smith"],
-            A2K: ["Frank Miller", "Grace Wilson"],
-            Community: ["Frank Miller", "Grace Wilson"],
-            UCSD: ["John Doe", "Jane Smith"],
-            Everyone: ["John Doe", "Jane Smith", "Frank Miller", "Grace Wilson"],
+            hg1: ["john doe", "jane smith"],
+            a2k: ["frank miller", "grace wilson"],
+            community: ["frank miller", "grace wilson"],
+            ucsd: ["john doe", "jane smith"],
+            everyone: ["john doe", "jane smith", "frank miller", "grace wilson"],
         };
 
         expect(setScriptPropertyMock).toHaveBeenCalledWith("GROUPS_MAP", JSON.stringify(expectedMap));
@@ -282,11 +282,11 @@ describe("loadGroupsFromOnestopIntoScriptProperties", () => {
         loadGroupsFromOnestopIntoScriptProperties();
 
         const expectedMap: GroupsMap = {
-            HG1: ["John Doe", "Jane Smith"],
-            HG2: ["Alice Johnson", "Bob Brown"],
-            A2K: ["Frank Miller", "Grace Wilson"],
-            Community: ["Frank Miller", "Grace Wilson"],
-            UCSD: ["John Doe", "Jane Smith", "Alice Johnson", "Bob Brown"],
+            hg1: ["john doe", "jane smith"],
+            hg2: ["alice johnson", "bob brown"],
+            a2k: ["frank miller", "grace wilson"],
+            community: ["frank miller", "grace wilson"],
+            ucsd: ["john doe", "jane smith", "alice johnson", "bob brown"],
         };
 
         expect(setScriptPropertyMock).toHaveBeenCalledWith("GROUPS_MAP", JSON.stringify(expectedMap));
@@ -328,13 +328,13 @@ describe("loadGroupsFromOnestopIntoScriptProperties", () => {
         loadGroupsFromOnestopIntoScriptProperties();
 
         const expectedMap: GroupsMap = {
-            HG1: ["John Doe", "Jane Smith"],
-            HG2: ["Alice Johnson", "Bob Brown"],
-            SDSU: ["Charlie Davis", "Emily Clark"],
-            A2K: ["Frank Miller", "Grace Wilson"],
-            UCSD: ["John Doe", "Jane Smith", "Alice Johnson", "Bob Brown"],
-            College: ["John Doe", "Jane Smith", "Alice Johnson", "Bob Brown", "Charlie Davis", "Emily Clark"],
-            Community: ["Frank Miller", "Grace Wilson"],
+            hg1: ["john doe", "jane smith"],
+            hg2: ["alice johnson", "bob brown"],
+            sdsu: ["charlie davis", "emily clark"],
+            a2k: ["frank miller", "grace wilson"],
+            ucsd: ["john doe", "jane smith", "alice johnson", "bob brown"],
+            college: ["john doe", "jane smith", "alice johnson", "bob brown", "charlie davis", "emily clark"],
+            community: ["frank miller", "grace wilson"],
         };
 
         expect(setScriptPropertyMock).toHaveBeenCalledWith("GROUPS_MAP", JSON.stringify(expectedMap));
@@ -376,12 +376,12 @@ describe("loadGroupsFromOnestopIntoScriptProperties", () => {
         loadGroupsFromOnestopIntoScriptProperties();
 
         const expectedMap: GroupsMap = {
-            HG1: ["John Doe", "Jane Smith"],
-            HG2: ["Alice Johnson", "Bob Brown"],
-            SDSU: ["Charlie Davis", "Emily Clark"],
-            A2K: ["Frank Miller", "Grace Wilson", "Charlie Davis", "Emily Clark"],
-            UCSD: ["John Doe", "Jane Smith", "Alice Johnson", "Bob Brown"],
-            College: ["John Doe", "Jane Smith", "Alice Johnson", "Bob Brown", "Charlie Davis", "Emily Clark"],
+            hg1: ["john doe", "jane smith"],
+            hg2: ["alice johnson", "bob brown"],
+            sdsu: ["charlie davis", "emily clark"],
+            a2k: ["frank miller", "grace wilson", "charlie davis", "emily clark"],
+            ucsd: ["john doe", "jane smith", "alice johnson", "bob brown"],
+            college: ["john doe", "jane smith", "alice johnson", "bob brown", "charlie davis", "emily clark"],
         };
 
         expect(setScriptPropertyMock).toHaveBeenCalledWith("GROUPS_MAP", JSON.stringify(expectedMap));
@@ -423,13 +423,13 @@ describe("loadGroupsFromOnestopIntoScriptProperties", () => {
         loadGroupsFromOnestopIntoScriptProperties();
 
         const expectedMap: GroupsMap = {
-            HG1: ["John Doe", "Jane Smith"],
-            HG2: ["Alice Johnson", "Bob Brown"],
-            SDSU: ["Charlie Davis", "Emily Clark"],
-            A2K: ["Frank Miller", "Grace Wilson"],
-            Community: ["Frank Miller", "Grace Wilson"],
-            College: [],
-            UCSD: ["John Doe", "Jane Smith", "Alice Johnson", "Bob Brown"],
+            hg1: ["john doe", "jane smith"],
+            hg2: ["alice johnson", "bob brown"],
+            sdsu: ["charlie davis", "emily clark"],
+            a2k: ["frank miller", "grace wilson"],
+            community: ["frank miller", "grace wilson"],
+            college: [],
+            ucsd: ["john doe", "jane smith", "alice johnson", "bob brown"],
         };
 
         expect(setScriptPropertyMock).toHaveBeenCalledWith("GROUPS_MAP", JSON.stringify(expectedMap));
@@ -471,13 +471,13 @@ describe("loadGroupsFromOnestopIntoScriptProperties", () => {
         loadGroupsFromOnestopIntoScriptProperties();
 
         const expectedMap: GroupsMap = {
-            HG1: ["John Doe", "Jane Smith", "Charlie Davis"],
-            HG2: ["Alice Johnson", "Bob Brown"],
-            IUSM: ["Charlie Davis", "Emily Clark"],
-            IGSM: ["Frank Miller", "Grace Wilson"],
-            International: ["Charlie Davis", "Emily Clark", "Frank Miller", "Grace Wilson"],
-            UCSD: ["John Doe", "Jane Smith", "Charlie Davis", "Alice Johnson", "Bob Brown"],
-            Everyone: ["John Doe", "Jane Smith", "Charlie Davis", "Alice Johnson", "Bob Brown", "Emily Clark", "Frank Miller", "Grace Wilson"],
+            hg1: ["john doe", "jane smith", "charlie davis"],
+            hg2: ["alice johnson", "bob brown"],
+            iusm: ["charlie davis", "emily clark"],
+            igsm: ["frank miller", "grace wilson"],
+            international: ["charlie davis", "emily clark", "frank miller", "grace wilson"],
+            ucsd: ["john doe", "jane smith", "charlie davis", "alice johnson", "bob brown"],
+            everyone: ["john doe", "jane smith", "charlie davis", "alice johnson", "bob brown", "emily clark", "frank miller", "grace wilson"],
         };
 
         expect(setScriptPropertyMock).toHaveBeenCalledWith("GROUPS_MAP", JSON.stringify(expectedMap));
@@ -486,15 +486,15 @@ describe("loadGroupsFromOnestopIntoScriptProperties", () => {
 
 // Mocked GROUPS_MAP
 const MOCK_GROUPS_MAP = {
-    SDSU: ['Josh Wong', 'Isaac Otero', 'Kevin Lai', 'Joyce Lai'],
-    IUSM: ['Brian Lin', 'James Lee'],
-    IGSM: ['Jack Zhang', 'Angel Zhang'],
-    "INT'L": ['Brian Lin', 'James Lee', 'Jack Zhang', 'Angel Zhang']
+    sdsu: ['josh wong', 'isaac otero', 'kevin lai', 'joyce lai'],
+    iusm: ['brian lin', 'james lee'],
+    igsm: ['jack zhang', 'angel zhang'],
+    "int'l": ['brian lin', 'james lee', 'jack zhang', 'angel zhang']
 };
 
 describe('getMembersFromGroups', () => {
     it('should return a flat array of members for given group names', () => {
-        const groupNames = ['SDSU', 'IUSM'];
+        const groupNames = ['sdsu', 'iusm'];
 
         jest.mock('../src/main/propertiesService', () => ({
             loadMapFromScriptProperties: jest.fn(() => MOCK_GROUPS_MAP)
@@ -503,7 +503,7 @@ describe('getMembersFromGroups', () => {
         const { getMembersFromGroups } = require("../src/main/groups");
 
         const result = getMembersFromGroups(groupNames);
-        expect(result).toEqual(['Josh Wong', 'Isaac Otero', 'Kevin Lai', 'Joyce Lai', 'Brian Lin', 'James Lee']);
+        expect(result).toEqual(['josh wong', 'isaac otero', 'kevin lai', 'joyce lai', 'brian lin', 'james lee']);
     });
 
     it('should return an empty array when no groups are provided', () => {
@@ -520,7 +520,7 @@ describe('getMembersFromGroups', () => {
     });
 
     it('should skip groups not found in GROUPS_MAP', () => {
-        const groupNames = ['IGSM', 'KALEO'];
+        const groupNames = ['igsm', 'kaleo'];
 
         jest.mock('../src/main/propertiesService', () => ({
             loadMapFromScriptProperties: jest.fn(() => MOCK_GROUPS_MAP)
@@ -529,11 +529,11 @@ describe('getMembersFromGroups', () => {
         const { getMembersFromGroups } = require("../src/main/groups");
 
         const result = getMembersFromGroups(groupNames);
-        expect(result).toEqual(['Jack Zhang', 'Angel Zhang']);
+        expect(result).toEqual(['jack zhang', 'angel zhang']);
     });
 
     it('should handle duplicate group names', () => {
-        const groupNames = ['IUSM', 'IUSM'];
+        const groupNames = ['iusm', 'iusm'];
 
         jest.mock('../src/main/propertiesService', () => ({
             loadMapFromScriptProperties: jest.fn(() => MOCK_GROUPS_MAP)
@@ -542,11 +542,11 @@ describe('getMembersFromGroups', () => {
         const { getMembersFromGroups } = require("../src/main/groups");
 
         const result = getMembersFromGroups(groupNames);
-        expect(result).toEqual(['Brian Lin', 'James Lee']);
+        expect(result).toEqual(['brian lin', 'james lee']);
     });
 
     it('should return an empty array if no group names match', () => {
-        const groupNames = ['KALEO', 'IMPACT'];
+        const groupNames = ['kaleo', 'impact'];
 
         // Mock GROUPS_MAP in your test environment if needed
         jest.mock('../src/main/propertiesService', () => ({

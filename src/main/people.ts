@@ -5,9 +5,11 @@ import { getScriptProperty, setScriptProperty } from "./propertiesService";
 
 type PersonNameIdMap = {[key: string]: string};
 
-const PEOPLE_PATH: string = `/projects/${BASECAMP_PROJECT_ID}/people.json`;
+const PEOPLE_JSON: string = "/people.json";
+const PROJECTS_PATH: string = "/projects/";
 const PEOPLE_MAP_KEY: string = "PEOPLE_MAP";
 const REMOVE_PARENTHESES_REGEX: RegExp = /\(.*?\)/g;
+const REMOVE_EXTRA_WHITESPACE_REGEX: RegExp = /\s+/g;
 
 let cachedPersonNameIdMap: PersonNameIdMap | null = null;
 
@@ -17,7 +19,7 @@ let cachedPersonNameIdMap: PersonNameIdMap | null = null;
  * from the Google Apps Script Developer UI
  */
 export function populatePeopleInDb(): void {
-    const requestUrl: string = getBasecampUrl() + PEOPLE_PATH;
+    const requestUrl: string = getPeoplePath();
     const peopleData: Person[] = sendPaginatedBasecampGetRequest(requestUrl) as Person[];
 
     // Reduce all of the people to a single map
@@ -29,6 +31,10 @@ export function populatePeopleInDb(): void {
 
     setScriptProperty(PEOPLE_MAP_KEY, JSON.stringify(personNameIdMap));
     cachedPersonNameIdMap = personNameIdMap;
+}
+
+function getPeoplePath(): string {
+    return getBasecampUrl() + PROJECTS_PATH + BASECAMP_PROJECT_ID + PEOPLE_JSON;
 }
 
 /**
@@ -98,5 +104,7 @@ function getPersonIdFromCache(personName: string): string | undefined {
  * @returns the person's name without parentheses
  */
 export function normalizePersonName(rawPersonName: string): string {
-    return rawPersonName.replace(REMOVE_PARENTHESES_REGEX, '').toLowerCase().trim();
+    const withoutParentheses: string = rawPersonName.replace(REMOVE_PARENTHESES_REGEX, '');
+    const withoutExtraWhitespace: string = withoutParentheses.replace(REMOVE_EXTRA_WHITESPACE_REGEX, ' ');
+    return withoutExtraWhitespace.toLowerCase().trim();
 }
