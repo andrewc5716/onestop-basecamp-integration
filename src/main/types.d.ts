@@ -38,6 +38,7 @@ declare interface Row {
 
 declare interface BasecampTodo {
   id: string,
+  title: string,
   url: string,
 }
 
@@ -103,6 +104,7 @@ declare interface BasecampTodoRequest extends JsonObject {
 // Response from Basecamp Todo. Only need id for now, can add more later
 declare interface BasecampTodoResponse extends JsonObject {
   id: string, // id of the created todo
+  title: string, // title of the created todo
   app_url: string // url of the created todo
 }
 

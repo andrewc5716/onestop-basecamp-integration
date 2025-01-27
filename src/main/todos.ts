@@ -24,7 +24,7 @@ export function createTodo(request: BasecampTodoRequest, todolistIdentifier: Tod
     Logger.log(`Creating new todo: "${request.content}"...\n`);
     const rawTodoResponse: JsonData = sendBasecampPostRequest(getCreateTodoUrl(todolistIdentifier), request);
     const todoResponse: BasecampTodoResponse = rawTodoResponse as BasecampTodoResponse;
-    return { id: todoResponse.id, url: todoResponse.app_url };
+    return { id: todoResponse.id, title: todoResponse.title, url: todoResponse.app_url };
 }
 
 /**

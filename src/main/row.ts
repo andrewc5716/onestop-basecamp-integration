@@ -748,8 +748,8 @@ function getScheduleEntryDescription(row: Row, roleTodoMap: RoleTodoMap): string
 
 function getRichTextForTodoLinks(roleTodoMap: RoleTodoMap): string {
     let richText: string = "RELATED TODOS: <ul>";
-    for(const [role, todo] of Object.entries(roleTodoMap)) {
-        richText += `<li>${role}: ${todo.url}</li>`;
+    for(const todo of Object.values(roleTodoMap)) {
+        richText += `<li><a href="${todo.url}">${todo.title}</a></li>`;
     }
     richText += "</ul>";
 
