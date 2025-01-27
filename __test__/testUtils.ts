@@ -353,10 +353,10 @@ export function getRandomlyGeneratedScheduleEntry(): BasecampScheduleEntryReques
     }
 }
 
-export function getRandomlyGeneratedRoleTodoIdMap(numRoles: number = 10): RoleTodoIdMap {
-    const roleTodoIdMap: RoleTodoIdMap = {};
+export function getRandomlyGeneratedRoleTodoMap(numRoles: number = 10): RoleTodoMap {
+    const roleTodoIdMap: RoleTodoMap = {};
     for(let i = 0; i < numRoles; i++) {
-        roleTodoIdMap[randomstring.generate()] = randomstring.generate();
+        roleTodoIdMap[randomstring.generate()] = { id: randomstring.generate(), url: randomstring.generate() };
     }
 
     return roleTodoIdMap;
@@ -369,7 +369,7 @@ export function getRandomlyGeneratedByteArray(numBytes: number = 100): Uint8Arra
 export function getRandomlyGeneratedRowBasecampMapping(): RowBasecampMapping {
     return {
         rowHash: randomstring.generate(),
-        roleTodoIdMap: getRandomlyGeneratedRoleTodoIdMap(),
+        roleTodoMap: getRandomlyGeneratedRoleTodoMap(),
         scheduleEntryId: randomstring.generate(),
         tabInfo: { date: new Date() },
     };

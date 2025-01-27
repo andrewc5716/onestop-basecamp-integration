@@ -89,10 +89,10 @@ export function hasId(row: Row): boolean {
  * Saves a given row's contents to the PropertiesService
  * 
  * @param row the row's contents to write
- * @param roleTodoIdMap a map that has role titles as the keys and todo ids as the values
+ * @param roleTodoMap a map that has role titles as the keys and todo objects as the values
  * @param scheduleEntryId id of the schedule entry created for this row
  */
-export function saveRow(row: Row, roleTodoIdMap: RoleTodoIdMap, scheduleEntryId: string): void {
+export function saveRow(row: Row, roleTodoMap: RoleTodoMap, scheduleEntryId: string): void {
     if(!hasId(row)) {
         throw new RowMissingIdError(`Row does not have an id: ${toString(row)}`);
     }
@@ -100,7 +100,7 @@ export function saveRow(row: Row, roleTodoIdMap: RoleTodoIdMap, scheduleEntryId:
     const rowId: string = getId(row);
     const rowHash: string = toHexString(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, toString(row)));
     const tabInfo: TabInfo = { date: row.date };
-    const rowBasecampMapping: RowBasecampMapping = {rowHash: rowHash, roleTodoIdMap: roleTodoIdMap, scheduleEntryId: scheduleEntryId, tabInfo: tabInfo};
+    const rowBasecampMapping: RowBasecampMapping = {rowHash: rowHash, roleTodoMap: roleTodoMap, scheduleEntryId: scheduleEntryId, tabInfo: tabInfo};
 
     setDocumentProperty(rowId, JSON.stringify(rowBasecampMapping));
 }
@@ -685,14 +685,14 @@ function filterDomainAttendees(domainNames: string[], domainFilters: string[]): 
  * Used for downstream processing
  * 
  * @param row a list of all the current roles associated with the row including the lead role. This may be identical to the original roles
- * @returns a map that associates role titles with basecamp todo ids
+ * @returns a map that associates role titles with basecamp todo objects
  */
-export function getRoleTodoIdMap(row: Row): RoleTodoIdMap {
+export function getRoleTodoIdMap(row: Row): RoleTodoMap {
     const savedRowBasecampMapping: RowBasecampMapping | null = getRowBasecampMapping(row);
     if(savedRowBasecampMapping === null) {
         throw new RowBasecampMappingMissingError("The rowBasecampMapping object is null! Unable to proceed with updating the todo!");
     }
-    return savedRowBasecampMapping.roleTodoIdMap;
+    return savedRowBasecampMapping.roleTodoMap;
 }
 
 export function getSavedScheduleEntryId(row: Row): string {
