@@ -202,7 +202,7 @@ function getSupergroupGroupAliases(rowValues: any[]): string[] {
 
 function getSupergroupAdditionalMembers(rowValues: any[]): string[] {
     const supergroupAdditionalMembersList: string = rowValues[SUPERGROUP_ADDITIONAL_MEMBERS_COLUMN_INDEX];
-    return supergroupAdditionalMembersList.split(COMMA_DELIMITER).map((memberName) => memberName.trim()).filter((memberName) => memberName !== "");
+    return supergroupAdditionalMembersList.split(COMMA_DELIMITER).map((memberName) => normalizePersonName(memberName)).filter((memberName) => memberName !== "");
 }
 
 function allSubgroupsHaveBeenLoaded(supergroup: Supergroup, loadedGroups: GroupsMap, loadedSupergroups: GroupsMap, allSupergroups: SupergroupMap): boolean {
