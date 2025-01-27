@@ -11,6 +11,7 @@ const GROUP_ALIASES_COLUMN_INDEX: number = 2;
 const SUPERGROUP_NAME_COLUMN_INDEX: number = 0;
 const SUBGROUP_COLUMN_INDEX: number = 1;
 const SUPERGROUP_ALIASES_COLUMN_INDEX: number = 2;
+const SUPERGROUP_ADDITIONAL_MEMBERS_COLUMN_INDEX: number = 3;
 const GROUPS_MAP_KEY: string = "GROUPS_MAP";
 
 // Interface declared here because this is an internal object used only during the Supergroup loading process
@@ -18,6 +19,7 @@ declare interface Supergroup {
     name: string,
     subgroups: string[],
     aliases: string[],
+    additionalMembers: string[],
 };
 
 // Maps a Supergroup name to its corresponding Supergroup object
@@ -134,7 +136,8 @@ function loadSupergroupsFromOnestop(loadedGroups: GroupsMap): { supergroupsMap: 
         if(allSubgroupsHaveBeenLoaded(currentSupergroup, loadedGroups, loadedSupergroups, allSupergroups)) {
             // Loads a Supergroup if all its dependent subgroups have already been loaded
             const subgroupMembers: string[] = getAllMembersFromSubgroups(currentSupergroup.subgroups, loadedGroups, loadedSupergroups);
-            loadedSupergroups[currentSupergroup.name] = subgroupMembers;
+            const supergroupMembers: string[] = subgroupMembers.concat(currentSupergroup.additionalMembers);
+            loadedSupergroups[currentSupergroup.name] = supergroupMembers;
             loadedSupergroupsAliases = addGroupAliasesToMap(loadedSupergroupsAliases, currentSupergroup.aliases, subgroupMembers);
         } else {
             const toPushToStack: string[] = processSupergroup(currentSupergroup, allSupergroups, loadedGroups, loadedSupergroups);
@@ -176,11 +179,13 @@ function constructSupergroup(rowValues: any[]): Supergroup {
     const supergroupName: string = rowValues[SUPERGROUP_NAME_COLUMN_INDEX];
     const subgroupNames: string[] = getSubgroupNames(rowValues);
     const supergroupAliases: string[] = getSupergroupGroupAliases(rowValues);
+    const supergroupAdditionalMembers: string[] = getSupergroupAdditionalMembers(rowValues);
     
     return {
         name: supergroupName,
         subgroups: subgroupNames,
         aliases: supergroupAliases,
+        additionalMembers: supergroupAdditionalMembers,
     };
 }
 
@@ -192,6 +197,11 @@ function getSubgroupNames(rowValues: any[]): string[] {
 function getSupergroupGroupAliases(rowValues: any[]): string[] {
     const supergroupAliasesList: string = rowValues[SUPERGROUP_ALIASES_COLUMN_INDEX];
     return supergroupAliasesList.split(COMMA_DELIMITER).map((alias) => alias.trim()).filter((alias) => alias !== "");
+}
+
+function getSupergroupAdditionalMembers(rowValues: any[]): string[] {
+    const supergroupAdditionalMembersList: string = rowValues[SUPERGROUP_ADDITIONAL_MEMBERS_COLUMN_INDEX];
+    return supergroupAdditionalMembersList.split(COMMA_DELIMITER).map((memberName) => memberName.trim()).filter((memberName) => memberName !== "");
 }
 
 function allSubgroupsHaveBeenLoaded(supergroup: Supergroup, loadedGroups: GroupsMap, loadedSupergroups: GroupsMap, allSupergroups: SupergroupMap): boolean {
