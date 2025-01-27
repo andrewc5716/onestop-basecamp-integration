@@ -7,6 +7,7 @@ const GROUP_NAME_COLUMN_INDEX: number = 0;
 const GROUP_MEMBERS_COLUMN_INDEX: number = 1;
 const SUPERGROUP_NAME_COLUMN_INDEX: number = 0;
 const SUPERGROUP_SUBGROUP_COLUMN_INDEX: number = 1;
+const SUPERGROUP_ADDITIONAL_MEMBERS_COLUMN_INDEX: number = 3;
 
 describe("GROUPS_MAP", () => {
     it("should return the groups map from the script properties when it is present", () => {
@@ -170,10 +171,13 @@ describe("loadGroupsFromOnestopIntoScriptProperties", () => {
 
         supergroupsDataValuesMock[1][SUPERGROUP_NAME_COLUMN_INDEX] = "UCSD";
         supergroupsDataValuesMock[1][SUPERGROUP_SUBGROUP_COLUMN_INDEX] = "HG1, HG2";
+        supergroupsDataValuesMock[1][SUPERGROUP_ADDITIONAL_MEMBERS_COLUMN_INDEX] = "";
         supergroupsDataValuesMock[2][SUPERGROUP_NAME_COLUMN_INDEX] = "College";
         supergroupsDataValuesMock[2][SUPERGROUP_SUBGROUP_COLUMN_INDEX] = "UCSD, SDSU";
+        supergroupsDataValuesMock[2][SUPERGROUP_ADDITIONAL_MEMBERS_COLUMN_INDEX] = "";
         supergroupsDataValuesMock[3][SUPERGROUP_NAME_COLUMN_INDEX] = "Community";
         supergroupsDataValuesMock[3][SUPERGROUP_SUBGROUP_COLUMN_INDEX] = "A2K";
+        supergroupsDataValuesMock[3][SUPERGROUP_ADDITIONAL_MEMBERS_COLUMN_INDEX] = "";
 
         jest.mock("../src/main/scan", () => ({
             getCellValues: jest.fn()
@@ -214,11 +218,13 @@ describe("loadGroupsFromOnestopIntoScriptProperties", () => {
 
         supergroupsDataValuesMock[1][SUPERGROUP_NAME_COLUMN_INDEX] = "Community";
         supergroupsDataValuesMock[1][SUPERGROUP_SUBGROUP_COLUMN_INDEX] = "A2K";
+        supergroupsDataValuesMock[1][SUPERGROUP_ADDITIONAL_MEMBERS_COLUMN_INDEX] = "";
         supergroupsDataValuesMock[2][SUPERGROUP_NAME_COLUMN_INDEX] = "UCSD";
         supergroupsDataValuesMock[2][SUPERGROUP_SUBGROUP_COLUMN_INDEX] = "HG1, HG2";
+        supergroupsDataValuesMock[2][SUPERGROUP_ADDITIONAL_MEMBERS_COLUMN_INDEX] = "";
         supergroupsDataValuesMock[3][SUPERGROUP_NAME_COLUMN_INDEX] = "Everyone";
         supergroupsDataValuesMock[3][SUPERGROUP_SUBGROUP_COLUMN_INDEX] = "UCSD, Community, International";
-        
+        supergroupsDataValuesMock[3][SUPERGROUP_ADDITIONAL_MEMBERS_COLUMN_INDEX] = "";
 
         jest.mock("../src/main/scan", () => ({
             getCellValues: jest.fn()
@@ -261,10 +267,13 @@ describe("loadGroupsFromOnestopIntoScriptProperties", () => {
 
         supergroupsDataValuesMock[1][SUPERGROUP_NAME_COLUMN_INDEX] = "UCSD";
         supergroupsDataValuesMock[1][SUPERGROUP_SUBGROUP_COLUMN_INDEX] = "HG1, HG2";
+        supergroupsDataValuesMock[1][SUPERGROUP_ADDITIONAL_MEMBERS_COLUMN_INDEX] = "";
         supergroupsDataValuesMock[2][SUPERGROUP_NAME_COLUMN_INDEX] = "";
         supergroupsDataValuesMock[2][SUPERGROUP_SUBGROUP_COLUMN_INDEX] = "";
+        supergroupsDataValuesMock[2][SUPERGROUP_ADDITIONAL_MEMBERS_COLUMN_INDEX] = "";
         supergroupsDataValuesMock[3][SUPERGROUP_NAME_COLUMN_INDEX] = "Community";
         supergroupsDataValuesMock[3][SUPERGROUP_SUBGROUP_COLUMN_INDEX] = "A2K";
+        supergroupsDataValuesMock[3][SUPERGROUP_ADDITIONAL_MEMBERS_COLUMN_INDEX] = "";
 
         jest.mock("../src/main/scan", () => ({
             getCellValues: jest.fn()
@@ -307,10 +316,13 @@ describe("loadGroupsFromOnestopIntoScriptProperties", () => {
 
         supergroupsDataValuesMock[1][SUPERGROUP_NAME_COLUMN_INDEX] = "Community";
         supergroupsDataValuesMock[1][SUPERGROUP_SUBGROUP_COLUMN_INDEX] = "A2K";
+        supergroupsDataValuesMock[1][SUPERGROUP_ADDITIONAL_MEMBERS_COLUMN_INDEX] = "";
         supergroupsDataValuesMock[2][SUPERGROUP_NAME_COLUMN_INDEX] = "College";
         supergroupsDataValuesMock[2][SUPERGROUP_SUBGROUP_COLUMN_INDEX] = "UCSD, SDSU";
+        supergroupsDataValuesMock[2][SUPERGROUP_ADDITIONAL_MEMBERS_COLUMN_INDEX] = "";
         supergroupsDataValuesMock[3][SUPERGROUP_NAME_COLUMN_INDEX] = "UCSD";
         supergroupsDataValuesMock[3][SUPERGROUP_SUBGROUP_COLUMN_INDEX] = "HG1, HG2";
+        supergroupsDataValuesMock[3][SUPERGROUP_ADDITIONAL_MEMBERS_COLUMN_INDEX] = "";
 
         jest.mock("../src/main/scan", () => ({
             getCellValues: jest.fn()
@@ -355,10 +367,13 @@ describe("loadGroupsFromOnestopIntoScriptProperties", () => {
 
         supergroupsDataValuesMock[1][SUPERGROUP_NAME_COLUMN_INDEX] = "A2K";
         supergroupsDataValuesMock[1][SUPERGROUP_SUBGROUP_COLUMN_INDEX] = "SDSU";
+        supergroupsDataValuesMock[1][SUPERGROUP_ADDITIONAL_MEMBERS_COLUMN_INDEX] = "";
         supergroupsDataValuesMock[2][SUPERGROUP_NAME_COLUMN_INDEX] = "College";
         supergroupsDataValuesMock[2][SUPERGROUP_SUBGROUP_COLUMN_INDEX] = "UCSD, SDSU";
+        supergroupsDataValuesMock[2][SUPERGROUP_ADDITIONAL_MEMBERS_COLUMN_INDEX] = "";
         supergroupsDataValuesMock[3][SUPERGROUP_NAME_COLUMN_INDEX] = "UCSD";
         supergroupsDataValuesMock[3][SUPERGROUP_SUBGROUP_COLUMN_INDEX] = "HG1, HG2";
+        supergroupsDataValuesMock[3][SUPERGROUP_ADDITIONAL_MEMBERS_COLUMN_INDEX] = "";
 
         jest.mock("../src/main/scan", () => ({
             getCellValues: jest.fn()
@@ -402,10 +417,13 @@ describe("loadGroupsFromOnestopIntoScriptProperties", () => {
 
         supergroupsDataValuesMock[1][SUPERGROUP_NAME_COLUMN_INDEX] = "UCSD";
         supergroupsDataValuesMock[1][SUPERGROUP_SUBGROUP_COLUMN_INDEX] = "HG1, HG2";
+        supergroupsDataValuesMock[1][SUPERGROUP_ADDITIONAL_MEMBERS_COLUMN_INDEX] = "";
         supergroupsDataValuesMock[2][SUPERGROUP_NAME_COLUMN_INDEX] = "College";
         supergroupsDataValuesMock[2][SUPERGROUP_SUBGROUP_COLUMN_INDEX] = "";
+        supergroupsDataValuesMock[2][SUPERGROUP_ADDITIONAL_MEMBERS_COLUMN_INDEX] = "";
         supergroupsDataValuesMock[3][SUPERGROUP_NAME_COLUMN_INDEX] = "Community";
         supergroupsDataValuesMock[3][SUPERGROUP_SUBGROUP_COLUMN_INDEX] = "A2K";
+        supergroupsDataValuesMock[3][SUPERGROUP_ADDITIONAL_MEMBERS_COLUMN_INDEX] = "";
 
         jest.mock("../src/main/scan", () => ({
             getCellValues: jest.fn()
@@ -450,10 +468,13 @@ describe("loadGroupsFromOnestopIntoScriptProperties", () => {
 
         supergroupsDataValuesMock[1][SUPERGROUP_NAME_COLUMN_INDEX] = "UCSD";
         supergroupsDataValuesMock[1][SUPERGROUP_SUBGROUP_COLUMN_INDEX] = "HG1, HG2";
+        supergroupsDataValuesMock[1][SUPERGROUP_ADDITIONAL_MEMBERS_COLUMN_INDEX] = "";
         supergroupsDataValuesMock[2][SUPERGROUP_NAME_COLUMN_INDEX] = "Everyone";
         supergroupsDataValuesMock[2][SUPERGROUP_SUBGROUP_COLUMN_INDEX] = "UCSD, International";
+        supergroupsDataValuesMock[2][SUPERGROUP_ADDITIONAL_MEMBERS_COLUMN_INDEX] = "";
         supergroupsDataValuesMock[3][SUPERGROUP_NAME_COLUMN_INDEX] = "International";
         supergroupsDataValuesMock[3][SUPERGROUP_SUBGROUP_COLUMN_INDEX] = "IUSM, IGSM";
+        supergroupsDataValuesMock[3][SUPERGROUP_ADDITIONAL_MEMBERS_COLUMN_INDEX] = "";
 
         jest.mock("../src/main/scan", () => ({
             getCellValues: jest.fn()
@@ -478,6 +499,108 @@ describe("loadGroupsFromOnestopIntoScriptProperties", () => {
             international: ["charlie davis", "emily clark", "frank miller", "grace wilson"],
             ucsd: ["john doe", "jane smith", "charlie davis", "alice johnson", "bob brown"],
             everyone: ["john doe", "jane smith", "charlie davis", "alice johnson", "bob brown", "emily clark", "frank miller", "grace wilson"],
+        };
+
+        expect(setScriptPropertyMock).toHaveBeenCalledWith("GROUPS_MAP", JSON.stringify(expectedMap));
+    });
+
+    it("should load additional supergroup members when a supergroup has additional members", () => {
+        const groupsDataValuesMock: any[][] = getRandomlyGeneratedGroupsTable(4);
+        const supergroupsDataValuesMock: any[][] = getRandomlyGeneratedSupergroupsTable(3);
+
+        groupsDataValuesMock[1][GROUP_NAME_COLUMN_INDEX] = "HG1";
+        groupsDataValuesMock[1][GROUP_MEMBERS_COLUMN_INDEX] = "John Doe, Jane Smith";
+        groupsDataValuesMock[2][GROUP_NAME_COLUMN_INDEX] = "HG2";
+        groupsDataValuesMock[2][GROUP_MEMBERS_COLUMN_INDEX] = "Alice Johnson, Bob Brown";
+        groupsDataValuesMock[3][GROUP_NAME_COLUMN_INDEX] = "SDSU";
+        groupsDataValuesMock[3][GROUP_MEMBERS_COLUMN_INDEX] = "Charlie Davis, Emily Clark";
+        groupsDataValuesMock[4][GROUP_NAME_COLUMN_INDEX] = "A2K";
+        groupsDataValuesMock[4][GROUP_MEMBERS_COLUMN_INDEX] = "Frank Miller, Grace Wilson";
+
+        supergroupsDataValuesMock[1][SUPERGROUP_NAME_COLUMN_INDEX] = "UCSD";
+        supergroupsDataValuesMock[1][SUPERGROUP_SUBGROUP_COLUMN_INDEX] = "HG1, HG2";
+        supergroupsDataValuesMock[1][SUPERGROUP_ADDITIONAL_MEMBERS_COLUMN_INDEX] = "Robert Brown";
+        supergroupsDataValuesMock[2][SUPERGROUP_NAME_COLUMN_INDEX] = "College";
+        supergroupsDataValuesMock[2][SUPERGROUP_SUBGROUP_COLUMN_INDEX] = "UCSD, SDSU";
+        supergroupsDataValuesMock[2][SUPERGROUP_ADDITIONAL_MEMBERS_COLUMN_INDEX] = "William Johnson, Olivia Wilson";
+        supergroupsDataValuesMock[3][SUPERGROUP_NAME_COLUMN_INDEX] = "Community";
+        supergroupsDataValuesMock[3][SUPERGROUP_SUBGROUP_COLUMN_INDEX] = "A2K";
+        supergroupsDataValuesMock[3][SUPERGROUP_ADDITIONAL_MEMBERS_COLUMN_INDEX] = "Sophia Martinez, Emma Anderson, Casey Morgan";
+
+        jest.mock("../src/main/scan", () => ({
+            getCellValues: jest.fn()
+            .mockReturnValueOnce(groupsDataValuesMock)
+            .mockReturnValueOnce(supergroupsDataValuesMock),
+        }));
+
+        const setScriptPropertyMock: Mock = jest.fn();
+        jest.mock("../src/main/propertiesService", () => ({
+            loadMapFromScriptProperties: jest.fn(() => ({})),
+            setScriptProperty: setScriptPropertyMock,
+        }));
+
+        const { loadGroupsFromOnestopIntoScriptProperties } = require('../src/main/groups');
+        loadGroupsFromOnestopIntoScriptProperties();
+
+        const expectedMap: GroupsMap = {
+            HG1: ["John Doe", "Jane Smith"],
+            HG2: ["Alice Johnson", "Bob Brown"],
+            SDSU: ["Charlie Davis", "Emily Clark"],
+            A2K: ["Frank Miller", "Grace Wilson"],
+            Community: ["Frank Miller", "Grace Wilson", "Sophia Martinez", "Emma Anderson", "Casey Morgan"],
+            UCSD: ["John Doe", "Jane Smith", "Alice Johnson", "Bob Brown", "Robert Brown"],
+            College: ["John Doe", "Jane Smith", "Alice Johnson", "Bob Brown", "Robert Brown", "Charlie Davis", "Emily Clark", "William Johnson", "Olivia Wilson"],
+        };
+
+        expect(setScriptPropertyMock).toHaveBeenCalledWith("GROUPS_MAP", JSON.stringify(expectedMap));
+    });
+
+    it("should remove duplicate members when members are part of the additional members for a supergroup and one of its subgroups", () => {
+        const groupsDataValuesMock: any[][] = getRandomlyGeneratedGroupsTable(4);
+        const supergroupsDataValuesMock: any[][] = getRandomlyGeneratedSupergroupsTable(3);
+
+        groupsDataValuesMock[1][GROUP_NAME_COLUMN_INDEX] = "HG1";
+        groupsDataValuesMock[1][GROUP_MEMBERS_COLUMN_INDEX] = "John Doe, Jane Smith";
+        groupsDataValuesMock[2][GROUP_NAME_COLUMN_INDEX] = "HG2";
+        groupsDataValuesMock[2][GROUP_MEMBERS_COLUMN_INDEX] = "Alice Johnson, Bob Brown";
+        groupsDataValuesMock[3][GROUP_NAME_COLUMN_INDEX] = "SDSU";
+        groupsDataValuesMock[3][GROUP_MEMBERS_COLUMN_INDEX] = "Charlie Davis, Emily Clark";
+        groupsDataValuesMock[4][GROUP_NAME_COLUMN_INDEX] = "A2K";
+        groupsDataValuesMock[4][GROUP_MEMBERS_COLUMN_INDEX] = "Frank Miller, Grace Wilson";
+
+        supergroupsDataValuesMock[1][SUPERGROUP_NAME_COLUMN_INDEX] = "UCSD";
+        supergroupsDataValuesMock[1][SUPERGROUP_SUBGROUP_COLUMN_INDEX] = "HG1, HG2";
+        supergroupsDataValuesMock[1][SUPERGROUP_ADDITIONAL_MEMBERS_COLUMN_INDEX] = "Robert Brown";
+        supergroupsDataValuesMock[2][SUPERGROUP_NAME_COLUMN_INDEX] = "College";
+        supergroupsDataValuesMock[2][SUPERGROUP_SUBGROUP_COLUMN_INDEX] = "UCSD, SDSU";
+        supergroupsDataValuesMock[2][SUPERGROUP_ADDITIONAL_MEMBERS_COLUMN_INDEX] = "Robert Brown";
+        supergroupsDataValuesMock[3][SUPERGROUP_NAME_COLUMN_INDEX] = "Community";
+        supergroupsDataValuesMock[3][SUPERGROUP_SUBGROUP_COLUMN_INDEX] = "A2K";
+        supergroupsDataValuesMock[3][SUPERGROUP_ADDITIONAL_MEMBERS_COLUMN_INDEX] = "";
+
+        jest.mock("../src/main/scan", () => ({
+            getCellValues: jest.fn()
+            .mockReturnValueOnce(groupsDataValuesMock)
+            .mockReturnValueOnce(supergroupsDataValuesMock),
+        }));
+
+        const setScriptPropertyMock: Mock = jest.fn();
+        jest.mock("../src/main/propertiesService", () => ({
+            loadMapFromScriptProperties: jest.fn(() => ({})),
+            setScriptProperty: setScriptPropertyMock,
+        }));
+
+        const { loadGroupsFromOnestopIntoScriptProperties } = require('../src/main/groups');
+        loadGroupsFromOnestopIntoScriptProperties();
+
+        const expectedMap: GroupsMap = {
+            HG1: ["John Doe", "Jane Smith"],
+            HG2: ["Alice Johnson", "Bob Brown"],
+            SDSU: ["Charlie Davis", "Emily Clark"],
+            A2K: ["Frank Miller", "Grace Wilson"],
+            Community: ["Frank Miller", "Grace Wilson"],
+            UCSD: ["John Doe", "Jane Smith", "Alice Johnson", "Bob Brown", "Robert Brown"],
+            College: ["John Doe", "Jane Smith", "Alice Johnson", "Bob Brown", "Robert Brown", "Charlie Davis", "Emily Clark"],
         };
 
         expect(setScriptPropertyMock).toHaveBeenCalledWith("GROUPS_MAP", JSON.stringify(expectedMap));
