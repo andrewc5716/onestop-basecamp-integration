@@ -289,25 +289,25 @@ function getRandomlyGeneratedGroupRow(numGroupMembers: number = 3): any[] {
 }
 
 export function getRandomlyGeneratedGroupsTable(numGroups: number = 10): any[][] {
-    const aliasTable: any[][] = [["Name", "Group Members"]];
+    const groupsTable: any[][] = [["Name", "Group Members", "Alternate Names"]];
     for(let i = 0; i < numGroups; i++) {
-        aliasTable.push(getRandomlyGeneratedGroupRow());
+        groupsTable.push(getRandomlyGeneratedGroupRow());
     }
 
-    return aliasTable;
+    return groupsTable;
 }
 
-function getRandomlyGeneratedSupergroupRow(numSubgroups: number = 3): any[] {
-    return [randomstring.generate(), randomstring.generate(), Array.from({length: numSubgroups}, () => randomstring.generate()).join(",")];
+function getRandomlyGeneratedSupergroupRow(numSubgroups: number = 3, numAdditionalMembers: number = 2): any[] {
+    return [randomstring.generate(), Array.from({length: numSubgroups}, () => randomstring.generate()).join(","), randomstring.generate(), Array.from({length: numAdditionalMembers}, () => randomstring.generate()).join(",")];
 }
 
 export function getRandomlyGeneratedSupergroupsTable(numGroups: number = 10): any[][] {
-    const aliasTable: any[][] = [["Name", "Subgroups"]];
+    const supergroupsTable: any[][] = [["Name", "Subgroups", "Alternate Names", "Additional Members"]];
     for(let i = 0; i < numGroups; i++) {
-        aliasTable.push(getRandomlyGeneratedSupergroupRow());
+        supergroupsTable.push(getRandomlyGeneratedSupergroupRow());
     }
 
-    return aliasTable;
+    return supergroupsTable;
 }
 
 export function getRandomlyGeneratedCellValues(numRows: number = 5, numColumns: number = 5): any[][] {
