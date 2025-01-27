@@ -681,13 +681,13 @@ function filterDomainAttendees(domainNames: string[], domainFilters: string[]): 
 }
 
 /**
- * Gets the roleTodoIdMap object from the RowBasecampMapping object.
+ * Gets the roleTodoMap object from the RowBasecampMapping object.
  * Used for downstream processing
  * 
  * @param row a list of all the current roles associated with the row including the lead role. This may be identical to the original roles
  * @returns a map that associates role titles with basecamp todo objects
  */
-export function getRoleTodoIdMap(row: Row): RoleTodoMap {
+export function getRoleTodoMap(row: Row): RoleTodoMap {
     const savedRowBasecampMapping: RowBasecampMapping | null = getRowBasecampMapping(row);
     if(savedRowBasecampMapping === null) {
         throw new RowBasecampMappingMissingError("The rowBasecampMapping object is null! Unable to proceed with updating the todo!");
@@ -707,11 +707,11 @@ export function hasBasecampAttendees(row: Row): boolean {
     return getBasecampIdsFromPersonNameList(getAttendeesFromRow(row)).length > 0;
 }
 
-export function getScheduleEntryRequestForRow(row: Row): BasecampScheduleEntryRequest {
+export function getScheduleEntryRequestForRow(row: Row, roleTodoMap: RoleTodoMap): BasecampScheduleEntryRequest {
     const summary: string = getScheduleEntrySummary(row);
     const startsAt: string = row.startTime.toISOString();
     const endsAt: string = row.endTime.toISOString();
-    const description: string = getScheduleEntryDescription(row);
+    const description: string = getScheduleEntryDescription(row, roleTodoMap);
     const participantIds: string[] = getBasecampIdsFromPersonNameList(getAttendeesFromRow(row));
 
     return getBasecampScheduleEntryRequest(summary, startsAt, endsAt, description, participantIds, false, true);
@@ -726,7 +726,7 @@ function getScheduleEntrySummary(row: Row): string {
     return `[${who}] ${row.what.value}`;
 }
 
-function getScheduleEntryDescription(row: Row): string {
+function getScheduleEntryDescription(row: Row, roleTodoMap: RoleTodoMap): string {
     const location: string = getRichTextFromText("WHERE", row.where);
     const locales: Intl.LocalesArgument = 'en-us';
     const options: Intl.DateTimeFormatOptions = {
@@ -741,6 +741,17 @@ function getScheduleEntryDescription(row: Row): string {
     const inCharge: string = getRichTextFromText("IN CHARGE", row.inCharge);
     const helpers: string = getRichTextFromText("HELPERS", row.helpers);
     const notes: string = getRichTextFromText("NOTES", row.notes);
+    const relatedTodos: string = getRichTextForTodoLinks(roleTodoMap);
 
-    return wrapWithDivTag(combineWithBreakTags([location, time, inCharge, helpers, notes]));
+    return wrapWithDivTag(combineWithBreakTags([location, time, inCharge, helpers, notes, relatedTodos]));
+}
+
+function getRichTextForTodoLinks(roleTodoMap: RoleTodoMap): string {
+    let richText: string = "RELATED TODOS: <ul>";
+    for(const [role, todo] of Object.entries(roleTodoMap)) {
+        richText += `<li>${role}: ${todo.url}</li>`;
+    }
+    richText += "</ul>";
+
+    return richText;
 }

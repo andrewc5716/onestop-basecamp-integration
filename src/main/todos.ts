@@ -93,15 +93,15 @@ export function getBasecampTodoRequest(content: string, description: string, ass
  * @returns a map that associates role titles with basecamp todo ids
  */
 export function createNewTodos(roleRequestMap: RoleRequestMap): RoleTodoMap {
-    const roleTodoIdMap: RoleTodoMap = {};
+    const roleTodoMap: RoleTodoMap = {};
 
     Object.keys(roleRequestMap).forEach( role => {
         let request: BasecampTodoRequest = roleRequestMap[role];
         let basecampTodo: BasecampTodo = createTodo(request, getDefaultTodoListIdentifier());
-        roleTodoIdMap[role] = basecampTodo;
+        roleTodoMap[role] = basecampTodo;
     });
 
-    return roleTodoIdMap;
+    return roleTodoMap;
 }
 
 /**
@@ -149,7 +149,7 @@ export function deleteObsoleteTodos(currentRoleRequestMap: RoleRequestMap, lastS
  * Gets a list of obsolete todo ids based off of the obsolete roels roles by comparing the original and current roles together
  * 
  * @param obsoleteRoles an array of obsolete roles
- * @param lastSavedRoleTodoIdMap a map associating an event's roles with todo ids
+ * @param lastSavedRoleTodoMap a map associating an event's roles with todo objects
  * @returns an array of obsolete roles
  */
 export function getObsoleteTodosIds(obsoleteRoles: string[], lastSavedRoleTodoMap: RoleTodoMap): string[] {
@@ -167,7 +167,7 @@ export function getObsoleteTodosIds(obsoleteRoles: string[], lastSavedRoleTodoMa
 
 /**
  * Updates todos for existing roles. Gets the request body from the roleRequestMap map
- * Gets the existing todo id from the roleTodoIdMap object
+ * Gets the existing todo id from the roleTodoMap object
  * 
  * @param currentRoleRequestMap a map associating role titles with BasecampTodoRequest objects
  * @param lastSavedRoleTodoMap a map associating an event's roles to existing todo objects that is currently saved in the document properties
@@ -175,7 +175,7 @@ export function getObsoleteTodosIds(obsoleteRoles: string[], lastSavedRoleTodoMa
  */
 export function updateTodosForExistingRoles(currentRoleRequestMap: RoleRequestMap, lastSavedRoleTodoMap: RoleTodoMap): RoleTodoMap {
     Logger.log("Updating todos for existing roles...");
-    const existingRoleTodoIdMap: RoleTodoMap = {};
+    const existingRoleTodoMap: RoleTodoMap = {};
     const existingRoles: string[] = getExistingRoles(currentRoleRequestMap, lastSavedRoleTodoMap);
 
     for(const role of existingRoles) {
@@ -196,10 +196,10 @@ export function updateTodosForExistingRoles(currentRoleRequestMap: RoleRequestMa
 
         updateTodo(request, todoIdentifier);
 
-        existingRoleTodoIdMap[role] = existingTodo;
+        existingRoleTodoMap[role] = existingTodo;
     }
 
-    return existingRoleTodoIdMap;
+    return existingRoleTodoMap;
 }
 
 /**
@@ -213,7 +213,7 @@ export function createTodosForNewRoles(currentRoleRequestMap: RoleRequestMap, la
     Logger.log("Checking for new roles...\n");
 
     const newRoles: string[] = getNewRoles(currentRoleRequestMap, lastSavedRoleTodoMap);
-    const newRoleTodoIdMap: RoleTodoMap = {};
+    const newRoleTodoMap: RoleTodoMap = {};
     
     if(newRoles.length > 0) {
         Logger.log(`New role(s) detected: ${newRoles}\n`);
@@ -225,14 +225,14 @@ export function createTodosForNewRoles(currentRoleRequestMap: RoleRequestMap, la
             }
 
             let newTodoId = createTodo(request, getDefaultTodoListIdentifier());
-            newRoleTodoIdMap[role] = newTodoId;
+            newRoleTodoMap[role] = newTodoId;
         }
 
     } else {
         Logger.log("No new roles detected!\n");
     }
 
-    return newRoleTodoIdMap;
+    return newRoleTodoMap;
 }
 
 function getDefaultTodoListIdentifier(): TodolistIdentifier {

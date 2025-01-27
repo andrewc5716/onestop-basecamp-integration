@@ -186,7 +186,7 @@ describe("importOnestopToBasecamp", () => {
         const lastSavedRoleTodoMapMock1: RoleTodoMap = getRandomlyGeneratedRoleTodoMap();
         const newRoleTodoMapMock1: RoleTodoMap = getRandomlyGeneratedRoleTodoMap();
         const existingRoleTodoMapMock1: RoleTodoMap = getRandomlyGeneratedRoleTodoMap();
-        const updatedRoleTodoIdMapMock1: RoleTodoMap = {...existingRoleTodoMapMock1, ...newRoleTodoMapMock1};
+        const updatedRoleTodoMapMock1: RoleTodoMap = {...existingRoleTodoMapMock1, ...newRoleTodoMapMock1};
         const roleRequestMapMock2: RoleRequestMap = getRandomlyGeneratedRoleRequestMap();
         const scheduleEntryRequestMock2: BasecampScheduleEntryRequest = getRandomlyGeneratedScheduleEntry();
         const scheduleEntryIdMock2: string = randomstring.generate();
@@ -224,7 +224,7 @@ describe("importOnestopToBasecamp", () => {
         const getIdMock: Mock = jest.fn()
             .mockReturnValueOnce(rowIdMock1)
             .mockReturnValueOnce(rowIdMock2);
-        const getRoleTodoIdMapMock: Mock = jest.fn()
+        const getRoleTodoMapMock: Mock = jest.fn()
             .mockReturnValueOnce(lastSavedRoleTodoMapMock1)
             .mockReturnValueOnce(lastSavedRoleTodoMapMock2);
         const getSavedScheduleEntryIdMock: Mock = jest.fn()
@@ -238,7 +238,7 @@ describe("importOnestopToBasecamp", () => {
             getScheduleEntryRequestForRow: getScheduleEntryRequestForRowMock,
             saveRow: saveRowMock,
             getId: getIdMock,
-            getRoleTodoIdMap: getRoleTodoIdMapMock,
+            getRoleTodoMap: getRoleTodoMapMock,
             getSavedScheduleEntryId: getSavedScheduleEntryIdMock,
         }));
 
@@ -287,7 +287,7 @@ describe("importOnestopToBasecamp", () => {
         expect(createTodosForNewRolesMock).toHaveBeenNthCalledWith(1, roleRequestMapMock1, lastSavedRoleTodoMapMock1);
         expect(updateTodosForExistingRolesMock).toHaveBeenNthCalledWith(1, roleRequestMapMock1, lastSavedRoleTodoMapMock1);
         expect(updateScheduleEntryMock).toHaveBeenNthCalledWith(1, scheduleEntryRequestMock1, scheduleEntryIdentifierMock1);
-        expect(saveRowMock).toHaveBeenNthCalledWith(1, rowMock1, updatedRoleTodoIdMapMock1, scheduleEntryIdMock1);
+        expect(saveRowMock).toHaveBeenNthCalledWith(1, rowMock1, updatedRoleTodoMapMock1, scheduleEntryIdMock1);
     
         // Asserts for changed second row
         expect(hasChangedMock).toHaveBeenNthCalledWith(2, rowMock2);

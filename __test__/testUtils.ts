@@ -354,12 +354,12 @@ export function getRandomlyGeneratedScheduleEntry(): BasecampScheduleEntryReques
 }
 
 export function getRandomlyGeneratedRoleTodoMap(numRoles: number = 10): RoleTodoMap {
-    const roleTodoIdMap: RoleTodoMap = {};
+    const roleTodoMap: RoleTodoMap = {};
     for(let i = 0; i < numRoles; i++) {
-        roleTodoIdMap[randomstring.generate()] = { id: randomstring.generate(), url: randomstring.generate() };
+        roleTodoMap[randomstring.generate()] = { id: randomstring.generate(), url: randomstring.generate() };
     }
 
-    return roleTodoIdMap;
+    return roleTodoMap;
 }
 
 export function getRandomlyGeneratedByteArray(numBytes: number = 100): Uint8Array {

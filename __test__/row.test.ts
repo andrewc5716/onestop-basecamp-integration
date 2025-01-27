@@ -746,7 +746,7 @@ describe("clearAllRowMetadata", () => {
 
 });
 
-describe("getRoleTodoIdMap", () => {
+describe("getRoleTodoMap", () => {
 
 });
 
@@ -856,6 +856,7 @@ describe("getScheduleEntryRequestForRow", () => {
         rowMock.inCharge.value = "John Doe";
         rowMock.helpers = getRandomlyGeneratedText(1);
         rowMock.helpers.value = "Jane Smith, Alice Johnson";
+        const roleTodoMapMock: RoleTodoMap = getRandomlyGeneratedRoleTodoMap();
 
         jest.mock("../src/main/groups", () => ({
             GROUP_NAMES: ["UCSD"],
@@ -875,7 +876,7 @@ describe("getScheduleEntryRequestForRow", () => {
 
         const { getScheduleEntryRequestForRow } = require("../src/main/row");
 
-        const scheduleEntryRequest: BasecampScheduleEntryRequest = getScheduleEntryRequestForRow(rowMock);
+        const scheduleEntryRequest: BasecampScheduleEntryRequest = getScheduleEntryRequestForRow(rowMock, roleTodoMapMock);
         expect(scheduleEntryRequest).toBeDefined();
         expect(scheduleEntryRequest.summary).toContain("UCSD");
         expect(scheduleEntryRequest.summary).toContain(rowMock.what.value);
@@ -884,6 +885,7 @@ describe("getScheduleEntryRequestForRow", () => {
         rowMock.where.tokens.forEach((token) => expect(scheduleEntryRequest.description).toContain(token.value));
         expect(scheduleEntryRequest.description).toContain(rowMock.inCharge.value);
         expect(scheduleEntryRequest.description).toContain(rowMock.helpers.value);
+        Object.values(roleTodoMapMock).forEach((todo) => expect(scheduleEntryRequest.description).toContain(todo.url));
         rowMock.notes.tokens.forEach((token) => expect(scheduleEntryRequest.description).toContain(token.value));
         expect(scheduleEntryRequest.participant_ids).toContain(PEOPLE_MAP["John Doe"]);
         expect(scheduleEntryRequest.participant_ids).toContain(PEOPLE_MAP["Jane Smith"]);

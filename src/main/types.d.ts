@@ -41,7 +41,7 @@ declare interface BasecampTodo {
   url: string,
 }
 
-// The key string represents a role and the value represents a todoId
+// The key string represents a role and the value represents a todo object
 type RoleTodoMap = { [role: string]: BasecampTodo };
 
 declare interface TabInfo {
