@@ -6,7 +6,7 @@ global.PropertiesService = PropertiesService;
 
 import { generateIdForRow, getId, getMetadata, getSavedScheduleEntryId, hasId, saveRow } from "../src/main/row";
 import { RowMissingIdError } from '../src/main/error/rowMissingIdError';
-import { getRandomlyGeneratedByteArray, getRandomlyGeneratedMember, getRandomlyGeneratedMetadata, getRandomlyGeneratedRange, getRandomlyGeneratedRoleTodoIdMap, getRandomlyGeneratedRow, getRandomlyGeneratedRowBasecampMapping, getRandomlyGeneratedText, Mock } from './testUtils';
+import { getRandomlyGeneratedByteArray, getRandomlyGeneratedMember, getRandomlyGeneratedMetadata, getRandomlyGeneratedRange, getRandomlyGeneratedRoleTodoMap, getRandomlyGeneratedRow, getRandomlyGeneratedRowBasecampMapping, getRandomlyGeneratedText, Mock } from './testUtils';
 import randomstring from "randomstring";
 import { RowBasecampMappingMissingError } from '../src/main/error/rowBasecampMappingMissingError';
 import { normalizePersonName } from '../src/main/people';
@@ -381,16 +381,16 @@ describe("saveRow", () => {
         metadataMock.getValue = jest.fn(() => null);
         rowMock.metadata = metadataMock;
 
-        const roleTodoIdMapMock: RoleTodoIdMap = getRandomlyGeneratedRoleTodoIdMap();
+        const roleTodoMapMock: RoleTodoMap = getRandomlyGeneratedRoleTodoMap();
         const scheduleEntryIdMock: string = randomstring.generate();
 
-        expect(() => saveRow(rowMock, roleTodoIdMapMock, scheduleEntryIdMock)).toThrow(RowMissingIdError);
+        expect(() => saveRow(rowMock, roleTodoMapMock, scheduleEntryIdMock)).toThrow(RowMissingIdError);
     });
 
     it("should save the row to the document properties when called", () => {
         const rowMock: Row = getRandomlyGeneratedRow();
         const metadataMock: Metadata = getRandomlyGeneratedMetadata();
-        const roleTodoIdMapMock: RoleTodoIdMap = getRandomlyGeneratedRoleTodoIdMap();
+        const roleTodoMapMock: RoleTodoMap = getRandomlyGeneratedRoleTodoMap();
         const scheduleEntryIdMock: string = randomstring.generate();
 
         const rowIdMock: string = randomstring.generate();
@@ -412,7 +412,7 @@ describe("saveRow", () => {
 
         const { saveRow } = require("../src/main/row");
 
-        saveRow(rowMock, roleTodoIdMapMock, scheduleEntryIdMock);
+        saveRow(rowMock, roleTodoMapMock, scheduleEntryIdMock);
 
         expect(setDocumentPropertyMock).toHaveBeenCalledWith(rowIdMock, expect.any(String));
     });
@@ -753,7 +753,7 @@ describe("clearAllRowMetadata", () => {
 
 });
 
-describe("getRoleTodoIdMap", () => {
+describe("getRoleTodoMap", () => {
 
 });
 
@@ -865,6 +865,7 @@ describe("getScheduleEntryRequestForRow", () => {
         rowMock.inCharge.value = "John Doe";
         rowMock.helpers = getRandomlyGeneratedText(1);
         rowMock.helpers.value = "Jane Smith, Alice Johnson";
+        const roleTodoMapMock: RoleTodoMap = getRandomlyGeneratedRoleTodoMap();
 
         jest.mock("../src/main/groups", () => ({
             GROUP_NAMES: ["ucsd"],
@@ -885,7 +886,7 @@ describe("getScheduleEntryRequestForRow", () => {
 
         const { getScheduleEntryRequestForRow } = require("../src/main/row");
 
-        const scheduleEntryRequest: BasecampScheduleEntryRequest = getScheduleEntryRequestForRow(rowMock);
+        const scheduleEntryRequest: BasecampScheduleEntryRequest = getScheduleEntryRequestForRow(rowMock, roleTodoMapMock);
         expect(scheduleEntryRequest).toBeDefined();
         expect(scheduleEntryRequest.summary).toContain("UCSD");
         expect(scheduleEntryRequest.summary).toContain(rowMock.what.value);
@@ -894,6 +895,7 @@ describe("getScheduleEntryRequestForRow", () => {
         rowMock.where.tokens.forEach((token) => expect(scheduleEntryRequest.description).toContain(token.value));
         expect(scheduleEntryRequest.description).toContain(rowMock.inCharge.value);
         expect(scheduleEntryRequest.description).toContain(rowMock.helpers.value);
+        Object.values(roleTodoMapMock).forEach((todo) => expect(scheduleEntryRequest.description).toContain(todo.url));
         rowMock.notes.tokens.forEach((token) => expect(scheduleEntryRequest.description).toContain(token.value));
         expect(scheduleEntryRequest.participant_ids).toContain(PEOPLE_MAP["john doe"]);
         expect(scheduleEntryRequest.participant_ids).toContain(PEOPLE_MAP["jane smith"]);

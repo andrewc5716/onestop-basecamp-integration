@@ -36,8 +36,14 @@ declare interface Row {
   notes: Text
 }
 
-// The key string represents a role and the value represents a todoId
-type RoleTodoIdMap = { [role: string]: string };
+declare interface BasecampTodo {
+  id: string,
+  title: string,
+  url: string,
+}
+
+// The key string represents a role and the value represents a todo object
+type RoleTodoMap = { [role: string]: BasecampTodo };
 
 declare interface TabInfo {
   date: Date
@@ -45,7 +51,7 @@ declare interface TabInfo {
 
 declare interface RowBasecampMapping {
   rowHash: string,
-  roleTodoIdMap: RoleTodoIdMap
+  roleTodoMap: RoleTodoMap
   scheduleEntryId: string,
   tabInfo: TabInfo
 }
@@ -97,7 +103,9 @@ declare interface BasecampTodoRequest extends JsonObject {
 
 // Response from Basecamp Todo. Only need id for now, can add more later
 declare interface BasecampTodoResponse extends JsonObject {
-  id: string // id of the created todo
+  id: string, // id of the created todo
+  title: string, // title of the created todo
+  app_url: string // url of the created todo
 }
 
 declare interface ScheduleIdentifier {
