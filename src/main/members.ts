@@ -1,4 +1,6 @@
 import { mergeAliasMaps } from "./aliases";
+import { PersonAliasClashError } from "./error/personAliasClashError";
+import { normalizePersonName } from "./people";
 import { loadMapFromScriptProperties, setScriptProperty } from "./propertiesService";
 import { getCellValues } from "./scan";
 
@@ -52,7 +54,7 @@ function loadMembersFromOnestop(): { memberMap: MemberMap, alternateNamesMap: Al
 
 function constructMember(rowValues: any): Member {
     return {
-        name: rowValues[NAME_COLUMN_INDEX],
+        name: normalizePersonName(rowValues[NAME_COLUMN_INDEX]),
         gender: rowValues[GENDER_COLUMN_INDEX],
         married: rowValues[MARRIED_COLUMN_INDEX],
         parent: rowValues[PARENT_COLUMN_INDEX],
@@ -68,11 +70,11 @@ function getAliasList(rowValues: any, index: number): string[] {
 function addAlternateNamesToMap(alternateNamesMap: AliasMap, alternateNames: string[], currentMember: Member): AliasMap {
     // Maps a person's alternate name to their actual name
     for(const alternateName of alternateNames) {
-        if(alternateNamesMap.hasOwnProperty(alternateName)) {
-            Logger.log(`Warning: Multiple members have the alternate name ${alternateName}`)
-            alternateNamesMap[alternateName].push(currentMember.name);
+        const normalizedAlternateName: string = alternateName.toLowerCase().trim();
+        if(alternateNamesMap.hasOwnProperty(normalizedAlternateName)) {
+            throw new PersonAliasClashError(`Multiple members have the alternate name ${normalizedAlternateName}`);
         } else {
-            alternateNamesMap[alternateName] = [currentMember.name];
+            alternateNamesMap[normalizedAlternateName] = [currentMember.name];
         }
     }
 
@@ -88,9 +90,9 @@ function loadCouplesFromOnestop(): AliasMap {
         const rowValues: any[] = cellValues[i];
 
         const coupleAliasesList: string[] = getAliasList(rowValues, COUPLES_ALIASES_COLUMN_INDEX);
-        const husband: string = rowValues[HUSBAND_COLUMN_INDEX];
-        const wife: string = rowValues[WIFE_COLUMN_INDEX];
-        coupleAliasesList.forEach(coupleAlias => aliasMap[coupleAlias] = [husband, wife]);
+        const husband: string = normalizePersonName(rowValues[HUSBAND_COLUMN_INDEX]);
+        const wife: string = normalizePersonName(rowValues[WIFE_COLUMN_INDEX]);
+        coupleAliasesList.forEach(coupleAlias => aliasMap[coupleAlias.toLowerCase().trim()] = [husband, wife]);
     }
 
     return aliasMap;

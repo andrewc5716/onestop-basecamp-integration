@@ -46,6 +46,5 @@ function isHelperTokenValid(helperTokenWithFilters: string): boolean {
 }
 
 function normalizeHelper(helper: string): string {
-    // todo: make the whole helper input lowercase; but need to make all the maps lowercase too then to make it work
-    return helper.replace(STAFF_REGEX, '').trim();
+    return helper.replace(STAFF_REGEX, '').toLowerCase().trim();
 }

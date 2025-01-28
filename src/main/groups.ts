@@ -1,4 +1,5 @@
 import { mergeAliasMaps } from "./aliases";
+import { normalizePersonName } from "./people";
 import { loadMapFromScriptProperties, setScriptProperty } from "./propertiesService";
 import { getCellValues } from "./scan";
 
@@ -68,7 +69,7 @@ function loadGroupsFromOnestop(): { groupsMap: GroupsMap, groupsAliasMap: AliasM
     // Start at row 1 to skip the table header row
     for(let i = 1; i < cellValues.length; i++) {
         const rowValues: any[] = cellValues[i];
-        const groupName: string = rowValues[GROUP_NAME_COLUMN_INDEX];
+        const groupName: string = rowValues[GROUP_NAME_COLUMN_INDEX].toLowerCase().trim();
         const groupMemberNames: string[] = getGroupMemberNames(rowValues);
         const groupAliases: string[] = getGroupAliases(rowValues);
 
@@ -92,11 +93,11 @@ function loadGroupsFromOnestop(): { groupsMap: GroupsMap, groupsAliasMap: AliasM
 
 function getGroupMemberNames(rowValues: any[]): string[] {
     const groupMemberNameList: string = rowValues[GROUP_MEMBER_NAMES_COLUMN_INDEX];
-    return groupMemberNameList.split(COMMA_DELIMITER).map((name) => name.trim()).filter((name) => name !== "");
+    return groupMemberNameList.split(COMMA_DELIMITER).map((name) => normalizePersonName(name)).filter((name) => name !== "");
 }
 
 function getGroupAliases(rowValues: any[]): string[] {
-    const groupAliasesList: string = rowValues[GROUP_ALIASES_COLUMN_INDEX];
+    const groupAliasesList: string = rowValues[GROUP_ALIASES_COLUMN_INDEX].toLowerCase();
     return groupAliasesList.split(COMMA_DELIMITER).map((alias) => alias.trim()).filter((alias) => alias !== "");
 }
 
@@ -176,7 +177,7 @@ function isSuperGroup(groupName: string, allSupergroups: SupergroupMap): boolean
 }
 
 function constructSupergroup(rowValues: any[]): Supergroup {
-    const supergroupName: string = rowValues[SUPERGROUP_NAME_COLUMN_INDEX];
+    const supergroupName: string = rowValues[SUPERGROUP_NAME_COLUMN_INDEX].toLowerCase().trim();
     const subgroupNames: string[] = getSubgroupNames(rowValues);
     const supergroupAliases: string[] = getSupergroupGroupAliases(rowValues);
     const supergroupAdditionalMembers: string[] = getSupergroupAdditionalMembers(rowValues);
@@ -190,18 +191,18 @@ function constructSupergroup(rowValues: any[]): Supergroup {
 }
 
 function getSubgroupNames(rowValues: any[]): string[] {
-    const subgroupNameList: string = rowValues[SUBGROUP_COLUMN_INDEX];
+    const subgroupNameList: string = rowValues[SUBGROUP_COLUMN_INDEX].toLowerCase();
     return subgroupNameList.split(COMMA_DELIMITER).map((name) => name.trim()).filter((name) => name !== "");
 }
 
 function getSupergroupGroupAliases(rowValues: any[]): string[] {
-    const supergroupAliasesList: string = rowValues[SUPERGROUP_ALIASES_COLUMN_INDEX];
+    const supergroupAliasesList: string = rowValues[SUPERGROUP_ALIASES_COLUMN_INDEX].toLowerCase();
     return supergroupAliasesList.split(COMMA_DELIMITER).map((alias) => alias.trim()).filter((alias) => alias !== "");
 }
 
 function getSupergroupAdditionalMembers(rowValues: any[]): string[] {
     const supergroupAdditionalMembersList: string = rowValues[SUPERGROUP_ADDITIONAL_MEMBERS_COLUMN_INDEX];
-    return supergroupAdditionalMembersList.split(COMMA_DELIMITER).map((memberName) => memberName.trim()).filter((memberName) => memberName !== "");
+    return supergroupAdditionalMembersList.split(COMMA_DELIMITER).map((memberName) => normalizePersonName(memberName)).filter((memberName) => memberName !== "");
 }
 
 function allSubgroupsHaveBeenLoaded(supergroup: Supergroup, loadedGroups: GroupsMap, loadedSupergroups: GroupsMap, allSupergroups: SupergroupMap): boolean {

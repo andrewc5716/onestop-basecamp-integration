@@ -6,27 +6,27 @@ import { getRandomlyGeneratedMember } from "./testUtils";
 
 describe("removeFilters", () => {
     it("should return the original string and an empty array when the input string does not contain any filters", () => {
-        const inputString: string = "IGSM";
+        const inputString: string = "igsm";
         const expectedOutput: { stringWithoutFilters: string, removedFilters: string[] } = { stringWithoutFilters: inputString, removedFilters: [] };
         expect(removeFilters(inputString)).toStrictEqual(expectedOutput);
     });
 
     it("should remove a filter from the input string when the input string contains a filter", () => {
-        const inputString: string = "IGSM Bros";
-        const expectedOutput: { stringWithoutFilters: string, removedFilters: string[] } = { stringWithoutFilters: "IGSM", removedFilters: ["Bros"] };
+        const inputString: string = "igsm Bros";
+        const expectedOutput: { stringWithoutFilters: string, removedFilters: string[] } = { stringWithoutFilters: "igsm", removedFilters: ["bros"] };
         expect(removeFilters(inputString)).toStrictEqual(expectedOutput);
     });
 
     it("should remove multiple filters from the input string when the input string contains multiple filters", () => {
-        const inputString: string = "IGSM Married Bros";
-        const expectedOutput: { stringWithoutFilters: string, removedFilters: string[] } = { stringWithoutFilters: "IGSM", removedFilters: ["Bros", "Married"] };
+        const inputString: string = "igsm Married Bros";
+        const expectedOutput: { stringWithoutFilters: string, removedFilters: string[] } = { stringWithoutFilters: "igsm", removedFilters: ["bros", "married"] };
         expect(removeFilters(inputString)).toStrictEqual(expectedOutput);
     });
 });
 
 describe("containsFilter", () => {
     it("should return true when the input string contains a filter", () => {
-        const inputString: string = "IGSM Bros";
+        const inputString: string = "igsm Bros";
         expect(containsFilter(inputString)).toBeTruthy();
     });
 
@@ -119,10 +119,10 @@ describe("filterMembers", () => {
 
         const { filterMembers } = require("../src/main/filter");
 
-        const filtertedMembers: string[] = filterMembers(groupMembersMock, filterListMock);
+        const filteredMembers: string[] = filterMembers(groupMembersMock, filterListMock);
 
         const expectedFilteredMembers: string[] = ["John Doe", "Bob Brown"];
-        expect(filtertedMembers).toStrictEqual(expectedFilteredMembers);
+        expect(filteredMembers).toStrictEqual(expectedFilteredMembers);
     });
 
     it("should ignore invalid filters when there are invalid filters in the filter list", () => {

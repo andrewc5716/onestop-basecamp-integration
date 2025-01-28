@@ -5,6 +5,7 @@ global.PropertiesService = PropertiesService;
 global.SpreadsheetApp = SpreadsheetApp;
 
 import { getRandomlyGeneratedAliasTable, getRandomlyGeneratedMemberMap, getRandomlyGeneratedMemberTable, Mock } from './testUtils';
+import { PersonAliasClashError } from '../src/main/error/personAliasClashError';
 
 const NAME_COLUMN_INDEX: number = 0;
 const GENDER_COLUMN_INDEX: number = 1;
@@ -73,28 +74,28 @@ describe("loadMembersFromOnestopIntoScriptProperties", () => {
         const receivedAliasMap: AliasMap = loadMembersFromOnestopIntoScriptProperties();
 
         const expectedMemberMap: MemberMap = {
-            "John Doe": {name: "John Doe", gender: membersDataValuesMock[1][GENDER_COLUMN_INDEX], married: membersDataValuesMock[1][MARRIED_COLUMN_INDEX], parent: membersDataValuesMock[1][PARENT_COLUMN_INDEX], class: membersDataValuesMock[1][CLASS_COLUMN_INDEX]},
-            "James Brown": {name: "James Brown", gender: membersDataValuesMock[2][GENDER_COLUMN_INDEX], married: membersDataValuesMock[2][MARRIED_COLUMN_INDEX], parent: membersDataValuesMock[2][PARENT_COLUMN_INDEX], class: membersDataValuesMock[2][CLASS_COLUMN_INDEX]},
-            "Mary Brown": {name: "Mary Brown", gender: membersDataValuesMock[3][GENDER_COLUMN_INDEX], married: membersDataValuesMock[3][MARRIED_COLUMN_INDEX], parent: membersDataValuesMock[3][PARENT_COLUMN_INDEX], class: membersDataValuesMock[3][CLASS_COLUMN_INDEX]},
-            "Robert White": {name: "Robert White", gender: membersDataValuesMock[4][GENDER_COLUMN_INDEX], married: membersDataValuesMock[4][MARRIED_COLUMN_INDEX], parent: membersDataValuesMock[4][PARENT_COLUMN_INDEX], class: membersDataValuesMock[4][CLASS_COLUMN_INDEX]},
-            "Emily White": {name: "Emily White", gender: membersDataValuesMock[5][GENDER_COLUMN_INDEX], married: membersDataValuesMock[5][MARRIED_COLUMN_INDEX], parent: membersDataValuesMock[5][PARENT_COLUMN_INDEX], class: membersDataValuesMock[5][CLASS_COLUMN_INDEX]},
+            "john doe": {name: "john doe", gender: membersDataValuesMock[1][GENDER_COLUMN_INDEX], married: membersDataValuesMock[1][MARRIED_COLUMN_INDEX], parent: membersDataValuesMock[1][PARENT_COLUMN_INDEX], class: membersDataValuesMock[1][CLASS_COLUMN_INDEX]},
+            "james brown": {name: "james brown", gender: membersDataValuesMock[2][GENDER_COLUMN_INDEX], married: membersDataValuesMock[2][MARRIED_COLUMN_INDEX], parent: membersDataValuesMock[2][PARENT_COLUMN_INDEX], class: membersDataValuesMock[2][CLASS_COLUMN_INDEX]},
+            "mary brown": {name: "mary brown", gender: membersDataValuesMock[3][GENDER_COLUMN_INDEX], married: membersDataValuesMock[3][MARRIED_COLUMN_INDEX], parent: membersDataValuesMock[3][PARENT_COLUMN_INDEX], class: membersDataValuesMock[3][CLASS_COLUMN_INDEX]},
+            "robert white": {name: "robert white", gender: membersDataValuesMock[4][GENDER_COLUMN_INDEX], married: membersDataValuesMock[4][MARRIED_COLUMN_INDEX], parent: membersDataValuesMock[4][PARENT_COLUMN_INDEX], class: membersDataValuesMock[4][CLASS_COLUMN_INDEX]},
+            "emily white": {name: "emily white", gender: membersDataValuesMock[5][GENDER_COLUMN_INDEX], married: membersDataValuesMock[5][MARRIED_COLUMN_INDEX], parent: membersDataValuesMock[5][PARENT_COLUMN_INDEX], class: membersDataValuesMock[5][CLASS_COLUMN_INDEX]},
         };
 
         const expectedAliasMap: AliasMap = {
-            "John": ["John Doe"],
-            "John D": ["John Doe"],
-            "James": ["James Brown"],
-            "James B": ["James Brown"],
-            "Mary": ["Mary Brown"],
-            "Mary B": ["Mary Brown"],
-            "Robert": ["Robert White"],
-            "Robert W": ["Robert White"],
-            "Emily": ["Emily White"],
-            "Emily W": ["Emily White"],
-            "James/Mary": ["James Brown", "Mary Brown"],
-            "Browns": ["James Brown", "Mary Brown"],
-            "Robert/Emily": ["Robert White", "Emily White"],
-            "Whites": ["Robert White", "Emily White"],
+            "john": ["john doe"],
+            "john d": ["john doe"],
+            "james": ["james brown"],
+            "james b": ["james brown"],
+            "mary": ["mary brown"],
+            "mary b": ["mary brown"],
+            "robert": ["robert white"],
+            "robert w": ["robert white"],
+            "emily": ["emily white"],
+            "emily w": ["emily white"],
+            "james/mary": ["james brown", "mary brown"],
+            "browns": ["james brown", "mary brown"],
+            "robert/emily": ["robert white", "emily white"],
+            "whites": ["robert white", "emily white"],
         };
 
         expect(setScriptPropertyMock).toHaveBeenCalled();
@@ -134,10 +135,10 @@ describe("loadMembersFromOnestopIntoScriptProperties", () => {
         const couplesDataValuesMock: any[][] = getRandomlyGeneratedAliasTable(0);
 
         const expectedAliasMap: AliasMap = {
-            "John": ["John Doe"],
-            "John D": ["John Doe"],
-            "James": ["James Brown"],
-            "James B": ["James Brown"],
+            "john": ["john doe"],
+            "john d": ["john doe"],
+            "james": ["james brown"],
+            "james b": ["james brown"],
         };
 
         jest.mock("../src/main/scan", () => ({
@@ -163,7 +164,7 @@ describe("loadMembersFromOnestopIntoScriptProperties", () => {
         expect(membersAliases).toStrictEqual(expectedAliasMap);
     });
 
-    it("should map an alternate name to multiple people when multiple people share the same alternate name", () => {
+    it("should throw an error when multiple people share the same alternate name", () => {
         const membersDataValuesMock: any[][] = getRandomlyGeneratedMemberTable(2, 1);
         membersDataValuesMock[1][NAME_COLUMN_INDEX] = "John Doe";
         membersDataValuesMock[1][ALTERNATE_NAMES_COLUMN_INDEX] = "John,John D";
@@ -171,12 +172,6 @@ describe("loadMembersFromOnestopIntoScriptProperties", () => {
         membersDataValuesMock[2][ALTERNATE_NAMES_COLUMN_INDEX] = "John,John B";
 
         const couplesDataValuesMock: any[][] = getRandomlyGeneratedAliasTable(0);
-
-        const expectedAliasMap: AliasMap = {
-            "John": ["John Doe", "John Brown"],
-            "John D": ["John Doe"],
-            "John B": ["John Brown"],
-        };
 
         jest.mock("../src/main/scan", () => ({
             getCellValues: jest.fn()
@@ -189,16 +184,8 @@ describe("loadMembersFromOnestopIntoScriptProperties", () => {
             setScriptProperty: jest.fn(),
         }));
 
-        const mergeAliasMapsMock: Mock = jest.fn(() => expectedAliasMap);
-        jest.mock("../src/main/aliases", () => ({
-            mergeAliasMaps: mergeAliasMapsMock,
-        }));
-
         const { loadMembersFromOnestopIntoScriptProperties } = require('../src/main/members');
-        const membersAliases: AliasMap = loadMembersFromOnestopIntoScriptProperties();
-
-        expect(mergeAliasMapsMock).toHaveBeenCalledWith(expectedAliasMap, {});
-        expect(membersAliases).toStrictEqual(expectedAliasMap);
+        expect(() => loadMembersFromOnestopIntoScriptProperties()).toThrow(new PersonAliasClashError('Multiple members have the alternate name john'));
     });
 
     it("should map an alias to both a person and a couple when a person's alternate name is the same as a couple's alias", () => {
@@ -215,27 +202,27 @@ describe("loadMembersFromOnestopIntoScriptProperties", () => {
         couplesDataValuesMock[1] = ["James Brown", "Mary Brown", "JM"];
 
         const expectedMembersAliasMap: AliasMap = {
-            "John": ["John Miller"],
-            "John M": ["John Miller"],
-            "JM": ["John Miller"],
-            "James": ["James Brown"],
-            "James B": ["James Brown"],
-            "Mary": ["Mary Brown"],
-            "Mary B": ["Mary Brown"]
+            "john": ["john miller"],
+            "john m": ["john miller"],
+            "jm": ["john miller"],
+            "james": ["james brown"],
+            "james b": ["james brown"],
+            "mary": ["mary brown"],
+            "mary b": ["mary brown"]
         };
 
         const expectedCouplesAliasMap: AliasMap = {
-            "JM": ["James Brown", "Mary Brown"],
+            "jm": ["james brown", "mary brown"],
         };
 
         const expectedAliasMap: AliasMap = {
-            "John": ["John Miller"],
-            "John M": ["John Miller"],
-            "JM": ["John Miller", "James Brown", "Mary Brown"],
-            "James": ["James Brown"],
-            "James B": ["James Brown"],
-            "Mary": ["Mary Brown"],
-            "Mary B": ["Mary Brown"],
+            "john": ["john miller"],
+            "john m": ["john miller"],
+            "jm": ["john miller", "james brown", "mary brown"],
+            "james": ["james brown"],
+            "james b": ["james brown"],
+            "mary": ["mary brown"],
+            "mary b": ["mary brown"],
         };
 
         jest.mock("../src/main/scan", () => ({
