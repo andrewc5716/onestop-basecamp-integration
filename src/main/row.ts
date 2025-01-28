@@ -578,7 +578,7 @@ function getMinistryNames(row: Row): string[] {
 function getMinistryFilters(row: Row): string[] {
     return splitWhoColumn(row)
     .map(name => name.toLowerCase().trim())
-    .filter(value => isFilter(value));;
+    .filter(value => isFilter(value));
 }
 
 /**
