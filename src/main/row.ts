@@ -632,9 +632,10 @@ export function getAttendeesFromRow(row: Row): string[] {
     const isVarious = checkForVarious(row);
     const isOther = checkForOther(row);
 
+    attendees.push(...getAllHelperNames(row));
+
     if(isRotation || isVarious || isOther) {
         attendees.push(...getLeadsNames(row));
-        attendees.push(...getAllHelperNames(row));
         
     } else if(ministryNames.length > 0) {
         // Process Ministry Attendees
