@@ -109,6 +109,8 @@ describe('getAttendeesFromRow', () => {
         const row: Row = getRandomlyGeneratedRow();
         row.domain = "INT'L";
         row.who = "IGSM";
+        row.helpers = getRandomlyGeneratedText(1);
+        row.helpers.value = "";
 
         const MOCK_GROUPS_MAP = {
             igsm: ['jack zhang', 'angel zhang'],
@@ -141,6 +143,8 @@ describe('getAttendeesFromRow', () => {
         const row: Row = getRandomlyGeneratedRow();
         row.domain = "INT'L";
         row.who = "";
+        row.helpers = getRandomlyGeneratedText(1);
+        row.helpers.value = "";
 
         // Mocked GROUPS_MAP
         const MOCK_GROUPS_MAP = {
@@ -177,6 +181,8 @@ describe('getAttendeesFromRow', () => {
         const row: Row = getRandomlyGeneratedRow();
         row.domain = '';
         row.who = '';
+        row.helpers = getRandomlyGeneratedText(1);
+        row.helpers.value = "";
 
         jest.mock('../src/main/propertiesService', () => ({
             loadMapFromScriptProperties: jest.fn((key: string) => {
@@ -198,6 +204,8 @@ describe('getAttendeesFromRow', () => {
         const row: Row = getRandomlyGeneratedRow();
         row.domain = "INT'L";
         row.who = "IGSM, Bros";
+        row.helpers = getRandomlyGeneratedText(1);
+        row.helpers.value = "";
 
         const MOCK_GROUPS_MAP = {
             igsm: ['jack zhang', 'angel zhang'],
@@ -229,6 +237,8 @@ describe('getAttendeesFromRow', () => {
         const row: Row = getRandomlyGeneratedRow();
         row.domain = "COLLEGE, Sis";
         row.who = "";
+        row.helpers = getRandomlyGeneratedText(1);
+        row.helpers.value = "";
 
         const MOCK_GROUPS_MAP = {
             college: ['andrew chan', 'janice chan', 'josh wong', 'isaac otero', 'kevin lai', 'joyce lai', 'brian lin', 'james lee'],
@@ -261,6 +271,8 @@ describe('getAttendeesFromRow', () => {
         const row: Row = getRandomlyGeneratedRow();
         row.domain = "CHURCHWIDE";
         row.who = "Sis";
+        row.helpers = getRandomlyGeneratedText(1);
+        row.helpers.value = "";
 
         // Mocked GROUPS_MAP
         const MOCK_GROUPS_MAP = {
@@ -301,9 +313,9 @@ describe('getAttendeesFromRow', () => {
         row.domain = "ROTATION";
         row.who = "Rotation";
         row.inCharge = getRandomlyGeneratedText(1);
-        row.inCharge.value = "Kevin Lai";
+        row.inCharge.value = "kevin lai";
         row.helpers = getRandomlyGeneratedText(1);
-        row.helpers.value = "Josh Wong, Isaac Otero";
+        row.helpers.value = "josh wong, isaac otero";
 
         const MOCK_GROUPS_MAP = {
             ROTATION: undefined,
@@ -327,7 +339,85 @@ describe('getAttendeesFromRow', () => {
 
         const result = getAttendeesFromRow(row);
 
-        expect(result).toEqual(['kevin lai', 'josh wong', 'isaac otero']);
+        expect(result).toEqual(['josh wong', 'isaac otero', 'kevin lai']);
+    });
+
+    it('should return ministry members and helpers when ministry is populated', () => {
+        const row: Row = getRandomlyGeneratedRow();
+        row.domain = "int'l";
+        row.who = "igsm";
+        row.helpers = getRandomlyGeneratedText(1);
+        row.helpers.value = "john doe";
+
+        const MOCK_GROUPS_MAP = {
+            igsm: ['jack zhang', 'angel zhang'],
+        };
+
+        const MOCK_MEMBER_MAP = {
+            "jack zhang": {"gender": "Male"},
+            "angel zhang": {"gender": "Female"},
+            "john doe": {"gender": "Male"}
+        };
+
+        jest.mock('../src/main/propertiesService', () => ({
+            loadMapFromScriptProperties: jest.fn((key: string) => {
+                if (key === "MEMBER_MAP") {
+                    return MOCK_MEMBER_MAP;
+
+                } else if (key === "GROUPS_MAP") {
+                    return MOCK_GROUPS_MAP;
+                } else {
+                    return {};
+                }
+            }),
+        }));
+
+        const { getAttendeesFromRow } = require("../src/main/row");
+
+        const result = getAttendeesFromRow(row);
+
+        expect(result).toEqual(['john doe', 'jack zhang', 'angel zhang']);
+    });
+
+    it('should return all specified domain members and helpers when no ministry names are present', () => {
+        const row: Row = getRandomlyGeneratedRow();
+        row.domain = "int'l";
+        row.who = "";
+        row.helpers = getRandomlyGeneratedText(1);
+        row.helpers.value = "john doe";
+
+        // Mocked GROUPS_MAP
+        const MOCK_GROUPS_MAP = {
+            "int'l": ['brian lin', 'james lee', 'jack zhang', 'angel zhang'],
+        };
+
+        // Mocked MEMBER MAP
+        const MOCK_MEMBER_MAP = {
+            "brian lin": {"gender": "Male"},
+            "james lee": {"gender": "Male"},
+            "jack zhang": {"gender": "Male"},
+            "angel zhang": {"gender": "Female"},
+            "john doe": {"gender": "Male"},
+        };
+
+        jest.mock('../src/main/propertiesService', () => ({
+            loadMapFromScriptProperties: jest.fn((key: string) => {
+                if (key === "MEMBER_MAP") {
+                    return MOCK_MEMBER_MAP;
+
+                } else if (key === "GROUPS_MAP") {
+                    return MOCK_GROUPS_MAP;
+                } else {
+                    return {};
+                }
+            }),
+        }));
+
+        const { getAttendeesFromRow } = require("../src/main/row");
+
+        const result = getAttendeesFromRow(row);
+
+        expect(result).toEqual(['john doe', 'brian lin', 'james lee', 'jack zhang', 'angel zhang']);
     });
 });
 
