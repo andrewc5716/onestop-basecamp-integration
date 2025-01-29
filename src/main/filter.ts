@@ -11,14 +11,16 @@ const SIS_GENDER: string = "Female";
 
 // Maps a filter's name on the Onestop to its corresponding filter function
 const FILTER_MAP: FilterMap = {
-    Bros: brosFilter, 
-    Sis: sisFilter,
-    Married: marriedFilter,
-    Parents: parentsFilter,
-    Moms: momsFilter,
-    Dads: dadsFilter,
-    "Minus Moms": minusMomsFilter,
-    "Minus Dads": minusDadsFilter,
+    bros: brosFilter, 
+    brothers: brosFilter,
+    sis: sisFilter,
+    sisters: sisFilter,
+    married: marriedFilter,
+    parents: parentsFilter,
+    moms: momsFilter,
+    dads: dadsFilter,
+    "minus moms": minusMomsFilter,
+    "minus dads": minusDadsFilter,
 };
 
 /** Removes all filters from a string
@@ -27,12 +29,12 @@ const FILTER_MAP: FilterMap = {
  * @returns modified string with filters removed as well as the array of removed filters
  */
 export function removeFilters(stringWithFilters: string): { stringWithoutFilters: string, removedFilters: string[] } {
-    if(!containsFilter(stringWithFilters)) {
+    if(!containsFilter(stringWithFilters.toLowerCase())) {
         return { stringWithoutFilters: stringWithFilters, removedFilters: [] };
     }
 
     const filters: string[] = Object.keys(FILTER_MAP);
-    let finalString = stringWithFilters;
+    let finalString = stringWithFilters.toLowerCase();
     const removedFilters: string[] = [];
     for(const filter of filters) {
         if(finalString.includes(filter)) {
@@ -51,7 +53,7 @@ export function removeFilters(stringWithFilters: string): { stringWithoutFilters
  * @returns boolean indicating whether the provided string contains a filter
  */
 export function containsFilter(stringToCheck: string): boolean {
-    return Object.keys(FILTER_MAP).some((filterName) => stringToCheck.includes(filterName));
+    return Object.keys(FILTER_MAP).some((filterName) => stringToCheck.toLowerCase().includes(filterName));
 }
 
 /**
@@ -61,7 +63,7 @@ export function containsFilter(stringToCheck: string): boolean {
  * @returns boolean representing whether the given string has a corresponding filter
  */
 export function isFilter(potentialFilter: string): boolean {
-    return FILTER_MAP.hasOwnProperty(potentialFilter);
+    return FILTER_MAP.hasOwnProperty(potentialFilter.toLowerCase());
 }
 
 /**
@@ -100,7 +102,7 @@ function getCombinedFilter(filterList: string[]): FilterFunction {
 }
 
 function getFilters(filterList: string[]): string[] {
-    return filterList.map(filterName => filterName.trim()).filter(filterName => filterName !== "");
+    return filterList.map(filterName => filterName.toLowerCase().trim()).filter(filterName => filterName !== "");
 }
 
 function validMemberFilter(memberName: string): boolean {

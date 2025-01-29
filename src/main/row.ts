@@ -1,11 +1,11 @@
+import { ALIASES_MAP } from "./aliases";
 import { InvalidHashError } from "./error/invalidHashError";
 import { RowBasecampMappingMissingError } from "./error/rowBasecampMappingMissingError";
 import { RowMissingIdError } from "./error/rowMissingIdError";
 import { RowNotSavedError } from "./error/rowNotSavedError";
 import { containsFilter, filterMembers, isFilter, removeFilters } from "./filter";
 import { GROUPS_MAP, getMembersFromGroups, GROUP_NAMES } from "./groups";
-import { ALIASES_MAP } from "./members";
-import { getPersonId } from "./people";
+import { getPersonId, normalizePersonName } from "./people";
 import { getDocumentProperty, setDocumentProperty } from "./propertiesService";
 import { getBasecampScheduleEntryRequest } from "./schedule";
 import { getBasecampTodoRequest } from "./todos";
@@ -89,10 +89,10 @@ export function hasId(row: Row): boolean {
  * Saves a given row's contents to the PropertiesService
  * 
  * @param row the row's contents to write
- * @param roleTodoIdMap a map that has role titles as the keys and todo ids as the values
+ * @param roleTodoMap a map that has role titles as the keys and todo objects as the values
  * @param scheduleEntryId id of the schedule entry created for this row
  */
-export function saveRow(row: Row, roleTodoIdMap: RoleTodoIdMap, scheduleEntryId: string): void {
+export function saveRow(row: Row, roleTodoMap: RoleTodoMap, scheduleEntryId: string): void {
     if(!hasId(row)) {
         throw new RowMissingIdError(`Row does not have an id: ${toString(row)}`);
     }
@@ -100,7 +100,7 @@ export function saveRow(row: Row, roleTodoIdMap: RoleTodoIdMap, scheduleEntryId:
     const rowId: string = getId(row);
     const rowHash: string = toHexString(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, toString(row)));
     const tabInfo: TabInfo = { date: row.date };
-    const rowBasecampMapping: RowBasecampMapping = {rowHash: rowHash, roleTodoIdMap: roleTodoIdMap, scheduleEntryId: scheduleEntryId, tabInfo: tabInfo};
+    const rowBasecampMapping: RowBasecampMapping = {rowHash: rowHash, roleTodoMap: roleTodoMap, scheduleEntryId: scheduleEntryId, tabInfo: tabInfo};
 
     setDocumentProperty(rowId, JSON.stringify(rowBasecampMapping));
 }
@@ -281,8 +281,8 @@ function getBasecampIdsFromPersonNameList(personNameList: string[]): string[] {
  */
 function getLeadsNames(row: Row): string[] {
     return row.inCharge.value.split(COMMA_DELIMITER)
-        .map(name => name.trim())
-        .filter(name => name !== "");
+    .map(name => normalizePersonName(name))
+    .filter(name => name !== "");
 }
 
 /**
@@ -292,8 +292,7 @@ function getLeadsNames(row: Row): string[] {
  * @returns Basecamp Todo description
  */
 function getBasecampTodoDescription(row: Row): string {
-    const location: string = `WHERE: ${row.where.value ?? "N\\A"}`;
-
+    const location: string = getRichTextFromText("WHERE", row.where);
     const locales: Intl.LocalesArgument = 'en-us';
     const options: Intl.DateTimeFormatOptions = {
         hour: 'numeric',
@@ -303,12 +302,44 @@ function getBasecampTodoDescription(row: Row): string {
     const startTime: string = row.startTime.toLocaleTimeString(locales, options);
     const endTime: string = row.endTime.toLocaleTimeString(locales, options);
 
-    const time: string = `\n\nWHEN: ${startTime} - ${endTime}`;
-    const inCharge: string = `\n\nIN CHARGE: ${row.inCharge.value ?? "N\\A"}`;
-    const helpers: string = `\n\nHELPERS:\n${row.helpers.value ?? "N\\A"}`;
-    const notes: string = `\n\nNOTES: ${row.notes.value ?? "N\\A"}`;
+    const time: string = `WHEN: ${startTime} - ${endTime}`;
+    const inCharge: string = getRichTextFromText("IN CHARGE", row.inCharge);
+    const helpers: string = getRichTextFromText("HELPERS", row.helpers);
+    const notes: string = getRichTextFromText("NOTES", row.notes);
 
-    return location + time + inCharge + helpers + notes;
+    return wrapWithDivTag(combineWithBreakTags([location, time, inCharge, helpers, notes]));
+}
+
+function getRichTextFromText(prefix: string, text: Text): string {
+    if(text.tokens.length === 1) {
+        return `${prefix}: ${replaceNewLinesWithBreakTags(text.value)}`;
+    }
+
+    const textTokens: TextData[] = text.tokens;
+    let richText: string = `${prefix}: `;
+    for(const token of textTokens) {
+        if(token.hyperlink !== null) {
+            richText += `<a href="${token.hyperlink}">${replaceNewLinesWithBreakTags(token.value)}</a>`;
+        } else if(token.strikethrough) {
+            richText += `<strike>${replaceNewLinesWithBreakTags(token.value)}</strike>`;
+        } else {
+            richText += replaceNewLinesWithBreakTags(token.value);
+        }
+    }
+
+    return richText;
+}
+
+function wrapWithDivTag(text: string): string {
+    return `<div>${text}</div>`;
+}
+
+function combineWithBreakTags(stringsToCombine: string[]): string {
+    return stringsToCombine.join("<br>");
+}
+
+function replaceNewLinesWithBreakTags(text: string): string {
+    return text.replace(NEW_LINE_DELIM, "<br>");
 }
 
 /**
@@ -343,8 +374,7 @@ export function getBasecampTodosForHelpers(row: Row): RoleRequestMap {
         const roleTitle: string = helperGroup.role ? `${helperGroup.role} Helper` : "Helper";
         const basecampTodoContent: string = `${roleTitle}: ${row.what.value}`;
         const basecampTodoDescription: string = getBasecampTodoDescription(row);
-        const helperIds: string[] = helperGroup.helperIds.filter(id => !leadIds.includes(id));
-        const assigneeIds: string[] = leadIds.concat(helperIds);
+        const assigneeIds = helperGroup.helperIds.filter(id => !leadIds.includes(id));
         const basecampDueDate: string = getBasecampDueDate(row);
 
         if(assigneeIds.length > 0) {
@@ -410,10 +440,10 @@ export function getHelperGroups(row: Row): HelperGroup[] {
  */
 function getHelpersNames(helpers: string): string[] {
     const helperStrings: string[] = helpers.split(COMMA_DELIMITER)
-    .map(name => name.trim())
+    .map(name => normalizePersonName(name))
     .filter(name => name !== "");
 
-    const helperNames: string[] = helperStrings.flatMap((helperString) => getMemberNamesFromHelperString(helperString));
+    const helperNames: string[] = helperStrings.flatMap((helperString) => getMemberNamesFromHelperIdentifier(helperString));
     // Removes any duplicates
     const uniqueHelperNames: string[] = [...new Set(helperNames)];
 
@@ -421,12 +451,12 @@ function getHelpersNames(helpers: string): string[] {
 }
 
 /**
- * Retrieves an array of member names from a helper string
+ * Retrieves an array of member names from a single helper identifier (person/alias/group)
  * 
- * @param helperString string to transform into helper names
+ * @param helperIdentifier string identifier of person/alias/group to transform into member names
  * @returns an array of member names
  */
-function getMemberNamesFromHelperString(helperString: string): string[] {
+function getMemberNamesFromHelperIdentifier(helperString: string): string[] {
     let helperToken: string = helperString;
     let filters: string[] = [];
     let members: string[] = [];
@@ -502,7 +532,8 @@ function getAllHelperNames(row: Row): string[] {
  */
 function getDomainNames(row: Row): string[] {
     return row.domain.split(COMMA_FORWARD_SLASH_DELIM_REGEX)
-    .map(value => value.trim()).filter(value => GROUP_NAMES.includes(value));
+    .map(value => value.toLowerCase().trim())
+    .filter(value => GROUP_NAMES.includes(value));
 }
 
 /**
@@ -513,7 +544,7 @@ function getDomainNames(row: Row): string[] {
  */
 function getDomainFilters(row: Row): string[] {
     return row.domain.split(COMMA_FORWARD_SLASH_DELIM_REGEX)
-    .map(value => value.trim()).filter(value => isFilter(value));
+    .map(value => value.toLowerCase().trim()).filter(value => isFilter(value));
 }
 
 /**
@@ -534,7 +565,8 @@ function splitWhoColumn(row: Row): string[] {
  */
 function getMinistryNames(row: Row): string[] {
     return splitWhoColumn(row)
-        .map(name => name.trim()).filter(value => GROUP_NAMES.includes(value));
+        .map(name => name.toLowerCase().trim())
+        .filter(value => GROUP_NAMES.includes(value));
 }
 
 /**
@@ -545,7 +577,8 @@ function getMinistryNames(row: Row): string[] {
  */
 function getMinistryFilters(row: Row): string[] {
     return splitWhoColumn(row)
-    .map(name => name.trim()).filter(value => isFilter(value));;
+    .map(name => name.toLowerCase().trim())
+    .filter(value => isFilter(value));
 }
 
 /**
@@ -599,9 +632,10 @@ export function getAttendeesFromRow(row: Row): string[] {
     const isVarious = checkForVarious(row);
     const isOther = checkForOther(row);
 
+    attendees.push(...getAllHelperNames(row));
+
     if(isRotation || isVarious || isOther) {
         attendees.push(...getLeadsNames(row));
-        attendees.push(...getAllHelperNames(row));
         
     } else if(ministryNames.length > 0) {
         // Process Ministry Attendees
@@ -651,18 +685,18 @@ function filterDomainAttendees(domainNames: string[], domainFilters: string[]): 
 }
 
 /**
- * Gets the roleTodoIdMap object from the RowBasecampMapping object.
+ * Gets the roleTodoMap object from the RowBasecampMapping object.
  * Used for downstream processing
  * 
  * @param row a list of all the current roles associated with the row including the lead role. This may be identical to the original roles
- * @returns a map that associates role titles with basecamp todo ids
+ * @returns a map that associates role titles with basecamp todo objects
  */
-export function getRoleTodoIdMap(row: Row): RoleTodoIdMap {
+export function getRoleTodoMap(row: Row): RoleTodoMap {
     const savedRowBasecampMapping: RowBasecampMapping | null = getRowBasecampMapping(row);
     if(savedRowBasecampMapping === null) {
         throw new RowBasecampMappingMissingError("The rowBasecampMapping object is null! Unable to proceed with updating the todo!");
     }
-    return savedRowBasecampMapping.roleTodoIdMap;
+    return savedRowBasecampMapping.roleTodoMap;
 }
 
 export function getSavedScheduleEntryId(row: Row): string {
@@ -677,11 +711,11 @@ export function hasBasecampAttendees(row: Row): boolean {
     return getBasecampIdsFromPersonNameList(getAttendeesFromRow(row)).length > 0;
 }
 
-export function getScheduleEntryRequestForRow(row: Row): BasecampScheduleEntryRequest {
+export function getScheduleEntryRequestForRow(row: Row, roleTodoMap: RoleTodoMap): BasecampScheduleEntryRequest {
     const summary: string = getScheduleEntrySummary(row);
     const startsAt: string = row.startTime.toISOString();
     const endsAt: string = row.endTime.toISOString();
-    const description: string = getScheduleEntryDescription(row);
+    const description: string = getScheduleEntryDescription(row, roleTodoMap);
     const participantIds: string[] = getBasecampIdsFromPersonNameList(getAttendeesFromRow(row));
 
     return getBasecampScheduleEntryRequest(summary, startsAt, endsAt, description, participantIds, false, true);
@@ -689,16 +723,17 @@ export function getScheduleEntryRequestForRow(row: Row): BasecampScheduleEntryRe
 
 function getScheduleEntrySummary(row: Row): string {
     const ministryNames: string[] = getMinistryNames(row);
+    const uppercaseMinistryNames: string[] = ministryNames.map(name => name.toUpperCase());
     const domainNames: string[] = getDomainNames(row);
+    const uppercaseDomainNames: string[] = domainNames.map(name => name.toUpperCase());
     // Choose the ministry names if possible, otherwise use the domain names
-    const who: string = ministryNames.length > 0 ? ministryNames.join(" ") : domainNames.join(" ");
+    const who: string = uppercaseMinistryNames.length > 0 ? uppercaseMinistryNames.join(" ") : uppercaseDomainNames.join(" ");
 
     return `[${who}] ${row.what.value}`;
 }
 
-function getScheduleEntryDescription(row: Row): string {
-    const location: string = `WHERE: ${row.where.value ?? "N\\A"}`;
-
+function getScheduleEntryDescription(row: Row, roleTodoMap: RoleTodoMap): string {
+    const location: string = getRichTextFromText("WHERE", row.where);
     const locales: Intl.LocalesArgument = 'en-us';
     const options: Intl.DateTimeFormatOptions = {
         hour: 'numeric',
@@ -708,10 +743,21 @@ function getScheduleEntryDescription(row: Row): string {
     const startTime: string = row.startTime.toLocaleTimeString(locales, options);
     const endTime: string = row.endTime.toLocaleTimeString(locales, options);
 
-    const time: string = `\n\nWHEN: ${startTime} - ${endTime}`;
-    const inCharge: string = `\n\nIN CHARGE: ${row.inCharge.value ?? "N\\A"}`;
-    const helpers: string = `\n\nHELPERS:\n${row.helpers.value ?? "N\\A"}`;
-    const notes: string = `\n\nNOTES: ${row.notes.value ?? "N\\A"}`;
+    const time: string = `WHEN: ${startTime} - ${endTime}`;
+    const inCharge: string = getRichTextFromText("IN CHARGE", row.inCharge);
+    const helpers: string = getRichTextFromText("HELPERS", row.helpers);
+    const notes: string = getRichTextFromText("NOTES", row.notes);
+    const relatedTodos: string = getRichTextForTodoLinks(roleTodoMap);
 
-    return location + time + inCharge + helpers + notes;
+    return wrapWithDivTag(combineWithBreakTags([location, time, inCharge, helpers, notes, relatedTodos]));
+}
+
+function getRichTextForTodoLinks(roleTodoMap: RoleTodoMap): string {
+    let richText: string = "RELATED TODOS: <ul>";
+    for(const todo of Object.values(roleTodoMap)) {
+        richText += `<li><a href="${todo.url}">${todo.title}</a></li>`;
+    }
+    richText += "</ul>";
+
+    return richText;
 }

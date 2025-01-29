@@ -289,25 +289,25 @@ function getRandomlyGeneratedGroupRow(numGroupMembers: number = 3): any[] {
 }
 
 export function getRandomlyGeneratedGroupsTable(numGroups: number = 10): any[][] {
-    const aliasTable: any[][] = [["Name", "Group Members"]];
+    const groupsTable: any[][] = [["Name", "Group Members", "Alternate Names"]];
     for(let i = 0; i < numGroups; i++) {
-        aliasTable.push(getRandomlyGeneratedGroupRow());
+        groupsTable.push(getRandomlyGeneratedGroupRow());
     }
 
-    return aliasTable;
+    return groupsTable;
 }
 
-function getRandomlyGeneratedSupergroupRow(numSubgroups: number = 3): any[] {
-    return [randomstring.generate(), randomstring.generate(), Array.from({length: numSubgroups}, () => randomstring.generate()).join(",")];
+function getRandomlyGeneratedSupergroupRow(numSubgroups: number = 3, numAdditionalMembers: number = 2): any[] {
+    return [randomstring.generate(), Array.from({length: numSubgroups}, () => randomstring.generate()).join(","), randomstring.generate(), Array.from({length: numAdditionalMembers}, () => randomstring.generate()).join(",")];
 }
 
 export function getRandomlyGeneratedSupergroupsTable(numGroups: number = 10): any[][] {
-    const aliasTable: any[][] = [["Name", "Subgroups"]];
+    const supergroupsTable: any[][] = [["Name", "Subgroups", "Alternate Names", "Additional Members"]];
     for(let i = 0; i < numGroups; i++) {
-        aliasTable.push(getRandomlyGeneratedSupergroupRow());
+        supergroupsTable.push(getRandomlyGeneratedSupergroupRow());
     }
 
-    return aliasTable;
+    return supergroupsTable;
 }
 
 export function getRandomlyGeneratedCellValues(numRows: number = 5, numColumns: number = 5): any[][] {
@@ -316,11 +316,21 @@ export function getRandomlyGeneratedCellValues(numRows: number = 5, numColumns: 
     );
 }
 
-function getRandomlyGeneratedText(): Text {
+export function getRandomlyGeneratedText(numTokens: number = 5): Text {
+    const tokens: TextData[] = Array.from({length: numTokens}, () => getRandomlyGeneratedTextData());
+
+    return {
+        value: tokens.map(token => token.value).join(""),
+        tokens: tokens,
+    }
+}
+
+function getRandomlyGeneratedTextData(): TextData {
     return {
         value: randomstring.generate(),
-        hyperlink: randomstring.generate()
-    }
+        hyperlink: randomstring.generate(),
+        strikethrough: getRandomBoolean(),
+    };
 }
 
 function getRandomNumber(upperBound: number = Number.MAX_SAFE_INTEGER): number {
@@ -343,13 +353,13 @@ export function getRandomlyGeneratedScheduleEntry(): BasecampScheduleEntryReques
     }
 }
 
-export function getRandomlyGeneratedRoleTodoIdMap(numRoles: number = 10): RoleTodoIdMap {
-    const roleTodoIdMap: RoleTodoIdMap = {};
+export function getRandomlyGeneratedRoleTodoMap(numRoles: number = 10): RoleTodoMap {
+    const roleTodoMap: RoleTodoMap = {};
     for(let i = 0; i < numRoles; i++) {
-        roleTodoIdMap[randomstring.generate()] = randomstring.generate();
+        roleTodoMap[randomstring.generate()] = { id: randomstring.generate(), title: randomstring.generate(), url: randomstring.generate() };
     }
 
-    return roleTodoIdMap;
+    return roleTodoMap;
 }
 
 export function getRandomlyGeneratedByteArray(numBytes: number = 100): Uint8Array {
@@ -359,7 +369,7 @@ export function getRandomlyGeneratedByteArray(numBytes: number = 100): Uint8Arra
 export function getRandomlyGeneratedRowBasecampMapping(): RowBasecampMapping {
     return {
         rowHash: randomstring.generate(),
-        roleTodoIdMap: getRandomlyGeneratedRoleTodoIdMap(),
+        roleTodoMap: getRandomlyGeneratedRoleTodoMap(),
         scheduleEntryId: randomstring.generate(),
         tabInfo: { date: new Date() },
     };

@@ -1,3 +1,5 @@
+import { mergeAliasMaps } from "./aliases";
+import { normalizePersonName } from "./people";
 import { loadMapFromScriptProperties, setScriptProperty } from "./propertiesService";
 import { getCellValues } from "./scan";
 
@@ -6,19 +8,24 @@ const GROUPS_TAB_NAME: string = "Groups";
 const SUPERGROUPS_TAB_NAME: string = "Supergroups";
 const GROUP_NAME_COLUMN_INDEX: number = 0;
 const GROUP_MEMBER_NAMES_COLUMN_INDEX: number = 1;
+const GROUP_ALIASES_COLUMN_INDEX: number = 2;
 const SUPERGROUP_NAME_COLUMN_INDEX: number = 0;
 const SUBGROUP_COLUMN_INDEX: number = 1;
+const SUPERGROUP_ALIASES_COLUMN_INDEX: number = 2;
+const SUPERGROUP_ADDITIONAL_MEMBERS_COLUMN_INDEX: number = 3;
 const GROUPS_MAP_KEY: string = "GROUPS_MAP";
 
 // Interface declared here because this is an internal object used only during the Supergroup loading process
 declare interface Supergroup {
     name: string,
     subgroups: string[],
+    aliases: string[],
+    additionalMembers: string[],
 };
 
 // Maps a Supergroup name to its corresponding Supergroup object
 // Only used internally within this module for loading
-type SupergroupMap = { [key: string]: Supergroup };
+type SupergroupMap = { [supergroupName: string]: Supergroup };
 
 export const GROUPS_MAP: GroupsMap = loadMapFromScriptProperties(GROUPS_MAP_KEY) as GroupsMap;
 
@@ -31,13 +38,16 @@ export const GROUP_NAMES: string[] = Object.keys(GROUPS_MAP) as string[];
 /**
  * Loads groups and supergroups from the Onestop into script properties
  */
-export function loadGroupsFromOnestopIntoScriptProperties(): void {
-    const groupsMap: GroupsMap = loadGroupsFromOnestop();
-    const supergroupsMap: GroupsMap = loadSupergroupsFromOnestop(groupsMap);
+export function loadGroupsFromOnestopIntoScriptProperties(): AliasMap {
+    const { groupsMap: groupsMap, groupsAliasMap: groupsAliasMap } = loadGroupsFromOnestop();
+    const { supergroupsMap: supergroupsMap, supergroupsAliasMap: supergroupsAliasMap } = loadSupergroupsFromOnestop(groupsMap);
     const combinedGroupsMaps: GroupsMap = mergeGroupsMaps(groupsMap, supergroupsMap);
     const duplicateFreeGroupsMap: GroupsMap = removeDuplicatesFromGroupMaps(combinedGroupsMaps);
+    const combinedAliasMaps: AliasMap = mergeAliasMaps(groupsAliasMap, supergroupsAliasMap);
 
     setScriptProperty(GROUPS_MAP_KEY, JSON.stringify(duplicateFreeGroupsMap));
+
+    return combinedAliasMaps;
 }
 
 /**
@@ -51,15 +61,17 @@ export function getMembersFromGroups(groupNames: string[]): string[] {
     return dedupedGroupNames.flatMap(groupName => GROUPS_MAP[groupName] || []);
 }
 
-function loadGroupsFromOnestop(): GroupsMap {
+function loadGroupsFromOnestop(): { groupsMap: GroupsMap, groupsAliasMap: AliasMap } {
     const cellValues: any[][] = getCellValues(GROUPS_TAB_NAME);
     const groupsMap: GroupsMap = {};
+    let groupsAliasMap: AliasMap = {};
 
     // Start at row 1 to skip the table header row
     for(let i = 1; i < cellValues.length; i++) {
         const rowValues: any[] = cellValues[i];
-        const groupName: string = rowValues[GROUP_NAME_COLUMN_INDEX];
+        const groupName: string = rowValues[GROUP_NAME_COLUMN_INDEX].toLowerCase().trim();
         const groupMemberNames: string[] = getGroupMemberNames(rowValues);
+        const groupAliases: string[] = getGroupAliases(rowValues);
 
         if(groupName === "") {
             // Skip empty entries
@@ -72,20 +84,43 @@ function loadGroupsFromOnestop(): GroupsMap {
         } else {
             groupsMap[groupName] = groupMemberNames;
         }
+
+        groupsAliasMap = addGroupAliasesToMap(groupsAliasMap, groupAliases, groupMemberNames);
     }
 
-    return groupsMap;
+    return { groupsMap: groupsMap, groupsAliasMap: groupsAliasMap };
 }
 
 function getGroupMemberNames(rowValues: any[]): string[] {
     const groupMemberNameList: string = rowValues[GROUP_MEMBER_NAMES_COLUMN_INDEX];
-    return groupMemberNameList.split(COMMA_DELIMITER).map((name) => name.trim()).filter((name) => name !== "");
+    return groupMemberNameList.split(COMMA_DELIMITER).map((name) => normalizePersonName(name)).filter((name) => name !== "");
 }
 
-function loadSupergroupsFromOnestop(loadedGroups: GroupsMap): GroupsMap {
+function getGroupAliases(rowValues: any[]): string[] {
+    const groupAliasesList: string = rowValues[GROUP_ALIASES_COLUMN_INDEX].toLowerCase();
+    return groupAliasesList.split(COMMA_DELIMITER).map((alias) => alias.trim()).filter((alias) => alias !== "");
+}
+
+function addGroupAliasesToMap(groupsAliasMap: AliasMap, groupAliases: string[], groupMemberNames: string[]): AliasMap {
+    const newGroupsAliasMap: AliasMap = { ...groupsAliasMap };
+
+    for(const alias of groupAliases) {
+        if(groupsAliasMap.hasOwnProperty(alias)) {
+            Logger.log(`Warning: Duplicate alias ${alias} detected`);
+            newGroupsAliasMap[alias] = newGroupsAliasMap[alias].concat(groupMemberNames);
+        } else {
+            newGroupsAliasMap[alias] = [...groupMemberNames];
+        }
+    }
+
+    return newGroupsAliasMap;
+}
+
+function loadSupergroupsFromOnestop(loadedGroups: GroupsMap): { supergroupsMap: GroupsMap, supergroupsAliasMap: AliasMap } {
     const cellValues: any[][] = getCellValues(SUPERGROUPS_TAB_NAME);
 
     let loadedSupergroups: GroupsMap = {};
+    let loadedSupergroupsAliases: AliasMap = {};
     const allSupergroups: SupergroupMap = parseSupergroups(cellValues);
     let supergroupStack: string[] = Object.keys(allSupergroups);
 
@@ -102,14 +137,16 @@ function loadSupergroupsFromOnestop(loadedGroups: GroupsMap): GroupsMap {
         if(allSubgroupsHaveBeenLoaded(currentSupergroup, loadedGroups, loadedSupergroups, allSupergroups)) {
             // Loads a Supergroup if all its dependent subgroups have already been loaded
             const subgroupMembers: string[] = getAllMembersFromSubgroups(currentSupergroup.subgroups, loadedGroups, loadedSupergroups);
-            loadedSupergroups[currentSupergroup.name] = subgroupMembers;
+            const supergroupMembers: string[] = subgroupMembers.concat(currentSupergroup.additionalMembers);
+            loadedSupergroups[currentSupergroup.name] = supergroupMembers;
+            loadedSupergroupsAliases = addGroupAliasesToMap(loadedSupergroupsAliases, currentSupergroup.aliases, subgroupMembers);
         } else {
             const toPushToStack: string[] = processSupergroup(currentSupergroup, allSupergroups, loadedGroups, loadedSupergroups);
             supergroupStack = supergroupStack.concat(toPushToStack);
         }
     }
 
-    return loadedSupergroups;
+    return { supergroupsMap: loadedSupergroups, supergroupsAliasMap: loadedSupergroupsAliases };
 }
 
 function parseSupergroups(cellValues: any[][]): SupergroupMap {
@@ -140,18 +177,32 @@ function isSuperGroup(groupName: string, allSupergroups: SupergroupMap): boolean
 }
 
 function constructSupergroup(rowValues: any[]): Supergroup {
-    const supergroupName: string = rowValues[SUPERGROUP_NAME_COLUMN_INDEX];
+    const supergroupName: string = rowValues[SUPERGROUP_NAME_COLUMN_INDEX].toLowerCase().trim();
     const subgroupNames: string[] = getSubgroupNames(rowValues);
+    const supergroupAliases: string[] = getSupergroupGroupAliases(rowValues);
+    const supergroupAdditionalMembers: string[] = getSupergroupAdditionalMembers(rowValues);
     
     return {
         name: supergroupName,
         subgroups: subgroupNames,
+        aliases: supergroupAliases,
+        additionalMembers: supergroupAdditionalMembers,
     };
 }
 
 function getSubgroupNames(rowValues: any[]): string[] {
-    const subgroupNameList: string = rowValues[SUBGROUP_COLUMN_INDEX];
+    const subgroupNameList: string = rowValues[SUBGROUP_COLUMN_INDEX].toLowerCase();
     return subgroupNameList.split(COMMA_DELIMITER).map((name) => name.trim()).filter((name) => name !== "");
+}
+
+function getSupergroupGroupAliases(rowValues: any[]): string[] {
+    const supergroupAliasesList: string = rowValues[SUPERGROUP_ALIASES_COLUMN_INDEX].toLowerCase();
+    return supergroupAliasesList.split(COMMA_DELIMITER).map((alias) => alias.trim()).filter((alias) => alias !== "");
+}
+
+function getSupergroupAdditionalMembers(rowValues: any[]): string[] {
+    const supergroupAdditionalMembersList: string = rowValues[SUPERGROUP_ADDITIONAL_MEMBERS_COLUMN_INDEX];
+    return supergroupAdditionalMembersList.split(COMMA_DELIMITER).map((memberName) => normalizePersonName(memberName)).filter((memberName) => memberName !== "");
 }
 
 function allSubgroupsHaveBeenLoaded(supergroup: Supergroup, loadedGroups: GroupsMap, loadedSupergroups: GroupsMap, allSupergroups: SupergroupMap): boolean {

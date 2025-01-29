@@ -12,7 +12,7 @@ describe("validateHelperCellText", () => {
             loadMapFromScriptProperties: jest.fn((key: string) => {
                 if (key === "GROUPS_MAP") {
                     return {
-                        "HG2": ['Andrew Chan', 'Janice Chan']
+                        "hg2": ['andrew chan', 'janice chan']
                     }
                 } 
                 return {};
@@ -28,7 +28,7 @@ describe("validateHelperCellText", () => {
             loadMapFromScriptProperties: jest.fn((key: string) => {
                 if (key === "ALIASES_MAP") {
                     return {
-                        "Andrew/Janice": ['Andrew Chan', 'Janice Chan']
+                        "andrew/janice": ['andrew chan', 'janice chan']
                     }
                 } 
                 return {};
@@ -44,7 +44,7 @@ describe("validateHelperCellText", () => {
             loadMapFromScriptProperties: jest.fn((key: string) => {
                 if (key === "MEMBER_MAP") {
                     return {
-                        "Andrew Chan": {"gender": "Male"}
+                        "andrew chan": {"gender": "Male"}
                     }
                 } 
                 return {};
@@ -60,7 +60,7 @@ describe("validateHelperCellText", () => {
             loadMapFromScriptProperties: jest.fn((key: string) => {
                 if (key === "MEMBER_MAP") {
                     return {
-                        "Andrew Chan": {"gender": "Male"}
+                        "andrew chan": {"gender": "Male"}
                     }
                 } 
                 return {};
@@ -76,7 +76,7 @@ describe("validateHelperCellText", () => {
             loadMapFromScriptProperties: jest.fn((key: string) => {
                 if (key === "MEMBER_MAP") {
                     return {
-                        "Andrew Chan": {"gender": "Male"}
+                        "andrew chan": {"gender": "Male"}
                     }
                 } 
                 return {};
@@ -92,7 +92,7 @@ describe("validateHelperCellText", () => {
             loadMapFromScriptProperties: jest.fn((key: string) => {
                 if (key === "GROUPS_MAP") {
                     return {
-                        "HG2": ['Andrew Chan', 'Janice Chan']
+                        "hg2": ['andrew chan', 'janice chan']
                     }
                 } 
                 return {};
@@ -108,11 +108,11 @@ describe("validateHelperCellText", () => {
             loadMapFromScriptProperties: jest.fn((key: string) => {
                 if (key === "GROUPS_MAP") {
                     return {
-                        "SDSU": ['Josh Wong']
+                        "sdsu": ['josh wong']
                     }
                 } else if (key === "MEMBER_MAP") {
                     return {
-                        "Josh Wong": {"gender": "Male"}
+                        "josh wong": {"gender": "Male"}
                     }
                 } 
                 return {};
@@ -128,9 +128,9 @@ describe("validateHelperCellText", () => {
             loadMapFromScriptProperties: jest.fn((key: string) => {
                 if (key === "MEMBER_MAP") {
                     return {
-                        "Andrew Chan": {"gender": "Male"},
-                        "Janice Chan": {"gender": "Female"},
-                        "Josh Wong": {"gender": "Male"}
+                        "andrew chan": {"gender": "Male"},
+                        "janice chan": {"gender": "Female"},
+                        "josh wong": {"gender": "Male"}
                     }
                 } 
                 return {};
@@ -146,9 +146,9 @@ describe("validateHelperCellText", () => {
             loadMapFromScriptProperties: jest.fn((key: string) => {
                 if (key === "MEMBER_MAP") {
                     return {
-                        "Andrew Chan": {"gender": "Male"},
-                        "Janice Chan": {"gender": "Female"},
-                        "Josh Wong": {"gender": "Male"}
+                        "andrew chan": {"gender": "Male"},
+                        "janice chan": {"gender": "Female"},
+                        "josh wong": {"gender": "Male"}
                     }
                 } 
                 return {};
@@ -164,8 +164,8 @@ describe("validateHelperCellText", () => {
             loadMapFromScriptProperties: jest.fn((key: string) => {
                 if (key === "MEMBER_MAP") {
                     return {
-                        "Andrew Chan": {"gender": "Male"},
-                        "Janice Chan": {"gender": "Female"},
+                        "andrew chan": {"gender": "Male"},
+                        "janice chan": {"gender": "Female"},
                     }
                 } 
                 return {};
@@ -181,16 +181,16 @@ describe("validateHelperCellText", () => {
             loadMapFromScriptProperties: jest.fn((key: string) => {
                 if (key === "GROUPS_MAP") {
                     return {
-                        "SDSU": ['Josh Wong']
+                        "sdsu": ['josh wong']
                     }
                 } else if (key === "ALIASES_MAP") {
                     return {
-                        "Jack/Angel": ['Jack Zhang', 'Angel Zhang']
+                        "jack/angel": ['jack zhang', 'angel zhang']
                     }
                 } else if (key === "MEMBER_MAP") {
                     return {
-                        "Andrew Chan": {"gender": "Male"},
-                        "Janice Chan": {"gender": "Female"},
+                        "andrew chan": {"gender": "Male"},
+                        "janice chan": {"gender": "Female"},
                     }
                 } 
                 return {};
@@ -206,7 +206,7 @@ describe("validateHelperCellText", () => {
             loadMapFromScriptProperties: jest.fn((key: string) => {
                 if (key === "GROUPS_MAP") {
                     return {
-                        "SDSU": ['Josh Wong']
+                        "sdsu": ['josh wong']
                     }
                 }
                 return {};
@@ -222,16 +222,16 @@ describe("validateHelperCellText", () => {
             loadMapFromScriptProperties: jest.fn((key: string) => {
                 if (key === "GROUPS_MAP") {
                     return {
-                        "SDSU": ['Josh Wong']
+                        "sdsu": ['Josh Wong']
                     }
                 } else if (key === "ALIASES_MAP") {
                     return {
-                        "Jack/Angel": ['Jack Zhang', 'Angel Zhang']
+                        "jack/angel": ['Jack Zhang', 'Angel Zhang']
                     }
                 } else if (key === "MEMBER_MAP") {
                     return {
-                        "Andrew Chan": {"gender": "Male"},
-                        "Janice Chan": {"gender": "Female"},
+                        "andrew chan": {"gender": "Male"},
+                        "janice chan": {"gender": "Female"},
                     }
                 } 
                 return {};
@@ -247,11 +247,11 @@ describe("validateHelperCellText", () => {
             loadMapFromScriptProperties: jest.fn((key: string) => {
                 if (key === "GROUPS_MAP") {
                     return {
-                        "SDSU": ['Josh Wong']
+                        "sdsu": ['josh wong']
                     }
                 } else if (key === "MEMBER_MAP") {
                     return {
-                        "Josh Wong": {"gender": "Male"}
+                        "josh wong": {"gender": "Male"}
                     }
                 } 
                 return {};
@@ -273,7 +273,7 @@ describe("validateLeadCellText", ()=> {
             loadMapFromScriptProperties: jest.fn((key: string) => {
                 if (key === "GROUPS_MAP") {
                     return {
-                        "HG2": ['Andrew Chan', 'Janice Chan']
+                        "hg2": ['andrew chan', 'janice chan']
                     }
                 } 
                 return {};
@@ -289,7 +289,7 @@ describe("validateLeadCellText", ()=> {
             loadMapFromScriptProperties: jest.fn((key: string) => {
                 if (key === "ALIASES_MAP") {
                     return {
-                        "Andrew/Janice": ['Andrew Chan', 'Janice Chan']
+                        "andrew/janice": ['andrew chan', 'janice chan']
                     }
                 } 
                 return {};
@@ -305,9 +305,9 @@ describe("validateLeadCellText", ()=> {
             loadMapFromScriptProperties: jest.fn((key: string) => {
                 if (key === "MEMBER_MAP") {
                     return {
-                        "Andrew Chan": {"gender": "Male"},
-                        "Janice Chan": {"gender": "Female"},
-                        "Josh Wong": {"gender": "Male"}
+                        "andrew chan": {"gender": "Male"},
+                        "janice chan": {"gender": "Female"},
+                        "josh wong": {"gender": "Male"}
                     }
                 } 
                 return {};
@@ -323,9 +323,9 @@ describe("validateLeadCellText", ()=> {
             loadMapFromScriptProperties: jest.fn((key: string) => {
                 if (key === "MEMBER_MAP") {
                     return {
-                        "Andrew Chan": {"gender": "Male"},
-                        "Janice Chan": {"gender": "Female"},
-                        "Josh Wong": {"gender": "Male"}
+                        "andrew chan": {"gender": "Male"},
+                        "janice chan": {"gender": "Female"},
+                        "josh wong": {"gender": "Male"}
                     }
                 } 
                 return {};
@@ -341,9 +341,9 @@ describe("validateLeadCellText", ()=> {
             loadMapFromScriptProperties: jest.fn((key: string) => {
                 if (key === "MEMBER_MAP") {
                     return {
-                        "Andrew Chan": {"gender": "Male"},
-                        "Janice Chan": {"gender": "Female"},
-                        "Josh Wong": {"gender": "Male"}
+                        "andrew chan": {"gender": "Male"},
+                        "janice chan": {"gender": "Female"},
+                        "josh wong": {"gender": "Male"}
                     }
                 } 
                 return {};
@@ -359,8 +359,8 @@ describe("validateLeadCellText", ()=> {
             loadMapFromScriptProperties: jest.fn((key: string) => {
                 if (key === "MEMBER_MAP") {
                     return {
-                        "Andrew Chan": {"gender": "Male"},
-                        "Janice Chan": {"gender": "Female"},
+                        "andrew chan": {"gender": "Male"},
+                        "janice chan": {"gender": "Female"},
                     }
                 } 
                 return {};
@@ -376,16 +376,16 @@ describe("validateLeadCellText", ()=> {
             loadMapFromScriptProperties: jest.fn((key: string) => {
                 if (key === "GROUPS_MAP") {
                     return {
-                        "SDSU": ['Josh Wong']
+                        "sdsu": ['josh wong']
                     }
                 } else if (key === "ALIASES_MAP") {
                     return {
-                        "Jack/Angel": ['Jack Zhang', 'Angel Zhang']
+                        "jack/angel": ['jack zhang', 'angel zhang']
                     }
                 } else if (key === "MEMBER_MAP") {
                     return {
-                        "Andrew Chan": {"gender": "Male"},
-                        "Janice Chan": {"gender": "Female"},
+                        "andrew chan": {"gender": "Male"},
+                        "janice chan": {"gender": "Female"},
                     }
                 } 
                 return {};

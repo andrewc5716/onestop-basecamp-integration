@@ -1,7 +1,8 @@
 import { GROUPS_MAP } from "./groups";
-import { ALIASES_MAP, MEMBER_MAP } from "./members";
+import { MEMBER_MAP } from "./members";
 import { removeFilters } from "./filter";
 import { normalizePersonName } from "./people";
+import { ALIASES_MAP } from "./aliases";
 
 const NEW_LINE_DELIM: string = "\n";
 const COLON_DELIM: string = ":";
@@ -102,18 +103,18 @@ function isHelperTokenValid(helperTokenWithFilters: string): boolean {
 }
 
 function isLeadTokenValid(leadToken: string): boolean {
-
-    if(leadToken === "") {
+    const normalizedLeadToken: string = normalizePersonName(leadToken);
+    if(normalizedLeadToken === "") {
         return true;
-    } else if(ALIASES_MAP.hasOwnProperty(leadToken)) {
+    } else if(ALIASES_MAP.hasOwnProperty(normalizedLeadToken)) {
         return true;
-    } else if(MEMBER_MAP.hasOwnProperty(normalizePersonName(leadToken))) {
+    } else if(MEMBER_MAP.hasOwnProperty(normalizePersonName(normalizedLeadToken))) {
         return true;
     }
     return false;
 }
 
 function normalizeHelper(helper: string): string {
-    // todo: make the whole helper input lowercase; but need to make all the maps lowercase too then to make it work
-    return helper.replace(STAFF_REGEX, '').trim();
+    const normalizedHelper: string = normalizePersonName(helper);
+    return normalizedHelper.replace(STAFF_REGEX, '').toLowerCase().trim();
 }

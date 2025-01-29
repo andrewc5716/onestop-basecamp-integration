@@ -4,7 +4,8 @@ global.Logger = Logger;
 global.PropertiesService = PropertiesService;
 global.SpreadsheetApp = SpreadsheetApp;
 
-import { getRandomlyGeneratedAliasMap, getRandomlyGeneratedAliasTable, getRandomlyGeneratedMemberMap, getRandomlyGeneratedMemberTable, Mock } from './testUtils';
+import { getRandomlyGeneratedAliasTable, getRandomlyGeneratedMemberMap, getRandomlyGeneratedMemberTable, Mock } from './testUtils';
+import { PersonAliasClashError } from '../src/main/error/personAliasClashError';
 
 const NAME_COLUMN_INDEX: number = 0;
 const GENDER_COLUMN_INDEX: number = 1;
@@ -39,32 +40,6 @@ describe("MEMBER_MAP", () => {
     });
 });
 
-describe("ALIASES_MAP", () => {
-    it("should return the aliases map from the script properties when it is present", () => {
-        const aliasesMapMock: AliasMap = getRandomlyGeneratedAliasMap();
-
-        jest.mock("../src/main/propertiesService", () => ({
-            loadMapFromScriptProperties: jest.fn(() => aliasesMapMock),
-        }));
-        
-        // Import the MEMBER_MAP with the mocked propertiesService
-        const { ALIASES_MAP } = require('../src/main/members');
-
-        expect(ALIASES_MAP).toEqual(aliasesMapMock);
-    });
-
-    it("should return an empty map when there is no aliases map present in the script properties", () => {
-        jest.mock("../src/main/propertiesService", () => ({
-            loadMapFromScriptProperties: jest.fn(() => ({})),
-        }));
-
-        // Import the MEMBER_MAP with the mocked propertiesService
-        const { ALIASES_MAP } = require('../src/main/members');
-
-        expect(ALIASES_MAP).toStrictEqual({});
-    });
-});
-
 describe("loadMembersFromOnestopIntoScriptProperties", () => {
     it("should load the members and couples table from the onestop into the script properties when the members and couples table are present on the onestop", () => {
         const membersDataValuesMock: any[][] = getRandomlyGeneratedMemberTable(5, 1);
@@ -96,36 +71,36 @@ describe("loadMembersFromOnestopIntoScriptProperties", () => {
         }));
 
         const { loadMembersFromOnestopIntoScriptProperties } = require('../src/main/members');
-        loadMembersFromOnestopIntoScriptProperties();
+        const receivedAliasMap: AliasMap = loadMembersFromOnestopIntoScriptProperties();
 
         const expectedMemberMap: MemberMap = {
-            "John Doe": {name: "John Doe", gender: membersDataValuesMock[1][GENDER_COLUMN_INDEX], married: membersDataValuesMock[1][MARRIED_COLUMN_INDEX], parent: membersDataValuesMock[1][PARENT_COLUMN_INDEX], class: membersDataValuesMock[1][CLASS_COLUMN_INDEX]},
-            "James Brown": {name: "James Brown", gender: membersDataValuesMock[2][GENDER_COLUMN_INDEX], married: membersDataValuesMock[2][MARRIED_COLUMN_INDEX], parent: membersDataValuesMock[2][PARENT_COLUMN_INDEX], class: membersDataValuesMock[2][CLASS_COLUMN_INDEX]},
-            "Mary Brown": {name: "Mary Brown", gender: membersDataValuesMock[3][GENDER_COLUMN_INDEX], married: membersDataValuesMock[3][MARRIED_COLUMN_INDEX], parent: membersDataValuesMock[3][PARENT_COLUMN_INDEX], class: membersDataValuesMock[3][CLASS_COLUMN_INDEX]},
-            "Robert White": {name: "Robert White", gender: membersDataValuesMock[4][GENDER_COLUMN_INDEX], married: membersDataValuesMock[4][MARRIED_COLUMN_INDEX], parent: membersDataValuesMock[4][PARENT_COLUMN_INDEX], class: membersDataValuesMock[4][CLASS_COLUMN_INDEX]},
-            "Emily White": {name: "Emily White", gender: membersDataValuesMock[5][GENDER_COLUMN_INDEX], married: membersDataValuesMock[5][MARRIED_COLUMN_INDEX], parent: membersDataValuesMock[5][PARENT_COLUMN_INDEX], class: membersDataValuesMock[5][CLASS_COLUMN_INDEX]},
+            "john doe": {name: "john doe", gender: membersDataValuesMock[1][GENDER_COLUMN_INDEX], married: membersDataValuesMock[1][MARRIED_COLUMN_INDEX], parent: membersDataValuesMock[1][PARENT_COLUMN_INDEX], class: membersDataValuesMock[1][CLASS_COLUMN_INDEX]},
+            "james brown": {name: "james brown", gender: membersDataValuesMock[2][GENDER_COLUMN_INDEX], married: membersDataValuesMock[2][MARRIED_COLUMN_INDEX], parent: membersDataValuesMock[2][PARENT_COLUMN_INDEX], class: membersDataValuesMock[2][CLASS_COLUMN_INDEX]},
+            "mary brown": {name: "mary brown", gender: membersDataValuesMock[3][GENDER_COLUMN_INDEX], married: membersDataValuesMock[3][MARRIED_COLUMN_INDEX], parent: membersDataValuesMock[3][PARENT_COLUMN_INDEX], class: membersDataValuesMock[3][CLASS_COLUMN_INDEX]},
+            "robert white": {name: "robert white", gender: membersDataValuesMock[4][GENDER_COLUMN_INDEX], married: membersDataValuesMock[4][MARRIED_COLUMN_INDEX], parent: membersDataValuesMock[4][PARENT_COLUMN_INDEX], class: membersDataValuesMock[4][CLASS_COLUMN_INDEX]},
+            "emily white": {name: "emily white", gender: membersDataValuesMock[5][GENDER_COLUMN_INDEX], married: membersDataValuesMock[5][MARRIED_COLUMN_INDEX], parent: membersDataValuesMock[5][PARENT_COLUMN_INDEX], class: membersDataValuesMock[5][CLASS_COLUMN_INDEX]},
         };
 
         const expectedAliasMap: AliasMap = {
-            "John": ["John Doe"],
-            "John D": ["John Doe"],
-            "James": ["James Brown"],
-            "James B": ["James Brown"],
-            "Mary": ["Mary Brown"],
-            "Mary B": ["Mary Brown"],
-            "Robert": ["Robert White"],
-            "Robert W": ["Robert White"],
-            "Emily": ["Emily White"],
-            "Emily W": ["Emily White"],
-            "James/Mary": ["James Brown", "Mary Brown"],
-            "Browns": ["James Brown", "Mary Brown"],
-            "Robert/Emily": ["Robert White", "Emily White"],
-            "Whites": ["Robert White", "Emily White"],
+            "john": ["john doe"],
+            "john d": ["john doe"],
+            "james": ["james brown"],
+            "james b": ["james brown"],
+            "mary": ["mary brown"],
+            "mary b": ["mary brown"],
+            "robert": ["robert white"],
+            "robert w": ["robert white"],
+            "emily": ["emily white"],
+            "emily w": ["emily white"],
+            "james/mary": ["james brown", "mary brown"],
+            "browns": ["james brown", "mary brown"],
+            "robert/emily": ["robert white", "emily white"],
+            "whites": ["robert white", "emily white"],
         };
 
-        expect(setScriptPropertyMock).toHaveBeenCalledTimes(2);
+        expect(setScriptPropertyMock).toHaveBeenCalled();
         expect(setScriptPropertyMock).toHaveBeenNthCalledWith(1, "MEMBER_MAP", JSON.stringify(expectedMemberMap));
-        expect(setScriptPropertyMock).toHaveBeenNthCalledWith(2, "ALIASES_MAP", JSON.stringify(expectedAliasMap));
+        expect(receivedAliasMap).toStrictEqual(expectedAliasMap);
     });
 
     it("should load an empty object into script properties for the members map when the members table is empty", () => {
@@ -159,31 +134,37 @@ describe("loadMembersFromOnestopIntoScriptProperties", () => {
 
         const couplesDataValuesMock: any[][] = getRandomlyGeneratedAliasTable(0);
 
+        const expectedAliasMap: AliasMap = {
+            "john": ["john doe"],
+            "john d": ["john doe"],
+            "james": ["james brown"],
+            "james b": ["james brown"],
+        };
+
         jest.mock("../src/main/scan", () => ({
             getCellValues: jest.fn()
             .mockReturnValueOnce(membersDataValuesMock)
             .mockReturnValueOnce(couplesDataValuesMock),
         }));
 
-        const setScriptPropertyMock: Mock = jest.fn();
         jest.mock("../src/main/propertiesService", () => ({
             loadMapFromScriptProperties: jest.fn(),
-            setScriptProperty: setScriptPropertyMock,
+            setScriptProperty: jest.fn(),
+        }));
+
+        const mergeAliasMapsMock: Mock = jest.fn(() => expectedAliasMap);
+        jest.mock("../src/main/aliases", () => ({
+            mergeAliasMaps: mergeAliasMapsMock,
         }));
 
         const { loadMembersFromOnestopIntoScriptProperties } = require('../src/main/members');
-        loadMembersFromOnestopIntoScriptProperties();
+        const membersAliases: AliasMap = loadMembersFromOnestopIntoScriptProperties();
 
-        const expected: AliasMap = {
-            "John": ["John Doe"],
-            "John D": ["John Doe"],
-            "James": ["James Brown"],
-            "James B": ["James Brown"],
-        };
-        expect(setScriptPropertyMock).toHaveBeenCalledWith("ALIASES_MAP", JSON.stringify(expected));
+        expect(mergeAliasMapsMock).toHaveBeenCalledWith(expectedAliasMap, {});
+        expect(membersAliases).toStrictEqual(expectedAliasMap);
     });
 
-    it("should map an alternate name to multiple people when multiple people share the same alternate name", () => {
+    it("should throw an error when multiple people share the same alternate name", () => {
         const membersDataValuesMock: any[][] = getRandomlyGeneratedMemberTable(2, 1);
         membersDataValuesMock[1][NAME_COLUMN_INDEX] = "John Doe";
         membersDataValuesMock[1][ALTERNATE_NAMES_COLUMN_INDEX] = "John,John D";
@@ -198,21 +179,13 @@ describe("loadMembersFromOnestopIntoScriptProperties", () => {
             .mockReturnValueOnce(couplesDataValuesMock),
         }));
 
-        const setScriptPropertyMock: Mock = jest.fn();
         jest.mock("../src/main/propertiesService", () => ({
             loadMapFromScriptProperties: jest.fn(),
-            setScriptProperty: setScriptPropertyMock,
+            setScriptProperty: jest.fn(),
         }));
 
         const { loadMembersFromOnestopIntoScriptProperties } = require('../src/main/members');
-        loadMembersFromOnestopIntoScriptProperties();
-
-        const expected: AliasMap = {
-            "John": ["John Doe", "John Brown"],
-            "John D": ["John Doe"],
-            "John B": ["John Brown"],
-        };
-        expect(setScriptPropertyMock).toHaveBeenCalledWith("ALIASES_MAP", JSON.stringify(expected));
+        expect(() => loadMembersFromOnestopIntoScriptProperties()).toThrow(new PersonAliasClashError('Multiple members have the alternate name john'));
     });
 
     it("should map an alias to both a person and a couple when a person's alternate name is the same as a couple's alias", () => {
@@ -228,30 +201,50 @@ describe("loadMembersFromOnestopIntoScriptProperties", () => {
         const couplesDataValuesMock: any[][] = getRandomlyGeneratedAliasTable(1);
         couplesDataValuesMock[1] = ["James Brown", "Mary Brown", "JM"];
 
+        const expectedMembersAliasMap: AliasMap = {
+            "john": ["john miller"],
+            "john m": ["john miller"],
+            "jm": ["john miller"],
+            "james": ["james brown"],
+            "james b": ["james brown"],
+            "mary": ["mary brown"],
+            "mary b": ["mary brown"]
+        };
+
+        const expectedCouplesAliasMap: AliasMap = {
+            "jm": ["james brown", "mary brown"],
+        };
+
+        const expectedAliasMap: AliasMap = {
+            "john": ["john miller"],
+            "john m": ["john miller"],
+            "jm": ["john miller", "james brown", "mary brown"],
+            "james": ["james brown"],
+            "james b": ["james brown"],
+            "mary": ["mary brown"],
+            "mary b": ["mary brown"],
+        };
+
         jest.mock("../src/main/scan", () => ({
             getCellValues: jest.fn()
             .mockReturnValueOnce(membersDataValuesMock)
             .mockReturnValueOnce(couplesDataValuesMock),
         }));
 
-        const setScriptPropertyMock: Mock = jest.fn();
         jest.mock("../src/main/propertiesService", () => ({
             loadMapFromScriptProperties: jest.fn(),
-            setScriptProperty: setScriptPropertyMock,
+            setScriptProperty: jest.fn(),
+        }));
+
+        const mergeAliasMapsMock: Mock = jest.fn(() => expectedAliasMap);
+        jest.mock("../src/main/aliases", () => ({
+            mergeAliasMaps: mergeAliasMapsMock,
         }));
 
         const { loadMembersFromOnestopIntoScriptProperties } = require('../src/main/members');
-        loadMembersFromOnestopIntoScriptProperties();
+        const membersAliases: AliasMap = loadMembersFromOnestopIntoScriptProperties();
 
-        const expected: AliasMap = {
-            "John": ["John Miller"],
-            "John M": ["John Miller"],
-            "JM": ["John Miller", "James Brown", "Mary Brown"],
-            "James": ["James Brown"],
-            "James B": ["James Brown"],
-            "Mary": ["Mary Brown"],
-            "Mary B": ["Mary Brown"]
-        };
-        expect(setScriptPropertyMock).toHaveBeenCalledWith("ALIASES_MAP", JSON.stringify(expected));
+        expect(mergeAliasMapsMock).toHaveBeenCalledWith(expectedMembersAliasMap, expectedCouplesAliasMap);
+        expect(membersAliases).toStrictEqual(expectedAliasMap);
     });
 });

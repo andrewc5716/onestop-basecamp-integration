@@ -1,10 +1,10 @@
 /**
- * Gets a list of roles from a roleTodoIdMap
+ * Gets a list of roles from a roleTodoMap
  * 
- * @param roleTodoIdMap a map associating an event's roles with todo ids
+ * @param roleTodoMap a map associating an event's roles with todo objects
  */
-function getOriginalEventRoles(roleTodoIdMap: RoleTodoIdMap): string[] {
-    return Object.keys(roleTodoIdMap);
+function getOriginalEventRoles(roleTodoMap: RoleTodoMap): string[] {
+    return Object.keys(roleTodoMap);
 }
 
 /**
@@ -20,12 +20,12 @@ function getCurrentEventRoles(currentRoleRequestMap: RoleRequestMap): string[] {
  * Gets a list of obsolete roles by comparing the original and current roles
  * 
  * @param currentRoleRequestMap a map associating an event's roles with API request bodies
- * @param lastSavedRoleTodoIdMap a map associating an event's roles to existing todo IDs, that is currently saved in the document properties
+ * @param lastSavedRoleTodoMap a map associating an event's roles to existing todo objects, that is currently saved in the document properties
  * @returns an array of removed roles
  */
-export function getRemovedRoles(currentRoleRequestMap: RoleRequestMap, lastSavedRoleTodoIdMap: RoleTodoIdMap): string[] {
+export function getRemovedRoles(currentRoleRequestMap: RoleRequestMap, lastSavedRoleTodoMap: RoleTodoMap): string[] {
     const currentRoles: string[] = getCurrentEventRoles(currentRoleRequestMap);
-    const originalRoles: string[] = getOriginalEventRoles(lastSavedRoleTodoIdMap);
+    const originalRoles: string[] = getOriginalEventRoles(lastSavedRoleTodoMap);
     return originalRoles.filter(role => !currentRoles.includes(role));
 }
 
@@ -33,12 +33,12 @@ export function getRemovedRoles(currentRoleRequestMap: RoleRequestMap, lastSaved
  * Gets a list of existing roles by comparing the original and current roles
  * 
  * @param currentRoleRequestMap a map associating an event's roles with API request bodies
- * @param lastSavedRoleTodoIdMap a map associating an event's roles to existing todo IDs, that is currently saved in the document properties
+ * @param lastSavedRoleTodoMap a map associating an event's roles to existing todo objects, that is currently saved in the document properties
  * @returns an array of existing roles
  */
-export function getExistingRoles(currentRoleRequestMap: RoleRequestMap, lastSavedRoleTodoIdMap: RoleTodoIdMap): string[] {
+export function getExistingRoles(currentRoleRequestMap: RoleRequestMap, lastSavedRoleTodoMap: RoleTodoMap): string[] {
     const currentRoles: string[] = getCurrentEventRoles(currentRoleRequestMap);
-    const originalRoles: string[] = getOriginalEventRoles(lastSavedRoleTodoIdMap);
+    const originalRoles: string[] = getOriginalEventRoles(lastSavedRoleTodoMap);
     return currentRoles.filter(role => originalRoles.includes(role));
 }
 
@@ -46,11 +46,11 @@ export function getExistingRoles(currentRoleRequestMap: RoleRequestMap, lastSave
  * Gets a list of new roles by comparing the original and current roles
  * 
  * @param currentRoleRequestMap a map associating an event's roles with API request bodies
- * @param lastSavedRoleTodoIdMap a map associating an event's roles to existing todo IDs, that is currently saved in the document properties
+ * @param lastSavedRoleTodoMap a map associating an event's roles to existing todo objects, that is currently saved in the document properties
  * @returns an array of new roles
  */
-export function getNewRoles(currentRoleRequestMap: RoleRequestMap, lastSavedRoleTodoIdMap: RoleTodoIdMap): string[] {
+export function getNewRoles(currentRoleRequestMap: RoleRequestMap, lastSavedRoleTodoMap: RoleTodoMap): string[] {
     const currentRoles: string[] = getCurrentEventRoles(currentRoleRequestMap);
-    const originalRoles: string[] = getOriginalEventRoles(lastSavedRoleTodoIdMap);
+    const originalRoles: string[] = getOriginalEventRoles(lastSavedRoleTodoMap);
     return currentRoles.filter(role => !originalRoles.includes(role));
 }
