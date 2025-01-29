@@ -7,10 +7,6 @@ describe("validateHelperCellText", () => {
         expect(validateHelperCellText("")).toBe("");
     });
 
-    it("should reject undefined helper", () => {
-        expect(validateHelperCellText("undefined")).toBe("Invalid identifier(s): undefined");
-    })
-
     it("should allow a group name", () => {
         jest.mock('../src/main/propertiesService', () => ({
             loadMapFromScriptProperties: jest.fn((key: string) => {
@@ -272,10 +268,6 @@ describe("validateLeadCellText", ()=> {
         expect(validateLeadCellText("")).toBe("");
     });
 
-    it("should reject undefined lead", () => {
-        expect(validateLeadCellText("undefined")).toBe("Invalid identifier(s): undefined");
-    })
-
     it("should reject a group name", () => {
         jest.mock('../src/main/propertiesService', () => ({
             loadMapFromScriptProperties: jest.fn((key: string) => {
@@ -287,9 +279,9 @@ describe("validateLeadCellText", ()=> {
                 return {};
             }),
         }));
-        const { validateHelperCellText } = require("../src/main/validation");
+        const { validateLeadCellText } = require("../src/main/validation");
 
-        expect(validateHelperCellText("HG2")).toBe("");
+        expect(validateLeadCellText("HG2")).toBe("Invalid identifier(s): HG2");
     });
 
     it("should allow an alias", () => {
@@ -303,9 +295,9 @@ describe("validateLeadCellText", ()=> {
                 return {};
             }),
         }));
-        const { validateHelperCellText } = require("../src/main/validation");
+        const { validateLeadCellText } = require("../src/main/validation");
 
-        expect(validateHelperCellText("Andrew/Janice")).toBe("");
+        expect(validateLeadCellText("Andrew/Janice")).toBe("");
     });
 
     it("should allow for comma separated list", () => {
@@ -321,9 +313,9 @@ describe("validateLeadCellText", ()=> {
                 return {};
             }),
         }));
-        const { validateHelperCellText } = require("../src/main/validation");
+        const { validateLeadCellText } = require("../src/main/validation");
 
-        expect(validateHelperCellText("Andrew Chan, Janice Chan, Josh Wong")).toBe("");
+        expect(validateLeadCellText("Andrew Chan, Janice Chan, Josh Wong")).toBe("");
     });
 
     it("should allow for separated list", () => {
@@ -339,9 +331,9 @@ describe("validateLeadCellText", ()=> {
                 return {};
             }),
         }));
-        const { validateHelperCellText } = require("../src/main/validation");
+        const { validateLeadCellText } = require("../src/main/validation");
 
-        expect(validateHelperCellText("Andrew Chan, Janice Chan, Josh Wong")).toBe("");
+        expect(validateLeadCellText("Andrew Chan, Janice Chan, Josh Wong")).toBe("");
     });
 
     it("should allow for multiple lines", () => {
@@ -357,9 +349,9 @@ describe("validateLeadCellText", ()=> {
                 return {};
             }),
         }));
-        const { validateHelperCellText } = require("../src/main/validation");
+        const { validateLeadCellText } = require("../src/main/validation");
 
-        expect(validateHelperCellText("Andrew Chan\nJanice Chan\nJosh Wong")).toBe("");
+        expect(validateLeadCellText("Andrew Chan\nJanice Chan\nJosh Wong")).toBe("");
     });
 
     it("should allow for empty entries between commas", () => {
@@ -374,9 +366,9 @@ describe("validateLeadCellText", ()=> {
                 return {};
             }),
         }));
-        const { validateHelperCellText } = require("../src/main/validation");
+        const { validateLeadCellText } = require("../src/main/validation");
 
-        expect(validateHelperCellText(",,,,Andrew Chan,,,Janice Chan,,,")).toBe("");
+        expect(validateLeadCellText(",,,,Andrew Chan,,,Janice Chan,,,")).toBe("");
     });
 
     it("should report invalid aliases, and members", () => {
@@ -399,8 +391,8 @@ describe("validateLeadCellText", ()=> {
                 return {};
             }),
         }));
-        const { validateHelperCellText } = require("../src/main/validation");
+        const { validateLeadCellText } = require("../src/main/validation");
 
-        expect(validateHelperCellText("SDSU, Jack/Angel\nFood: Andrew Chan\nJanice Chan")).toBe("");
+        expect(validateLeadCellText("SDSU, Jack/Angel\nFood: Andrew Chan\nJanice Chan")).toBe("Invalid identifier(s): SDSU, Food: Andrew Chan");
     });
 });

@@ -8,6 +8,23 @@ const COLON_DELIM: string = ":";
 const COMMA_DELIMITER: string = ",";
 const STAFF_REGEX: RegExp = /\bstaff\b/gi;
 
+export function validateLeadCellText(leadCellText: string): string {
+    const helperLines: string[] = leadCellText.split(NEW_LINE_DELIM);
+
+    let invalidLeadTokens: string[] = [];
+
+    helperLines.forEach((helperLine) => {
+        invalidLeadTokens = [...invalidLeadTokens, ...getInvalidLeadTokens(helperLine)]
+    });
+
+    if(invalidLeadTokens.length > 0) {
+        return generateValidationMessage(invalidLeadTokens);
+
+    } else {
+        return "";
+    }
+}
+
 export function validateHelperCellText(helperCellText: string): string {
     const helperLines: string[] = helperCellText.split(NEW_LINE_DELIM);
 
@@ -29,15 +46,30 @@ function generateValidationMessage(invalidHelperTokens: string[]): string {
     return `Invalid identifier(s): ${invalidHelperTokens.join(', ')}`
 }
 
+function getInvalidLeadTokens(leadLine: string): string[] {
+    const leads: string[] = leadLine.split(COMMA_DELIMITER);
+
+    const invalidLeadTokens: string[] = [];
+
+    leads.forEach((leadToken) => {
+        const trimmedLeadToken = leadToken.trim()
+        if(!isLeadTokenValid(trimmedLeadToken)) {
+            invalidLeadTokens.push(trimmedLeadToken);
+        }
+    })
+
+    return invalidLeadTokens;
+}
+
 function getInvalidHelperTokens(helperLine: string): string[] {
     const helperList: string = removeRoleTextFromHelperLine(helperLine);
     const helpers: string[] = helperList.split(COMMA_DELIMITER);
 
     const invalidHelperTokens: string[] = [];
 
-    helpers.forEach((helper) => {
-        if(!isHelperTokenValid(helper)) {
-            invalidHelperTokens.push(helper.trim());
+    helpers.forEach((helperToken) => {
+        if(!isHelperTokenValid(helperToken)) {
+            invalidHelperTokens.push(helperToken.trim());
         }
     })
 
@@ -64,6 +96,18 @@ function isHelperTokenValid(helperTokenWithFilters: string): boolean {
     } else if(ALIASES_MAP.hasOwnProperty(normalizedHelper)) {
         return true;
     } else if(MEMBER_MAP.hasOwnProperty(normalizePersonName(normalizedHelper))) {
+        return true;
+    }
+    return false;
+}
+
+function isLeadTokenValid(leadToken: string): boolean {
+
+    if(leadToken === "") {
+        return true;
+    } else if(ALIASES_MAP.hasOwnProperty(leadToken)) {
+        return true;
+    } else if(MEMBER_MAP.hasOwnProperty(normalizePersonName(leadToken))) {
         return true;
     }
     return false;
