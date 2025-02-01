@@ -31,10 +31,12 @@ Takes events from the Onestop's daily tabs and populates Basecamp with appropria
 17. Open your app and copy your Client ID and Client Secret for the following step.
 19. Create a new file `development.ts` inside the [config](./config/) folder, with the following contents:
 ```js
-export const DEV_BASECAMP_CLIENT_ID = 'REPLACE_WITH_YOUR_BASECAMP_CLIENT_ID';
-export const DEV_BASECAMP_CLIENT_SECRET = 'REPLACE_WITH_YOUR_BASECAMP_CLIENT_SECRET';
+export const DEV_BASECAMP_CLIENT_ID: string = 'REPLACE_WITH_YOUR_BASECAMP_CLIENT_ID';
+export const DEV_BASECAMP_CLIENT_SECRET: string = 'REPLACE_WITH_YOUR_BASECAMP_CLIENT_SECRET';
+export const DEV_BASECAMP_PROJECT_ID: string = 'REPLACE_WITH_BASECAMP_PROJECT_ID';
+export const DEV_BASECAMP_SCHEDULE_ID: string = 'REPLACE_WITH_BASECAMP_SCHEDULE_ID';
 ```
-20. Update `environmentVariables.ts` to make sure your Basecamp client id and secret are properly set and exported
+20. Update `environmentVariables.ts` to make sure your environment variables are properly set and exported
 
 ## Development
 ### Making changes

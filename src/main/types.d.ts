@@ -10,12 +10,19 @@ type Sheet = GoogleAppsScript.Spreadsheet.Sheet;
 type Range = GoogleAppsScript.Spreadsheet.Range;
 type Metadata = GoogleAppsScript.Spreadsheet.DeveloperMetadata;
 
+declare interface TextData {
+  value: string,
+  hyperlink: string | null,
+  strikethrough: boolean,
+}
+
 declare interface Text {
-  readonly value: string,
-  readonly hyperlink: string | null
+  value: string,
+  tokens: TextData[],
 }
 
 declare interface Row {
+  date: Date,
   metadata: Metadata,
   startTime: Date,
   endTime: Date,
@@ -26,16 +33,27 @@ declare interface Row {
   where: Text,
   inCharge: Text,
   helpers: Text,
-  childcare: Text,
   notes: Text
 }
 
-// The key string represents a role and the value represents a todoId
-type RoleTodoIdMap = { [key: string]: string };
+declare interface BasecampTodo {
+  id: string,
+  title: string,
+  url: string,
+}
+
+// The key string represents a role and the value represents a todo object
+type RoleTodoMap = { [role: string]: BasecampTodo };
+
+declare interface TabInfo {
+  date: Date
+}
 
 declare interface RowBasecampMapping {
   rowHash: string,
-  roleTodoIdMap: RoleTodoIdMap
+  roleTodoMap: RoleTodoMap
+  scheduleEntryId: string,
+  tabInfo: TabInfo
 }
 
 type HTTPResponse = GoogleAppsScript.URL_Fetch.HTTPResponse;
@@ -85,7 +103,34 @@ declare interface BasecampTodoRequest extends JsonObject {
 
 // Response from Basecamp Todo. Only need id for now, can add more later
 declare interface BasecampTodoResponse extends JsonObject {
-  id: string // id of the created todo
+  id: string, // id of the created todo
+  title: string, // title of the created todo
+  app_url: string // url of the created todo
+}
+
+declare interface ScheduleIdentifier {
+  readonly projectId: string,
+  readonly scheduleId: string
+}
+
+declare interface ScheduleEntryIdentifier {
+  readonly projectId: string,
+  readonly scheduleEntryId: string
+}
+
+// Response from Basecamp Schedule Entry. Only need id for now, can add more later
+declare interface BasecampScheduleEntryResponse extends JsonObject {
+  id: string // id of the created schedule entry
+}
+
+declare interface BasecampScheduleEntryRequest extends JsonObject {
+  summary: string,
+  starts_at: string, // ISO 8601
+  ends_at: string,
+  description: string,
+  participant_ids: string[],
+  all_day: boolean,
+  notify: boolean
 }
 
 // Response from Basecamp people API. Only need id and name for now, can add more later
@@ -113,8 +158,19 @@ type MemberMap = { [key: string]: Member };
 // Maps an alias to an array of member names that the alias corresponds to
 type AliasMap = { [key: string]: string[] };
 
+declare interface Group {
+  name: string,
+  members: string[],
+  aliases: string[],
+}
+
 // Maps a group name to an array of group member names
-type GroupsMap = { [key: string]: string[] }
+type GroupsMap = { [key: string]: string[] };
 
 // function used to filter groups of members; meant to be used with the array filter() function
 type FilterFunction = (memberName: string) => boolean;
+
+declare interface HelperGroup {
+  role?: string,
+  helperIds: string[],
+}
