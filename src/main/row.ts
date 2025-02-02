@@ -210,13 +210,20 @@ function toHexString(byteArray: number[]): string {
     .join('');
 }
 
+/**
+ * Returns the number of todos for a given row. Used to determine if there are any 
+ * missing Todos
+ * 
+ * @param row row to calculate the number of todos for
+ * @returns the number of todos for the given row
+ */
 function getNumTodosForRow(row: Row): number {
     const leadIds: string[] = getLeadsBasecampIds(row);
     const numLeadsTodos: number = leadIds.length > 0 ? 1 : 0;
     const helperGroups: HelperGroup[] = getHelperGroups(row);
 
     return helperGroups.reduce((numTodos, helperGroup) => {
-        const helperIds: string[] = helperGroup.helperIds.filter(id => !leadIds.includes(id));
+        const helperIds: string[] = getHelperIdsWithoutLeads(helperGroup, leadIds);
         return helperIds.length > 0 ? numTodos + 1 : numTodos;
     }, numLeadsTodos);
 }
@@ -385,7 +392,7 @@ export function getBasecampTodosForHelpers(row: Row): RoleRequestMap {
         const roleTitle: string = helperGroup.role ? `${helperGroup.role} Helper` : "Helper";
         const basecampTodoContent: string = `${roleTitle}: ${row.what.value}`;
         const basecampTodoDescription: string = getBasecampTodoDescription(row);
-        const assigneeIds = helperGroup.helperIds.filter(id => !leadIds.includes(id));
+        const assigneeIds = getHelperIdsWithoutLeads(helperGroup, leadIds);
         const basecampDueDate: string = getBasecampDueDate(row);
 
         if(assigneeIds.length > 0) {
@@ -398,6 +405,10 @@ export function getBasecampTodosForHelpers(row: Row): RoleRequestMap {
     }
 
     return helperRoleRequestMap;
+}
+
+function getHelperIdsWithoutLeads(helperGroup: HelperGroup, leadIds: string[]): string[] {
+    return helperGroup.helperIds.filter(id => !leadIds.includes(id));
 }
 
 /**

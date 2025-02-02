@@ -47,10 +47,12 @@ export function importOnestopToBasecamp(): void {
 function processExistingRow(row: Row): void {
 
     if(hasChanged(row) || isMissingTodos(row)) {
+        // Update Todos and Schedule Entry if the row has changed or if Todos are missing
         const updatedRoleTodoMap: RoleTodoMap = handleTodosForExistingRow(row);
         const scheduleEntryId: string = handleScheduleEntryForExistingRow(row, updatedRoleTodoMap);
         saveRow(row, updatedRoleTodoMap, scheduleEntryId);
     } else if(isMissingScheduleEntry(row)) {
+        // Create the Schedule Entry if it is missing
         const roleTodoMap: RoleTodoMap = getRoleTodoMap(row);
         const scheduleEntryId: string = handleScheduleEntryForExistingRow(row, roleTodoMap);
         saveRow(row, roleTodoMap, scheduleEntryId);
@@ -73,10 +75,12 @@ function handleScheduleEntryForExistingRow(row: Row, updatedRoleTodoMap: RoleTod
     let scheduleEntryId: string = getSavedScheduleEntryId(row);
     
     if(scheduleEntryId !== "") {
+        // Update the Schedule Entry if it exists
         const scheduleEntryRequest: BasecampScheduleEntryRequest = getScheduleEntryRequestForRow(row, updatedRoleTodoMap);
         const scheduleEntryIdentifier: ScheduleEntryIdentifier = getScheduleEntryIdentifier(scheduleEntryId);
         updateScheduleEntry(scheduleEntryRequest, scheduleEntryIdentifier);
     } else {
+        // Create the Schedule Entry if it is missing
         scheduleEntryId = createScheduleEntryForRow(row, updatedRoleTodoMap);
     }
 
