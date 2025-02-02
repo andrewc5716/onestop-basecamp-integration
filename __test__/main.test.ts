@@ -2,20 +2,20 @@ import { Logger } from 'gasmask';
 global.Logger = Logger;
 
 import randomstring from "randomstring";
-import { getRandomlyGeneratedRoleRequestMap, getRandomlyGeneratedRoleTodoMap, getRandomlyGeneratedRow, getRandomlyGeneratedRowBasecampMapping, getRandomlyGeneratedScheduleEntry, getRandomlyGeneratedScheduleEntryIdentifier, getRandomlyGeneratedScheduleIdentifier, Mock } from "./testUtils";
+import { getRandomlyGeneratedRoleRequestMap, getRandomlyGeneratedRoleTodoMap, getRandomlyGeneratedRow, getRandomlyGeneratedRowBasecampMapping, getRandomlyGeneratedScheduleEntryRequest, getRandomlyGeneratedScheduleEntryIdentifier, getRandomlyGeneratedScheduleIdentifier, Mock } from "./testUtils";
 
 describe("importOnestopToBasecamp", () => {
     it("should create new Todos and Schedule Entries when a row is new", () => {
         const rowMock1: Row = getRandomlyGeneratedRow();
         const roleRequestMapMock1: RoleRequestMap = getRandomlyGeneratedRoleRequestMap();
         const roleTodoMapMock1: RoleTodoMap = getRandomlyGeneratedRoleTodoMap();
-        const scheduleEntryRequestMock1: BasecampScheduleEntryRequest = getRandomlyGeneratedScheduleEntry();
+        const scheduleEntryRequestMock1: BasecampScheduleEntryRequest = getRandomlyGeneratedScheduleEntryRequest();
         const scheduleEntryIdMock1: string = randomstring.generate();
         const rowIdMock1: string = randomstring.generate();
         const rowMock2: Row = getRandomlyGeneratedRow();
         const roleRequestMapMock2: RoleRequestMap = getRandomlyGeneratedRoleRequestMap();
         const roleTodoMapMock2: RoleTodoMap = getRandomlyGeneratedRoleTodoMap();
-        const scheduleEntryRequestMock2: BasecampScheduleEntryRequest = getRandomlyGeneratedScheduleEntry();
+        const scheduleEntryRequestMock2: BasecampScheduleEntryRequest = getRandomlyGeneratedScheduleEntryRequest();
         const scheduleEntryIdMock2: string = randomstring.generate();
         const rowIdMock2: string = randomstring.generate();
         const documentPropertiesMock: DocumentProperties = {
@@ -178,7 +178,7 @@ describe("importOnestopToBasecamp", () => {
     it("should update existing Todos and Schedule Entries when a row is not new", () => {
         const rowMock1: Row = getRandomlyGeneratedRow();
         const roleRequestMapMock1: RoleRequestMap = getRandomlyGeneratedRoleRequestMap();
-        const scheduleEntryRequestMock1: BasecampScheduleEntryRequest = getRandomlyGeneratedScheduleEntry();
+        const scheduleEntryRequestMock1: BasecampScheduleEntryRequest = getRandomlyGeneratedScheduleEntryRequest();
         const scheduleEntryIdMock1: string = randomstring.generate();
         const scheduleEntryIdentifierMock1: ScheduleEntryIdentifier = getRandomlyGeneratedScheduleEntryIdentifier();
         const rowIdMock1: string = randomstring.generate();
@@ -188,7 +188,7 @@ describe("importOnestopToBasecamp", () => {
         const existingRoleTodoMapMock1: RoleTodoMap = getRandomlyGeneratedRoleTodoMap();
         const updatedRoleTodoMapMock1: RoleTodoMap = {...existingRoleTodoMapMock1, ...newRoleTodoMapMock1};
         const roleRequestMapMock2: RoleRequestMap = getRandomlyGeneratedRoleRequestMap();
-        const scheduleEntryRequestMock2: BasecampScheduleEntryRequest = getRandomlyGeneratedScheduleEntry();
+        const scheduleEntryRequestMock2: BasecampScheduleEntryRequest = getRandomlyGeneratedScheduleEntryRequest();
         const scheduleEntryIdMock2: string = randomstring.generate();
         const scheduleEntryIdentifierMock2: ScheduleEntryIdentifier = getRandomlyGeneratedScheduleEntryIdentifier();
         const rowIdMock2: string = randomstring.generate();
@@ -462,7 +462,7 @@ describe("importOnestopToBasecamp", () => {
         const rowMock1: Row = getRandomlyGeneratedRow();
         const roleRequestMapMock1: RoleRequestMap = {};
         const roleTodoMapMock1: RoleTodoMap = {};
-        const scheduleEntryRequestMock1: BasecampScheduleEntryRequest = getRandomlyGeneratedScheduleEntry();
+        const scheduleEntryRequestMock1: BasecampScheduleEntryRequest = getRandomlyGeneratedScheduleEntryRequest();
         const scheduleEntryIdMock1: string = randomstring.generate();
         const rowIdMock1: string = randomstring.generate();
         const documentPropertiesMock: DocumentProperties = {

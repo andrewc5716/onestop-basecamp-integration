@@ -341,7 +341,7 @@ export function getRandomBoolean(): boolean {
     return getRandomNumber(BOOLEAN_UPPERBOUND) ? true: false;
 }
 
-export function getRandomlyGeneratedScheduleEntry(): BasecampScheduleEntryRequest {
+export function getRandomlyGeneratedScheduleEntryRequest(): BasecampScheduleEntryRequest {
     return {
         summary: randomstring.generate(),
         starts_at: randomstring.generate(),
