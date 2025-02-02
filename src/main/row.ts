@@ -210,6 +210,17 @@ function toHexString(byteArray: number[]): string {
     .join('');
 }
 
+function getNumTodosForRow(row: Row): number {
+    const leadIds: string[] = getLeadsBasecampIds(row);
+    const numLeadsTodos: number = leadIds.length > 0 ? 1 : 0;
+    const helperGroups: HelperGroup[] = getHelperGroups(row);
+
+    return helperGroups.reduce((numTodos, helperGroup) => {
+        const helperIds: string[] = helperGroup.helperIds.filter(id => !leadIds.includes(id));
+        return helperIds.length > 0 ? numTodos + 1 : numTodos;
+    }, numLeadsTodos);
+}
+
 /**
  * Retrieves an array of BasecampTodoRequest objects for an event row. BasecampTodoRequest
  * objects are constructed for both the leads and the helpers
@@ -712,7 +723,7 @@ export function isMissingTodos(row: Row): boolean {
     if(savedRowBasecampMapping === null) {
         throw new RowBasecampMappingMissingError("The rowBasecampMapping object is null!");
     }
-    const numExpectedTodos: number = Object.values(getBasecampTodoRequestsForRow(row)).length;
+    const numExpectedTodos: number = getNumTodosForRow(row);
     return Object.values(savedRowBasecampMapping.roleTodoMap).length !== numExpectedTodos;
 }
 
