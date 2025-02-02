@@ -1,4 +1,4 @@
-import { BASECAMP_PROJECT_ID } from "../../config/environmentVariables";
+import { BASECAMP_PROJECT_ID, BASECAMP_TODOLIST_ID } from "../../config/environmentVariables";
 import { getBasecampProjectUrl, sendBasecampPostRequest, sendBasecampPutRequest } from "./basecamp";
 import { BasecampRequestMissingError } from "./error/basecampRequestMissingError";
 import { TodoIdMissingError } from "./error/todoIdMissingError";
@@ -10,8 +10,6 @@ const RECORDINGS_PATH: string = '/recordings/';
 const JSON_PATH: string = '.json';
 const TODO_JSON_PATH: string = '/todos' + JSON_PATH;
 const TRASHED_TODO_JSON_PATH: string = '/status/trashed' + JSON_PATH;
-
-export const TODOLIST_ID: string= "7865336721";
 
 /**
  * Creates a todo in Basecamp
@@ -238,6 +236,6 @@ export function createTodosForNewRoles(currentRoleRequestMap: RoleRequestMap, la
 function getDefaultTodoListIdentifier(): TodolistIdentifier {
     return {
         projectId: BASECAMP_PROJECT_ID,
-        todolistId: TODOLIST_ID
+        todolistId: BASECAMP_TODOLIST_ID
     }
 };
