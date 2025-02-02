@@ -9,7 +9,6 @@ import { RowMissingIdError } from '../src/main/error/rowMissingIdError';
 import { getRandomlyGeneratedByteArray, getRandomlyGeneratedMember, getRandomlyGeneratedMetadata, getRandomlyGeneratedRange, getRandomlyGeneratedRoleTodoMap, getRandomlyGeneratedRow, getRandomlyGeneratedRowBasecampMapping, getRandomlyGeneratedText, Mock } from './testUtils';
 import randomstring from "randomstring";
 import { RowBasecampMappingMissingError } from '../src/main/error/rowBasecampMappingMissingError';
-import { normalizePersonName } from '../src/main/people';
 
 describe("getMetadata", () => {
     it("should return the Metadata object when a single Metadata object is present", () => {
@@ -893,6 +892,121 @@ describe("getSavedScheduleEntryId", () => {
         const receivedScheduleEntryId: string = getSavedScheduleEntryId(row);
 
         expect(receivedScheduleEntryId).toStrictEqual(rowBasecampMappingMock.scheduleEntryId);
+    });
+});
+
+describe("isMissingTodos", () => {
+    it("should return true when the row is missing at least one todo", () => {
+        const metataMock: Metadata = getRandomlyGeneratedMetadata();
+        metataMock.getValue = jest.fn(() => randomstring.generate());
+        const rowMock: Row = getRandomlyGeneratedRow();
+        rowMock.metadata = metataMock;
+        const rowBasecampMappingMock: RowBasecampMapping = getRandomlyGeneratedRowBasecampMapping();
+
+        jest.mock('../src/main/propertiesService', () => ({
+            getDocumentProperty: jest.fn(() => JSON.stringify(rowBasecampMappingMock)),
+            loadMapFromScriptProperties: jest.fn(() => ({})),
+        }));
+
+        const { isMissingTodos } = require("../src/main/row");
+
+        expect(isMissingTodos(rowMock)).toBe(true);
+    });
+
+    it("should return false when the row is not missing any todos", () => {
+        const metataMock: Metadata = getRandomlyGeneratedMetadata();
+        metataMock.getValue = jest.fn(() => randomstring.generate());
+        const rowMock: Row = getRandomlyGeneratedRow();
+        rowMock.metadata = metataMock;
+        rowMock.inCharge.value = "john doe";
+        rowMock.helpers.value = "Food: jane smith, alice johnson";
+        const rowBasecampMappingMock: RowBasecampMapping = getRandomlyGeneratedRowBasecampMapping();
+        rowBasecampMappingMock.roleTodoMap = getRandomlyGeneratedRoleTodoMap(2);
+        const peopleMapMock: {[key: string]: string} = {
+            "john doe": randomstring.generate(),
+            "jane smith": randomstring.generate(),
+            "alice johnson": randomstring.generate(),
+        };
+
+        jest.mock('../src/main/propertiesService', () => ({
+            getDocumentProperty: jest.fn(() => JSON.stringify(rowBasecampMappingMock)),
+            loadMapFromScriptProperties: jest.fn(() => ({})),
+            getScriptProperty: jest.fn(() => JSON.stringify(peopleMapMock)),
+        }));
+
+        const { isMissingTodos } = require("../src/main/row");
+
+        expect(isMissingTodos(rowMock)).toBe(false);
+    });
+
+    it("should throw a RowBasecampMappingMissingError when there is no RowBasecampMapping", () => {
+        const metataMock: Metadata = getRandomlyGeneratedMetadata();
+        metataMock.getValue = jest.fn(() => randomstring.generate());
+        const rowMock: Row = getRandomlyGeneratedRow();
+        rowMock.metadata = metataMock;
+
+        jest.mock('../src/main/propertiesService', () => ({
+            getDocumentProperty: jest.fn(() => null),
+            loadMapFromScriptProperties: jest.fn(() => ({})),
+        }));
+
+        const { isMissingTodos } = require("../src/main/row");
+
+        expect(() => isMissingTodos(rowMock)).toThrow(new RowBasecampMappingMissingError("The rowBasecampMapping object is null!"));
+    });
+});
+
+describe("isMissingScheduleEntry", () =>{
+    it("should return return true when the row is missing a schedule entry", () => {
+        const metataMock: Metadata = getRandomlyGeneratedMetadata();
+        metataMock.getValue = jest.fn(() => randomstring.generate());
+        const rowMock: Row = getRandomlyGeneratedRow();
+        rowMock.metadata = metataMock;
+        const rowBasecampMappingMock: RowBasecampMapping = getRandomlyGeneratedRowBasecampMapping();
+        rowBasecampMappingMock.scheduleEntryId = "";
+
+        jest.mock('../src/main/propertiesService', () => ({
+            getDocumentProperty: jest.fn(() => JSON.stringify(rowBasecampMappingMock)),
+            loadMapFromScriptProperties: jest.fn(() => ({})),
+        }));
+
+        const { isMissingScheduleEntry } = require("../src/main/row");
+
+        expect(isMissingScheduleEntry(rowMock)).toBe(true);
+    });
+
+    it("should return false when the row is not missing a schedule entry", () => {
+        const metataMock: Metadata = getRandomlyGeneratedMetadata();
+        metataMock.getValue = jest.fn(() => randomstring.generate());
+        const rowMock: Row = getRandomlyGeneratedRow();
+        rowMock.metadata = metataMock;
+        const rowBasecampMappingMock: RowBasecampMapping = getRandomlyGeneratedRowBasecampMapping();
+        rowBasecampMappingMock.scheduleEntryId = randomstring.generate();
+
+        jest.mock('../src/main/propertiesService', () => ({
+            getDocumentProperty: jest.fn(() => JSON.stringify(rowBasecampMappingMock)),
+            loadMapFromScriptProperties: jest.fn(() => ({})),
+        }));
+
+        const { isMissingScheduleEntry } = require("../src/main/row");
+
+        expect(isMissingScheduleEntry(rowMock)).toBe(false);
+    });
+
+    it("should throw a RowBasecampMappingMissingError when there is no RowBasecampMapping", () => {
+        const metataMock: Metadata = getRandomlyGeneratedMetadata();
+        metataMock.getValue = jest.fn(() => randomstring.generate());
+        const rowMock: Row = getRandomlyGeneratedRow();
+        rowMock.metadata = metataMock;
+
+        jest.mock('../src/main/propertiesService', () => ({
+            getDocumentProperty: jest.fn(() => null),
+            loadMapFromScriptProperties: jest.fn(() => ({})),
+        }));
+
+        const { isMissingScheduleEntry } = require("../src/main/row");
+
+        expect(() => isMissingScheduleEntry(rowMock)).toThrow(new RowBasecampMappingMissingError("The rowBasecampMapping object is null!"));
     });
 });
 

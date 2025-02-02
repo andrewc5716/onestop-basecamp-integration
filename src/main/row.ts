@@ -712,7 +712,8 @@ export function isMissingTodos(row: Row): boolean {
     if(savedRowBasecampMapping === null) {
         throw new RowBasecampMappingMissingError("The rowBasecampMapping object is null!");
     }
-    return Object.values(savedRowBasecampMapping.roleTodoMap).length === 0;
+    const numExpectedTodos: number = Object.values(getBasecampTodoRequestsForRow(row)).length;
+    return Object.values(savedRowBasecampMapping.roleTodoMap).length !== numExpectedTodos;
 }
 
 export function isMissingScheduleEntry(row: Row): boolean {
