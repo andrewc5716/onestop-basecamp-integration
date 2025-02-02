@@ -95,8 +95,12 @@ export function createNewTodos(roleRequestMap: RoleRequestMap): RoleTodoMap {
 
     Object.keys(roleRequestMap).forEach( role => {
         let request: BasecampTodoRequest = roleRequestMap[role];
-        let basecampTodo: BasecampTodo = createTodo(request, getDefaultTodoListIdentifier());
-        roleTodoMap[role] = basecampTodo;
+        try {
+            let basecampTodo: BasecampTodo = createTodo(request, getDefaultTodoListIdentifier());
+            roleTodoMap[role] = basecampTodo;
+        } catch(error: any) {
+            Logger.log(`Error creating todo for role ${role}: ${error}`);
+        }
     });
 
     return roleTodoMap;

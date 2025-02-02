@@ -707,6 +707,22 @@ export function getSavedScheduleEntryId(row: Row): string {
     return savedRowBasecampMapping.scheduleEntryId;
 }
 
+export function isMissingTodos(row: Row): boolean {
+    const savedRowBasecampMapping: RowBasecampMapping | null = getRowBasecampMapping(row);
+    if(savedRowBasecampMapping === null) {
+        throw new RowBasecampMappingMissingError("The rowBasecampMapping object is null!");
+    }
+    return Object.values(savedRowBasecampMapping.roleTodoMap).length === 0;
+}
+
+export function isMissingScheduleEntry(row: Row): boolean {
+    const savedRowBasecampMapping: RowBasecampMapping | null = getRowBasecampMapping(row);
+    if(savedRowBasecampMapping === null) {
+        throw new RowBasecampMappingMissingError("The rowBasecampMapping object is null!");
+    }
+    return savedRowBasecampMapping.scheduleEntryId === "";
+}
+
 export function hasBasecampAttendees(row: Row): boolean {
     return getBasecampIdsFromPersonNameList(getAttendeesFromRow(row)).length > 0;
 }

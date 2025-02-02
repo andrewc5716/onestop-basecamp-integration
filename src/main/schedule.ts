@@ -1,5 +1,6 @@
 import { BASECAMP_PROJECT_ID, BASECAMP_SCHEDULE_ID } from "../../config/environmentVariables";
 import { getBasecampProjectUrl, sendBasecampPostRequest, sendBasecampPutRequest } from "./basecamp";
+import { getScheduleEntryRequestForRow, toString } from "./row";
 
 const SCHEDULES_PATH: string = '/schedules/';
 const SCHEDULE_ENTRIES: string = '/schedule_entries/';
@@ -79,4 +80,16 @@ function getUpdateScheduleEntryUrl(scheduleEntryIdentifier: ScheduleEntryIdentif
 
 function getDeleteScheduleEntryUrl(scheduleEntryIdentifier: ScheduleEntryIdentifier): string {
     return getBasecampProjectUrl(scheduleEntryIdentifier.projectId) + RECORDINGS_PATH + scheduleEntryIdentifier.scheduleEntryId + TRASHED_STATUS_JSON_PATH;
+}
+
+export function createScheduleEntryForRow(row: Row, roleTodoMap: RoleTodoMap): string {
+    const scheduleEntryRequest: BasecampScheduleEntryRequest = getScheduleEntryRequestForRow(row, roleTodoMap);
+    let scheduleEntryId: string = "";
+    try {
+        scheduleEntryId = createScheduleEntry(scheduleEntryRequest, getDefaultScheduleIdentifier());
+    } catch(error: any) {
+        Logger.log(`Error creating schedule entry for ${toString(row)}: ${error}`);
+    }
+
+    return scheduleEntryId;
 }
