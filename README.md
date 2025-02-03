@@ -31,10 +31,16 @@ Takes events from the Onestop's daily tabs and populates Basecamp with appropria
 17. Open your app and copy your Client ID and Client Secret for the following step.
 19. Create a new file `development.ts` inside the [config](./config/) folder, with the following contents:
 ```js
-export const DEV_BASECAMP_CLIENT_ID = 'REPLACE_WITH_YOUR_BASECAMP_CLIENT_ID';
-export const DEV_BASECAMP_CLIENT_SECRET = 'REPLACE_WITH_YOUR_BASECAMP_CLIENT_SECRET';
+export const DEV_BASECAMP_CLIENT_ID: string = 'REPLACE_WITH_YOUR_BASECAMP_CLIENT_ID';
+export const DEV_BASECAMP_CLIENT_SECRET: string = 'REPLACE_WITH_YOUR_BASECAMP_CLIENT_SECRET';
+export const DEV_BASECAMP_PROJECT_ID: string = 'REPLACE_WITH_BASECAMP_PROJECT_ID';
+export const DEV_BASECAMP_SCHEDULE_ID: string = 'REPLACE_WITH_BASECAMP_SCHEDULE_ID';
+export const DEV_BASECAMP_TODOLIST_ID: string = 'REPLACE_WITH_BASECAMP_TODOLIST_ID';
 ```
-20. Update `environmentVariables.ts` to make sure your Basecamp client id and secret are properly set and exported
+You can find the Basecamp project id by looking at the URL of your Basecamp project homepage. For the URL `https://3.basecamp.com/4474129/projects/38736474`, `4474129` represents the A2N organization id within Basecamp, and `38736474` is your Basecamp project id.   
+Similarly, you can find the schedule id by looking at the URL when you open the Schedule page from your Basecamp project. For the URL `https://3.basecamp.com/4474129/buckets/38736474/schedules/7717423557`, the schedule id is `7717423557`.   
+For the todolist id, look at the URL of the todolist you want to use for testing. You may need to create a new todolist for testing if it doesn't already exist. For the URL `https://3.basecamp.com/4474129/buckets/38736474/todolists/7865336721`, `7865336721` is the todolist id.
+20. Update `environmentVariables.ts` to make sure your environment variables are properly set and exported
 
 ## Development
 ### Making changes

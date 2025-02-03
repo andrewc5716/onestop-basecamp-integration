@@ -1,9 +1,13 @@
+import { ALIASES_MAP } from "./aliases";
 import { InvalidHashError } from "./error/invalidHashError";
 import { RowBasecampMappingMissingError } from "./error/rowBasecampMappingMissingError";
 import { RowMissingIdError } from "./error/rowMissingIdError";
 import { RowNotSavedError } from "./error/rowNotSavedError";
-import { getPersonId } from "./people";
-import { deleteAllDocumentProperties, getDocumentProperty, setDocumentProperty } from "./propertiesService";
+import { containsFilter, filterMembers, isFilter, removeFilters } from "./filter";
+import { GROUPS_MAP, getMembersFromGroups, GROUP_NAMES } from "./groups";
+import { getPersonId, normalizePersonName } from "./people";
+import { getDocumentProperty, setDocumentProperty } from "./propertiesService";
+import { getBasecampScheduleEntryRequest } from "./schedule";
 import { getBasecampTodoRequest } from "./todos";
 
 const ROW_ID_KEY: string = "rowId";
@@ -12,14 +16,10 @@ const HEXIDECIMAL_CHAR_LENGTH: number = 2;
 const COMMA_FORWARD_SLASH_DELIM_REGEX: RegExp = /[,\/]/;
 const MONTH_LENGTH: number = 2;
 const DAY_LENGTH: number = 2;
-const NEW_LINE_DELIM = "\n";
-const COLON_DELIM = ":";
-const LEAD_ROLE_TITLE = "Lead";
-
-declare interface HelperGroup {
-    readonly role?: string,
-    readonly helperIds: string[]
-}
+const NEW_LINE_DELIM: string = "\n";
+const COLON_DELIM: string = ":";
+const LEAD_ROLE_TITLE: string = "Lead";
+const COMMA_DELIMITER: string = ",";
 
 /**
  * Retrieves the metadata object for a given range. If the metadata object does not exist,
@@ -89,16 +89,18 @@ export function hasId(row: Row): boolean {
  * Saves a given row's contents to the PropertiesService
  * 
  * @param row the row's contents to write
- * @param roleTodoIdMap a map that has role titles as the keys and todo ids as the values
+ * @param roleTodoMap a map that has role titles as the keys and todo objects as the values
+ * @param scheduleEntryId id of the schedule entry created for this row
  */
-export function saveRow(row: Row, roleTodoIdMap: RoleTodoIdMap): void {
+export function saveRow(row: Row, roleTodoMap: RoleTodoMap, scheduleEntryId: string): void {
     if(!hasId(row)) {
         throw new RowMissingIdError(`Row does not have an id: ${toString(row)}`);
     }
 
     const rowId: string = getId(row);
     const rowHash: string = toHexString(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, toString(row)));
-    const rowBasecampMapping: RowBasecampMapping = {rowHash: rowHash, roleTodoIdMap: roleTodoIdMap};
+    const tabInfo: TabInfo = { date: row.date };
+    const rowBasecampMapping: RowBasecampMapping = {rowHash: rowHash, roleTodoMap: roleTodoMap, scheduleEntryId: scheduleEntryId, tabInfo: tabInfo};
 
     setDocumentProperty(rowId, JSON.stringify(rowBasecampMapping));
 }
@@ -189,8 +191,7 @@ export function getRowBasecampMapping(row: Row): RowBasecampMapping | null {
  */
 export function toString(row: Row): string {
     return `[${row.startTime}, ${row.endTime}, ${row.who}, ${row.numAttendees}, ${row.what.value}, 
-    ${row.where.value}, ${row.inCharge.value}, ${row.helpers.value},
-    ${row.childcare.value}, ${row.notes.value}]`;
+    ${row.where.value}, ${row.inCharge.value}, ${row.helpers.value}, ${row.notes.value}]`;
 }
 
 /**
@@ -244,7 +245,7 @@ export function getBasecampTodoForLeads(row: Row): RoleRequestMap {
         const leadsRequest: BasecampTodoRequest = getBasecampTodoRequest(basecampTodoContent, basecampTodoDescription, leadIds, leadIds, false, basecampDueDate);
         leadsRoleRequestMap[LEAD_ROLE_TITLE] = leadsRequest;
     } else {
-        Logger.log(`${getLeadsNames(row)} do not have any Basecamp ids. row: ${row}`);
+        Logger.log(`${getLeadsNames(row)} do not have any Basecamp ids. row: ${JSON.stringify(row)}`);
     }
 
     return leadsRoleRequestMap;
@@ -257,7 +258,7 @@ export function getBasecampTodoForLeads(row: Row): RoleRequestMap {
  * @returns array of Basecamp ids for the leads of a row
  */
 function getLeadsBasecampIds(row: Row): string[] {
-    const leadNames: string[] = getLeadsNames(row);
+    const leadNames: string[] = getLeadsNames(row).flatMap((name) => ALIASES_MAP.hasOwnProperty(name) ? ALIASES_MAP[name] : name);
     return getBasecampIdsFromPersonNameList(leadNames);
 }
 
@@ -269,7 +270,7 @@ function getLeadsBasecampIds(row: Row): string[] {
  */
 function getBasecampIdsFromPersonNameList(personNameList: string[]): string[] {
     return personNameList.map((name) => getPersonId(name))
-    .filter((personId) => personId !== undefined);
+        .filter((personId) => personId !== undefined);
 }
 
 /**
@@ -279,8 +280,9 @@ function getBasecampIdsFromPersonNameList(personNameList: string[]): string[] {
  * @returns array of leads names
  */
 function getLeadsNames(row: Row): string[] {
-    return row.inCharge.value.split(COMMA_FORWARD_SLASH_DELIM_REGEX)
-    .map(name => name.trim());
+    return row.inCharge.value.split(COMMA_DELIMITER)
+    .map(name => normalizePersonName(name))
+    .filter(name => name !== "");
 }
 
 /**
@@ -290,8 +292,7 @@ function getLeadsNames(row: Row): string[] {
  * @returns Basecamp Todo description
  */
 function getBasecampTodoDescription(row: Row): string {
-    const location: string = `WHERE: ${row.where.value ?? "N\\A"}`;
-
+    const location: string = getRichTextFromText("WHERE", row.where);
     const locales: Intl.LocalesArgument = 'en-us';
     const options: Intl.DateTimeFormatOptions = {
         hour: 'numeric',
@@ -301,13 +302,45 @@ function getBasecampTodoDescription(row: Row): string {
     const startTime: string = row.startTime.toLocaleTimeString(locales, options);
     const endTime: string = row.endTime.toLocaleTimeString(locales, options);
 
-    const time: string = `\n\nWHEN: ${startTime} - ${endTime}`;
-    const inCharge: string = `\n\nIN CHARGE: ${row.inCharge.value ?? "N\\A"}`;
-    const helpers: string = `\n\nHELPERS:\n${row.helpers.value ?? "N\\A"}`;
-    const childcare: string = `\n\nCHILDCARE: ${row.childcare.value ?? "N\\A"}`;
-    const notes: string = `\n\nNOTES: ${row.notes.value ?? "N\\A"}`;
     const disclaimer: string = `\n\n----------------------------------------------------------\n\nDISCLAIMER: Assignment changes made in Basecamp WILL NOT be reflected in the OneStop. Please update the OneStop row to update assignments:\n[Onestop link]`
-    return location + time + inCharge + helpers + childcare + notes + disclaimer;
+    const time: string = `WHEN: ${startTime} - ${endTime}`;
+    const inCharge: string = getRichTextFromText("IN CHARGE", row.inCharge);
+    const helpers: string = getRichTextFromText("HELPERS", row.helpers);
+    const notes: string = getRichTextFromText("NOTES", row.notes);
+
+    return wrapWithDivTag(combineWithBreakTags([location, time, inCharge, helpers, notes, disclaimer]));
+}
+
+function getRichTextFromText(prefix: string, text: Text): string {
+    if(text.tokens.length === 1) {
+        return `${prefix}: ${replaceNewLinesWithBreakTags(text.value)}`;
+    }
+
+    const textTokens: TextData[] = text.tokens;
+    let richText: string = `${prefix}: `;
+    for(const token of textTokens) {
+        if(token.hyperlink !== null) {
+            richText += `<a href="${token.hyperlink}">${replaceNewLinesWithBreakTags(token.value)}</a>`;
+        } else if(token.strikethrough) {
+            richText += `<strike>${replaceNewLinesWithBreakTags(token.value)}</strike>`;
+        } else {
+            richText += replaceNewLinesWithBreakTags(token.value);
+        }
+    }
+
+    return richText;
+}
+
+function wrapWithDivTag(text: string): string {
+    return `<div>${text}</div>`;
+}
+
+function combineWithBreakTags(stringsToCombine: string[]): string {
+    return stringsToCombine.join("<br>");
+}
+
+function replaceNewLinesWithBreakTags(text: string): string {
+    return text.replace(NEW_LINE_DELIM, "<br>");
 }
 
 /**
@@ -342,8 +375,7 @@ export function getBasecampTodosForHelpers(row: Row): RoleRequestMap {
         const roleTitle: string = helperGroup.role ? `${helperGroup.role} Helper` : "Helper";
         const basecampTodoContent: string = `${roleTitle}: ${row.what.value}`;
         const basecampTodoDescription: string = getBasecampTodoDescription(row);
-        const helperIds: string[] = helperGroup.helperIds.filter(id => !leadIds.includes(id));
-        const assigneeIds: string[] = leadIds.concat(helperIds);
+        const assigneeIds = helperGroup.helperIds.filter(id => !leadIds.includes(id));
         const basecampDueDate: string = getBasecampDueDate(row);
 
         if(assigneeIds.length > 0) {
@@ -359,27 +391,43 @@ export function getBasecampTodosForHelpers(row: Row): RoleRequestMap {
 }
 
 /**
+ * @param row row to retrieve helper lines from
+ * @returns an array of helper lines
+ */
+export function getHelperLines(row: Row): string[] {
+    return row.helpers.value.split(NEW_LINE_DELIM);
+}
+
+/**
+ * @param helperLine a line from the helpers column in a row
+ * @returns true or false
+ */
+export function hasRole(helperLine: string): boolean {
+    return helperLine.includes(COLON_DELIM);
+}
+
+/**
  * Retrieves an array of HelperGroup objects from a row
  * 
  * @param row row to retrieve the different HelperGroups from
  * @returns array of HelperGroups
  */
-function getHelperGroups(row: Row): HelperGroup[] {
+export function getHelperGroups(row: Row): HelperGroup[] {
     if(row.helpers.value === "") {
         return [];
     }
 
     const helperGroups: HelperGroup[] = [];
 
-    const helperLines: string[] = row.helpers.value.split(NEW_LINE_DELIM);
+    const helperLines: string[] = getHelperLines(row);
     for(const helperLine of helperLines) {
-        if (helperLine.includes(COLON_DELIM)) {
-            const [role, helperNameList] = helperLine.split(COLON_DELIM);
-            const trimmedHelperNameList: string = helperNameList.trim();
-            helperGroups.push(getHelperGroupFromNameList(trimmedHelperNameList, role));
+        if (hasRole(helperLine)) {
+            const [role, helperList] = helperLine.split(COLON_DELIM);
+            const trimmedHelperList: string = helperList.trim();
+            helperGroups.push(getHelperGroupFromHelperList(trimmedHelperList, role));
             
         } else if(helperLine !== "") {
-            helperGroups.push(getHelperGroupFromNameList(helperLine, undefined));
+            helperGroups.push(getHelperGroupFromHelperList(helperLine, undefined));
         }
     }
     return helperGroups;
@@ -392,19 +440,59 @@ function getHelperGroups(row: Row): HelperGroup[] {
  * @returns array of helper names
  */
 function getHelpersNames(helpers: string): string[] {
-    return helpers.split(COMMA_FORWARD_SLASH_DELIM_REGEX)
-    .map(name => name.trim())
+    const helperStrings: string[] = helpers.split(COMMA_DELIMITER)
+    .map(name => normalizePersonName(name))
     .filter(name => name !== "");
+
+    const helperNames: string[] = helperStrings.flatMap((helperString) => getMemberNamesFromHelperIdentifier(helperString));
+    // Removes any duplicates
+    const uniqueHelperNames: string[] = [...new Set(helperNames)];
+
+    return uniqueHelperNames;
 }
 
 /**
- * Constructs a HelperGroup object given a list of helper names and a role for the group
+ * Retrieves an array of member names from a single helper identifier (person/alias/group)
+ * 
+ * @param helperIdentifier string identifier of person/alias/group to transform into member names
+ * @returns an array of member names
+ */
+function getMemberNamesFromHelperIdentifier(helperString: string): string[] {
+    let helperToken: string = helperString;
+    let filters: string[] = [];
+    let members: string[] = [];
+
+    // Remove any filters if the individual helper string contains a filter applied specifically to this helper
+    if(containsFilter(helperString)) {
+        let { stringWithoutFilters: stringWithoutFilters, removedFilters: removedFilters } = removeFilters(helperString);
+        helperToken = stringWithoutFilters;
+        filters = removedFilters;
+    }
+
+    // Expands any groups or aliases if possible
+    if(GROUPS_MAP.hasOwnProperty(helperToken)) {
+        // Helper string refers to a group
+        members = GROUPS_MAP[helperToken];
+    } else if(ALIASES_MAP.hasOwnProperty(helperToken)) {
+        // Helper string is an alias
+        members = ALIASES_MAP[helperToken];
+    } else {
+        // If the string is not a group or an alias, assume it is a member name
+        members = [helperToken];
+    }
+
+    // Filters the helpers if any filters were detected
+    return filters.length > 0 ? filterMembers(members, filters) : members;
+}
+
+/**
+ * Constructs a HelperGroup object given a list of helpers and a role for the group
  * 
  * @param helperNameList list of comma and foward slash deliminated helper names
  * @param role the role for the group or undefined if one is not provided
  * @returns constructed HelperGroup object
  */
-function getHelperGroupFromNameList(helperNameList: string, role: string | undefined): HelperGroup {
+function getHelperGroupFromHelperList(helperNameList: string, role: string | undefined): HelperGroup {
     const helperNames: string[] = getHelpersNames(helperNameList);
     const helperIds: string[] = getBasecampIdsFromPersonNameList(helperNames);
     return {
@@ -414,23 +502,263 @@ function getHelperGroupFromNameList(helperNameList: string, role: string | undef
 }
 
 /**
- * Helpful debugging function which clears all row metadata
+ * Gets all of the expanded helper names as a list of member names from the helper column of a row
+ * 
+ * @param row the row to get the helper names from
+ * @returns constructed HelperGroup object
  */
-export function clearAllRowMetadata(): void {
-    deleteAllDocumentProperties();
+function getAllHelperNames(row: Row): string[] {
+    const allHelpers: string[] = [];
+    const helperLines: string[] = getHelperLines(row);
+
+    for(const helperLine of helperLines) {
+        if (hasRole(helperLine)) {
+            const [role, helperList] = helperLine.split(COLON_DELIM);
+            const trimmedHelperList: string = helperList.trim();
+            allHelpers.push(...getHelpersNames(trimmedHelperList));
+            
+        } else if(helperLine !== "") {
+            allHelpers.push(...getHelpersNames(helperLine));
+        }
+    }
+
+    return allHelpers;
 }
 
 /**
- * Gets the roleTodoIdMap object from the RowBasecampMapping object.
+ * Retrieves an array of domain names from a row
+ * 
+ * @param row row to retrieve domain names from
+ * @returns array of domain names
+ */
+function getDomainNames(row: Row): string[] {
+    return row.domain.split(COMMA_FORWARD_SLASH_DELIM_REGEX)
+    .map(value => value.toLowerCase().trim())
+    .filter(value => GROUP_NAMES.includes(value));
+}
+
+/**
+ * Retrieves an array of domain filters from a row
+ * 
+ * @param row row to retrieve domain filters from
+ * @returns array of domain filters
+ */
+function getDomainFilters(row: Row): string[] {
+    return row.domain.split(COMMA_FORWARD_SLASH_DELIM_REGEX)
+    .map(value => value.toLowerCase().trim()).filter(value => isFilter(value));
+}
+
+/**
+ * Splits the value of the who column of a row based on the COMMA_FORWARD_SLASH_DELIM_REGEX
+ * 
+ * @param row - An event row
+ * @returns a split string representing who is attending an event
+ */
+function splitWhoColumn(row: Row): string[] {
+    return row.who.split(COMMA_FORWARD_SLASH_DELIM_REGEX);
+}
+
+/**
+ * Retrieves an array of ministry names from a row
+ * 
+ * @param row row to retrieve ministry names from
+ * @returns array of ministry group names
+ */
+function getMinistryNames(row: Row): string[] {
+    return splitWhoColumn(row)
+        .map(name => name.toLowerCase().trim())
+        .filter(value => GROUP_NAMES.includes(value));
+}
+
+/**
+ * Retrieves an array of ministry filters from a row
+ * 
+ * @param row row to retrieve ministry filters from
+ * @returns array of ministry filters
+ */
+function getMinistryFilters(row: Row): string[] {
+    return splitWhoColumn(row)
+    .map(name => name.toLowerCase().trim())
+    .filter(value => isFilter(value));
+}
+
+/**
+ * Checks if the event has a who (ministy) column value of ROTATION
+ * 
+ * @param row - An event row
+ * @returns true or false
+ */
+export function checkForRotation(row: Row): boolean {
+    return splitWhoColumn(row)[0].toUpperCase() === "ROTATION";
+}
+
+/**
+ * Checks if the event has a who (ministry) column value of VARIOUS
+ * 
+ * @param row - An event row
+ * @returns true or false
+ */
+export function checkForVarious(row: Row): boolean {
+    return splitWhoColumn(row)[0].toUpperCase() ===  "VARIOUS";
+}
+
+/**
+ * Checks if the event has a who (ministry) column value of OTHER
+ * 
+ * @param row - An event row
+ * @returns true or false
+ */
+export function checkForOther(row: Row): boolean {
+    return splitWhoColumn(row)[0].toUpperCase() ===  "OTHER";
+}
+
+/**
+ * Retrieves an array of names from a row.
+ * 
+ * @param row - Row to retrieve the different attendees from.
+ * @returns Array of Person.
+ */
+export function getAttendeesFromRow(row: Row): string[] {
+    const attendees: string[] = [];
+
+    // Step 1: Extract Ministry Names and Filters
+    const ministryNames = getMinistryNames(row);
+    const ministryFilters = getMinistryFilters(row);
+
+    // Step 2: Extract Domain Names and Filters
+    const domainNames = getDomainNames(row);
+    const domainFilters = getDomainFilters(row);
+
+    const isRotation = checkForRotation(row);
+    const isVarious = checkForVarious(row);
+    const isOther = checkForOther(row);
+
+    attendees.push(...getAllHelperNames(row));
+
+    if(isRotation || isVarious || isOther) {
+        attendees.push(...getLeadsNames(row));
+        
+    } else if(ministryNames.length > 0) {
+        // Process Ministry Attendees
+        const ministryAttendees = filterMinistryAttendees(ministryNames, ministryFilters);
+        attendees.push(...ministryAttendees);
+
+    } else if(domainNames.length > 0 && ministryFilters.length === 0) {
+        // Process Domain Attendees
+        const domainAttendees = filterDomainAttendees(domainNames, domainFilters);
+        attendees.push(...domainAttendees);
+
+    } else if(domainNames.length > 0 && ministryFilters.length > 0) {
+        // Special case: Filter the domain using filters from the ministry column if there are no ministry groups present in the ministry column
+        const domainAttendees = filterDomainAttendees(domainNames, ministryFilters);
+        attendees.push(...domainAttendees);
+
+    } else  {
+        // Step 5: Handle Missing Data
+        Logger.log("ERROR: Unable to get attendees from row becuase both domain and ministry columns are empty!")
+    }
+
+    return attendees;
+}
+
+/**
+ * Process attendees for ministry groups.
+ * 
+ * @param ministryNames - Names of ministry groups.
+ * @param ministryFilters - Filters to apply to the ministry members.
+ * @returns Array of filtered members.
+ */
+function filterMinistryAttendees(ministryNames: string[], ministryFilters: string[]): string[] {
+    const members = getMembersFromGroups(ministryNames);
+    return filterMembers(members, ministryFilters);
+}
+
+/**
+ * Process attendees for domains.
+ * 
+ * @param domainNames - Names of domains.
+ * @param domainFilters - Filters to apply to the domain members.
+ * @returns Array of filtered members.
+ */
+function filterDomainAttendees(domainNames: string[], domainFilters: string[]): string[] {
+    const members = getMembersFromGroups(domainNames);
+    return filterMembers(members, domainFilters);
+}
+
+/**
+ * Gets the roleTodoMap object from the RowBasecampMapping object.
  * Used for downstream processing
  * 
  * @param row a list of all the current roles associated with the row including the lead role. This may be identical to the original roles
- * @returns a map that associates role titles with basecamp todo ids
+ * @returns a map that associates role titles with basecamp todo objects
  */
-export function getRoleTodoIdMap(row: Row) {
+export function getRoleTodoMap(row: Row): RoleTodoMap {
     const savedRowBasecampMapping: RowBasecampMapping | null = getRowBasecampMapping(row);
     if(savedRowBasecampMapping === null) {
         throw new RowBasecampMappingMissingError("The rowBasecampMapping object is null! Unable to proceed with updating the todo!");
     }
-    return savedRowBasecampMapping.roleTodoIdMap;
+    return savedRowBasecampMapping.roleTodoMap;
+}
+
+export function getSavedScheduleEntryId(row: Row): string {
+    const savedRowBasecampMapping: RowBasecampMapping | null = getRowBasecampMapping(row);
+    if(savedRowBasecampMapping === null) {
+        throw new RowBasecampMappingMissingError("The rowBasecampMapping object is null!");
+    }
+    return savedRowBasecampMapping.scheduleEntryId;
+}
+
+export function hasBasecampAttendees(row: Row): boolean {
+    return getBasecampIdsFromPersonNameList(getAttendeesFromRow(row)).length > 0;
+}
+
+export function getScheduleEntryRequestForRow(row: Row, roleTodoMap: RoleTodoMap): BasecampScheduleEntryRequest {
+    const summary: string = getScheduleEntrySummary(row);
+    const startsAt: string = row.startTime.toISOString();
+    const endsAt: string = row.endTime.toISOString();
+    const description: string = getScheduleEntryDescription(row, roleTodoMap);
+    const participantIds: string[] = getBasecampIdsFromPersonNameList(getAttendeesFromRow(row));
+
+    return getBasecampScheduleEntryRequest(summary, startsAt, endsAt, description, participantIds, false, true);
+}
+
+function getScheduleEntrySummary(row: Row): string {
+    const ministryNames: string[] = getMinistryNames(row);
+    const uppercaseMinistryNames: string[] = ministryNames.map(name => name.toUpperCase());
+    const domainNames: string[] = getDomainNames(row);
+    const uppercaseDomainNames: string[] = domainNames.map(name => name.toUpperCase());
+    // Choose the ministry names if possible, otherwise use the domain names
+    const who: string = uppercaseMinistryNames.length > 0 ? uppercaseMinistryNames.join(" ") : uppercaseDomainNames.join(" ");
+
+    return `[${who}] ${row.what.value}`;
+}
+
+function getScheduleEntryDescription(row: Row, roleTodoMap: RoleTodoMap): string {
+    const location: string = getRichTextFromText("WHERE", row.where);
+    const locales: Intl.LocalesArgument = 'en-us';
+    const options: Intl.DateTimeFormatOptions = {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+    }
+    const startTime: string = row.startTime.toLocaleTimeString(locales, options);
+    const endTime: string = row.endTime.toLocaleTimeString(locales, options);
+
+    const time: string = `WHEN: ${startTime} - ${endTime}`;
+    const inCharge: string = getRichTextFromText("IN CHARGE", row.inCharge);
+    const helpers: string = getRichTextFromText("HELPERS", row.helpers);
+    const notes: string = getRichTextFromText("NOTES", row.notes);
+    const relatedTodos: string = getRichTextForTodoLinks(roleTodoMap);
+
+    return wrapWithDivTag(combineWithBreakTags([location, time, inCharge, helpers, notes, relatedTodos]));
+}
+
+function getRichTextForTodoLinks(roleTodoMap: RoleTodoMap): string {
+    let richText: string = "RELATED TODOS: <ul>";
+    for(const todo of Object.values(roleTodoMap)) {
+        richText += `<li><a href="${todo.url}">${todo.title}</a></li>`;
+    }
+    richText += "</ul>";
+
+    return richText;
 }

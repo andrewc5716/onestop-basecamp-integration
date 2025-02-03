@@ -1,4 +1,5 @@
 import randomstring from "randomstring";
+import { randomBytes } from 'crypto';
 
 const BOOLEAN_UPPERBOUND: number = 2;
 
@@ -24,6 +25,7 @@ export function getRandomlyGeneratedMetadata(): Metadata {
 
 export function getRandomlyGeneratedRow(): Row {
     return {
+        date: new Date(),
         metadata: getRandomlyGeneratedMetadata(),
         startTime: new Date(),
         endTime: new Date(),
@@ -34,7 +36,6 @@ export function getRandomlyGeneratedRow(): Row {
         where: getRandomlyGeneratedText(),
         inCharge: getRandomlyGeneratedText(),
         helpers: getRandomlyGeneratedText(),
-        childcare: getRandomlyGeneratedText(),
         notes: getRandomlyGeneratedText()
     }
 }
@@ -288,25 +289,25 @@ function getRandomlyGeneratedGroupRow(numGroupMembers: number = 3): any[] {
 }
 
 export function getRandomlyGeneratedGroupsTable(numGroups: number = 10): any[][] {
-    const aliasTable: any[][] = [["Name", "Group Members"]];
+    const groupsTable: any[][] = [["Name", "Group Members", "Alternate Names"]];
     for(let i = 0; i < numGroups; i++) {
-        aliasTable.push(getRandomlyGeneratedGroupRow());
+        groupsTable.push(getRandomlyGeneratedGroupRow());
     }
 
-    return aliasTable;
+    return groupsTable;
 }
 
-function getRandomlyGeneratedSupergroupRow(numSubgroups: number = 3): any[] {
-    return [randomstring.generate(), randomstring.generate(), Array.from({length: numSubgroups}, () => randomstring.generate()).join(",")];
+function getRandomlyGeneratedSupergroupRow(numSubgroups: number = 3, numAdditionalMembers: number = 2): any[] {
+    return [randomstring.generate(), Array.from({length: numSubgroups}, () => randomstring.generate()).join(","), randomstring.generate(), Array.from({length: numAdditionalMembers}, () => randomstring.generate()).join(",")];
 }
 
 export function getRandomlyGeneratedSupergroupsTable(numGroups: number = 10): any[][] {
-    const aliasTable: any[][] = [["Name", "Subgroups"]];
+    const supergroupsTable: any[][] = [["Name", "Subgroups", "Alternate Names", "Additional Members"]];
     for(let i = 0; i < numGroups; i++) {
-        aliasTable.push(getRandomlyGeneratedSupergroupRow());
+        supergroupsTable.push(getRandomlyGeneratedSupergroupRow());
     }
 
-    return aliasTable;
+    return supergroupsTable;
 }
 
 export function getRandomlyGeneratedCellValues(numRows: number = 5, numColumns: number = 5): any[][] {
@@ -315,17 +316,97 @@ export function getRandomlyGeneratedCellValues(numRows: number = 5, numColumns: 
     );
 }
 
-function getRandomlyGeneratedText(): Text {
+export function getRandomlyGeneratedText(numTokens: number = 5): Text {
+    const tokens: TextData[] = Array.from({length: numTokens}, () => getRandomlyGeneratedTextData());
+
+    return {
+        value: tokens.map(token => token.value).join(""),
+        tokens: tokens,
+    }
+}
+
+function getRandomlyGeneratedTextData(): TextData {
     return {
         value: randomstring.generate(),
-        hyperlink: randomstring.generate()
-    }
+        hyperlink: randomstring.generate(),
+        strikethrough: getRandomBoolean(),
+    };
 }
 
 function getRandomNumber(upperBound: number = Number.MAX_SAFE_INTEGER): number {
     return Math.floor(Math.random() * upperBound);
 }
 
-function getRandomBoolean(): boolean {
+export function getRandomBoolean(): boolean {
     return getRandomNumber(BOOLEAN_UPPERBOUND) ? true: false;
+}
+
+export function getRandomlyGeneratedScheduleEntry(): BasecampScheduleEntryRequest {
+    return {
+        summary: randomstring.generate(),
+        starts_at: randomstring.generate(),
+        ends_at: randomstring.generate(),
+        description: randomstring.generate(),
+        participant_ids: [randomstring.generate()],
+        all_day: getRandomBoolean(),
+        notify: getRandomBoolean()
+    }
+}
+
+export function getRandomlyGeneratedRoleTodoMap(numRoles: number = 10): RoleTodoMap {
+    const roleTodoMap: RoleTodoMap = {};
+    for(let i = 0; i < numRoles; i++) {
+        roleTodoMap[randomstring.generate()] = { id: randomstring.generate(), title: randomstring.generate(), url: randomstring.generate() };
+    }
+
+    return roleTodoMap;
+}
+
+export function getRandomlyGeneratedByteArray(numBytes: number = 100): Uint8Array {
+    return Uint8Array.from(randomBytes(numBytes));
+}
+
+export function getRandomlyGeneratedRowBasecampMapping(): RowBasecampMapping {
+    return {
+        rowHash: randomstring.generate(),
+        roleTodoMap: getRandomlyGeneratedRoleTodoMap(),
+        scheduleEntryId: randomstring.generate(),
+        tabInfo: { date: new Date() },
+    };
+}
+
+export function getRandomlyGeneratedRoleRequestMap(numRoles: number = 10): RoleRequestMap {
+    const roleRequestMap: RoleRequestMap = {};
+    for(let i = 0; i < numRoles; i++) {
+        roleRequestMap[randomstring.generate()] = getRandomlyGeneratedBasecampTodoRequest();
+    }
+
+    return roleRequestMap;
+}
+
+export function getRandomlyGeneratedBasecampTodoRequest(numAssignees: number = 5): BasecampTodoRequest {
+    const ids: string[] = Array.from({length: numAssignees}, () => randomstring.generate());
+
+    return {
+        content: randomstring.generate(),
+        description: randomstring.generate(),
+        assignee_ids: ids,
+        completion_subscriber_ids: ids,
+        notify: getRandomBoolean(),
+        due_on: randomstring.generate(),
+    };
+}
+
+export function getRandomlyGeneratedScheduleIdentifier(): ScheduleIdentifier {
+    return {
+        projectId: randomstring.generate(),
+        scheduleId: randomstring.generate(),
+    }
+}
+
+export function getRandomlyGeneratedScheduleEntryIdentifier(): ScheduleEntryIdentifier {
+    return {
+        projectId: randomstring.generate(),
+        scheduleEntryId: randomstring.generate(),
+    }
 }

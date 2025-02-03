@@ -27,9 +27,6 @@ const HTTP_GET_METHOD: HttpMethod = 'get';
 const BASECAMP_API_URL: string = 'https://3.basecampapi.com';
 const A2N_BASECAMP_ORG_ID: string = '4474129';
 const BUCKETS_PATH: string = '/buckets/';
-// Project ID hardcoded to our SD Basecamp Integration project for testing
-// In the future we may consider moving this to a script property as a config value
-export const PROJECT_ID: string = "38736474";
 
 /**
  * Gets the Basecamp URL for a specific project

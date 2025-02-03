@@ -1,7 +1,8 @@
 import { deleteDocumentProperty, getAllDocumentProperties } from "./propertiesService";
-import { getRoleTodoIdMap } from "./row";
+import { getRoleTodoMap, getSavedScheduleEntryId, getScheduleEntryRequestForRow } from "./row";
 import { generateIdForRow, getBasecampTodoRequestsForRow, getId, hasChanged, hasId, saveRow } from "./row";
 import { getEventRowsFromSpreadsheet } from "./scan";
+import { createScheduleEntry, deleteScheduleEntry, getDefaultScheduleIdentifier, getScheduleEntryIdentifier, updateScheduleEntry } from "./schedule";
 import { createNewTodos, createTodosForNewRoles, deleteObsoleteTodos, deleteTodos, updateTodosForExistingRoles } from "./todos";
 
 /**
@@ -46,19 +47,32 @@ export function importOnestopToBasecamp(): void {
 function processExistingRow(row: Row): void {
 
     if(hasChanged(row)) {
+        const updatedRoleTodoMap: RoleTodoMap = handleTodosForExistingRow(row);
+        const scheduleEntryId: string = handleScheduleEntryForExistingRow(row, updatedRoleTodoMap);
 
-        const currentRoleRequestMap: RoleRequestMap = getBasecampTodoRequestsForRow(row);
-        const lastSavedRoleTodoIdMap: RoleTodoIdMap  = getRoleTodoIdMap(row);
-
-        deleteObsoleteTodos(currentRoleRequestMap, lastSavedRoleTodoIdMap);
-
-        const newRoleTodoIdMap: RoleTodoIdMap = createTodosForNewRoles(currentRoleRequestMap, lastSavedRoleTodoIdMap);
-        const existingRoleTodoIdMap: RoleTodoIdMap = updateTodosForExistingRoles(currentRoleRequestMap, lastSavedRoleTodoIdMap);
-
-        const updatedRoleTodoIdMap: RoleTodoIdMap = {...existingRoleTodoIdMap, ...newRoleTodoIdMap};
-
-        saveRow(row, updatedRoleTodoIdMap);
+        saveRow(row, updatedRoleTodoMap, scheduleEntryId);
     }
+}
+
+function handleTodosForExistingRow(row: Row): RoleTodoMap {
+    const currentRoleRequestMap: RoleRequestMap = getBasecampTodoRequestsForRow(row);
+    const lastSavedRoleTodoMap: RoleTodoMap  = getRoleTodoMap(row);
+
+    deleteObsoleteTodos(currentRoleRequestMap, lastSavedRoleTodoMap);
+
+    const newRoleTodoMap: RoleTodoMap = createTodosForNewRoles(currentRoleRequestMap, lastSavedRoleTodoMap);
+    const existingRoleTodoMap: RoleTodoMap = updateTodosForExistingRoles(currentRoleRequestMap, lastSavedRoleTodoMap);
+
+    return {...existingRoleTodoMap, ...newRoleTodoMap};
+}
+
+function handleScheduleEntryForExistingRow(row: Row, updatedRoleTodoMap: RoleTodoMap): string {
+    const scheduleEntryId: string = getSavedScheduleEntryId(row);
+    const scheduleEntryRequest: BasecampScheduleEntryRequest = getScheduleEntryRequestForRow(row, updatedRoleTodoMap);
+    const scheduleEntryIdentifier: ScheduleEntryIdentifier = getScheduleEntryIdentifier(scheduleEntryId);
+    updateScheduleEntry(scheduleEntryRequest, scheduleEntryIdentifier);
+
+    return scheduleEntryId;
 }
 
 /**
@@ -70,12 +84,13 @@ function processExistingRow(row: Row): void {
  */
 function processNewRow(row: Row): void {
     const roleRequestMap: RoleRequestMap = getBasecampTodoRequestsForRow(row);
-    const roleTodoIdMap: RoleTodoIdMap = createNewTodos(roleRequestMap);
+    const roleTodoMap: RoleTodoMap = createNewTodos(roleRequestMap);
 
-    if(Object.keys(roleTodoIdMap).length > 0) {
-        generateIdForRow(row);
-        saveRow(row, roleTodoIdMap);
-    }
+    const scheduleEntryRequest: BasecampScheduleEntryRequest = getScheduleEntryRequestForRow(row, roleTodoMap);
+    const scheduleEntryId: string = createScheduleEntry(scheduleEntryRequest, getDefaultScheduleIdentifier());
+
+    generateIdForRow(row);
+    saveRow(row, roleTodoMap, scheduleEntryId);
 }
 
 function deleteOldRows(processedRowIds: string[]): void {
@@ -85,11 +100,26 @@ function deleteOldRows(processedRowIds: string[]): void {
         if(!processedRowIds.includes(rowId)) {
 
             const rowBasecampMapping: RowBasecampMapping = propertyStore[rowId];
-            const roleTodoIdMap: RoleTodoIdMap = rowBasecampMapping.roleTodoIdMap;
-            const todoIds: string[] = Object.values(roleTodoIdMap);
 
+            // Handle Todos
+            const roleTodoMap: RoleTodoMap = rowBasecampMapping.roleTodoMap;
+            const todoIds: string[] = Object.values(roleTodoMap).map(todo => todo.id);
             deleteTodos(todoIds);
+
+            // Handle Schedule Entries
+            // Have to use the Date constructor because GAS retrieves the date as a string
+            const rowDate: Date = new Date(rowBasecampMapping.tabInfo.date);
+            if(isInFuture(rowDate)) {
+                const scheduleEntryId: string = rowBasecampMapping.scheduleEntryId;
+                const scheduleEntryIdentifier: ScheduleEntryIdentifier = getScheduleEntryIdentifier(scheduleEntryId);
+                deleteScheduleEntry(scheduleEntryIdentifier);
+            }
+
             deleteDocumentProperty(rowId);
         }
     }
+}
+
+function isInFuture(date: Date): boolean {
+    return date.getTime() > Date.now();
 }
