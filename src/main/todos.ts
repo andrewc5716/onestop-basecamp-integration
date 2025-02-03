@@ -120,7 +120,11 @@ export function deleteTodos(todoIds: string[]): void {
             todoId: id
         }
 
-        deleteTodo(todoIdentifier);
+        try {
+            deleteTodo(todoIdentifier);
+        } catch(error: any) {
+            Logger.log(`Error deleting todo with id ${id}: ${error}`);
+        }
     }
 }
 
@@ -196,9 +200,12 @@ export function updateTodosForExistingRoles(currentRoleRequestMap: RoleRequestMa
             todoId: existingTodo.id
         };
 
-        updateTodo(request, todoIdentifier);
-
-        existingRoleTodoMap[role] = existingTodo;
+        try {
+            updateTodo(request, todoIdentifier);
+            existingRoleTodoMap[role] = existingTodo;
+        } catch(error: any) {
+            Logger.log(`Error updating todo for role ${role}: ${error}`);
+        }
     }
 
     return existingRoleTodoMap;
@@ -226,8 +233,12 @@ export function createTodosForNewRoles(currentRoleRequestMap: RoleRequestMap, la
                 throw new BasecampRequestMissingError("Missing basecamp request!");
             }
 
-            let newTodoId = createTodo(request, getDefaultTodoListIdentifier());
-            newRoleTodoMap[role] = newTodoId;
+            try {
+                let newTodoId = createTodo(request, getDefaultTodoListIdentifier());
+                newRoleTodoMap[role] = newTodoId;
+            } catch(error: any) {
+                Logger.log(`Error creating todo for role ${role}: ${error}`);
+            }
         }
 
     } else {

@@ -1,5 +1,5 @@
 import { deleteDocumentProperty, getAllDocumentProperties } from "./propertiesService";
-import { getRoleTodoMap, getSavedScheduleEntryId, getScheduleEntryRequestForRow, isMissingScheduleEntry, isMissingTodos } from "./row";
+import { getRoleTodoMap, getSavedScheduleEntryId, getScheduleEntryRequestForRow, isMissingScheduleEntry, isMissingTodos, toString } from "./row";
 import { generateIdForRow, getBasecampTodoRequestsForRow, getId, hasChanged, hasId, saveRow } from "./row";
 import { getEventRowsFromSpreadsheet } from "./scan";
 import { createScheduleEntryForRow, deleteScheduleEntry, getScheduleEntryIdentifier, updateScheduleEntry } from "./schedule";
@@ -78,7 +78,12 @@ function handleScheduleEntryForExistingRow(row: Row, updatedRoleTodoMap: RoleTod
         // Update the Schedule Entry if it exists
         const scheduleEntryRequest: BasecampScheduleEntryRequest = getScheduleEntryRequestForRow(row, updatedRoleTodoMap);
         const scheduleEntryIdentifier: ScheduleEntryIdentifier = getScheduleEntryIdentifier(scheduleEntryId);
-        updateScheduleEntry(scheduleEntryRequest, scheduleEntryIdentifier);
+
+        try {
+            updateScheduleEntry(scheduleEntryRequest, scheduleEntryIdentifier);
+        } catch (error: any) {
+            Logger.log(`Error updating schedule entry for row ${toString(row)}: ${error}`);
+        }
     } else {
         // Create the Schedule Entry if it is missing
         scheduleEntryId = createScheduleEntryForRow(row, updatedRoleTodoMap);
@@ -122,7 +127,12 @@ function deleteOldRows(processedRowIds: string[]): void {
             if(isInFuture(rowDate)) {
                 const scheduleEntryId: string = rowBasecampMapping.scheduleEntryId;
                 const scheduleEntryIdentifier: ScheduleEntryIdentifier = getScheduleEntryIdentifier(scheduleEntryId);
-                deleteScheduleEntry(scheduleEntryIdentifier);
+
+                try {
+                    deleteScheduleEntry(scheduleEntryIdentifier);
+                } catch (error: any) {
+                    Logger.log(`Error deleting schedule entry for row ${rowId}: ${error}`);
+                }
             }
 
             deleteDocumentProperty(rowId);
