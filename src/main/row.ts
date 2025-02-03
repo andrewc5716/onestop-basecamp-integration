@@ -270,7 +270,7 @@ function getLeadsBasecampIds(row: Row): string[] {
  */
 function getBasecampIdsFromPersonNameList(personNameList: string[]): string[] {
     return personNameList.map((name) => getPersonId(name))
-    .filter((personId) => personId !== undefined);
+        .filter((personId) => personId !== undefined);
 }
 
 /**
@@ -280,7 +280,7 @@ function getBasecampIdsFromPersonNameList(personNameList: string[]): string[] {
  * @returns array of leads names
  */
 function getLeadsNames(row: Row): string[] {
-    return row.inCharge.value.split(COMMA_FORWARD_SLASH_DELIM_REGEX)
+    return row.inCharge.value.split(COMMA_DELIMITER)
     .map(name => normalizePersonName(name))
     .filter(name => name !== "");
 }
