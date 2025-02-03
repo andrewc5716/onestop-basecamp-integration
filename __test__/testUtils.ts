@@ -9,7 +9,14 @@ export function getRandomlyGeneratedMetadata(): Metadata {
     return {
         getId: jest.fn(),
         getKey: jest.fn(),
-        getLocation: jest.fn(),
+        getLocation: jest.fn().mockReturnValue({
+            getSpreadsheet: jest.fn().mockReturnValue({
+                getId: jest.fn().mockReturnValue('1xdpnKWfW18nlGNexCxmUhdSgodj2IBgnuxu9SeURTBw'),
+            }),
+            getSheet: jest.fn().mockReturnValue({
+                getSheetId: jest.fn().mockReturnValue(1379898132),
+            }),
+        }),
         getValue: jest.fn(),
         getVisibility: jest.fn(),
         moveToColumn: jest.fn().mockReturnThis(),
