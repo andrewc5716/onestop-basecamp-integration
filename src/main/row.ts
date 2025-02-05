@@ -92,7 +92,7 @@ export function hasId(row: Row): boolean {
  * @param roleTodoMap a map that has role titles as the keys and todo objects as the values
  * @param scheduleEntryId id of the schedule entry created for this row
  */
-export function saveRow(row: Row, roleTodoMap: RoleTodoMap, scheduleEntryId: string): void {
+export function saveRow(row: Row, roleTodoMap: RoleTodoMap, scheduleEntryId: string | undefined): void {
     if(!hasId(row)) {
         throw new RowMissingIdError(`Row does not have an id: ${toString(row)}`);
     }
@@ -721,7 +721,7 @@ export function getRoleTodoMap(row: Row): RoleTodoMap {
     return savedRowBasecampMapping.roleTodoMap;
 }
 
-export function getSavedScheduleEntryId(row: Row): string {
+export function getSavedScheduleEntryId(row: Row): string | undefined {
     const savedRowBasecampMapping: RowBasecampMapping | null = getRowBasecampMapping(row);
     if(savedRowBasecampMapping === null) {
         throw new RowBasecampMappingMissingError("The rowBasecampMapping object is null!");
@@ -743,7 +743,7 @@ export function isMissingScheduleEntry(row: Row): boolean {
     if(savedRowBasecampMapping === null) {
         throw new RowBasecampMappingMissingError("The rowBasecampMapping object is null!");
     }
-    return savedRowBasecampMapping.scheduleEntryId === "";
+    return savedRowBasecampMapping.scheduleEntryId === undefined;
 }
 
 export function hasBasecampAttendees(row: Row): boolean {

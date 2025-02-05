@@ -963,7 +963,7 @@ describe("isMissingScheduleEntry", () =>{
         const rowMock: Row = getRandomlyGeneratedRow();
         rowMock.metadata = metataMock;
         const rowBasecampMappingMock: RowBasecampMapping = getRandomlyGeneratedRowBasecampMapping();
-        rowBasecampMappingMock.scheduleEntryId = "";
+        rowBasecampMappingMock.scheduleEntryId = undefined;
 
         jest.mock('../src/main/propertiesService', () => ({
             getDocumentProperty: jest.fn(() => JSON.stringify(rowBasecampMappingMock)),

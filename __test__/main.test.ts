@@ -465,8 +465,8 @@ describe("importOnestopToBasecamp", () => {
             .mockReturnValueOnce(lastSavedRoleTodoMapMock1)
             .mockReturnValueOnce(lastSavedRoleTodoMapMock2);
         const getSavedScheduleEntryIdMock: Mock = jest.fn()
-            .mockReturnValueOnce("")
-            .mockReturnValueOnce("");
+            .mockReturnValueOnce(undefined)
+            .mockReturnValueOnce(undefined);
 
         jest.mock("../src/main/row", () => ({
             hasId: hasIdMock,
@@ -574,8 +574,8 @@ describe("importOnestopToBasecamp", () => {
             .mockReturnValueOnce(lastSavedRoleTodoMapMock1)
             .mockReturnValueOnce(lastSavedRoleTodoMapMock2);
         const getSavedScheduleEntryIdMock: Mock = jest.fn()
-            .mockReturnValueOnce("")
-            .mockReturnValueOnce("");
+            .mockReturnValueOnce(undefined)
+            .mockReturnValueOnce(undefined);
 
         jest.mock("../src/main/row", () => ({
             hasId: hasIdMock,

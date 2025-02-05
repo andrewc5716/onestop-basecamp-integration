@@ -211,7 +211,7 @@ describe("createScheduleEntryForRow", () => {
         expect(receivedScheduleEntryId).toBe(scheduleEntryIdMock);
     });
 
-    it("should return an empty string when there is an error creating the schedule entry", () => {
+    it("should return undefined when there is an error creating the schedule entry", () => {
         const rowMock: Row = getRandomlyGeneratedRow();
         const roleTodoMapMock: RoleTodoMap = getRandomlyGeneratedRoleTodoMap();
 
@@ -232,6 +232,6 @@ describe("createScheduleEntryForRow", () => {
         const receivedScheduleEntryId: string = createScheduleEntryForRow(rowMock, roleTodoMapMock);
 
         expect(sendBasecampPostRequestMock).toHaveBeenCalled();
-        expect(receivedScheduleEntryId).toBe("");
+        expect(receivedScheduleEntryId).toBe(undefined);
     });
 });

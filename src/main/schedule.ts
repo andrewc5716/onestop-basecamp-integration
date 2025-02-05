@@ -82,9 +82,9 @@ function getDeleteScheduleEntryUrl(scheduleEntryIdentifier: ScheduleEntryIdentif
     return getBasecampProjectUrl(scheduleEntryIdentifier.projectId) + RECORDINGS_PATH + scheduleEntryIdentifier.scheduleEntryId + TRASHED_STATUS_JSON_PATH;
 }
 
-export function createScheduleEntryForRow(row: Row, roleTodoMap: RoleTodoMap): string {
+export function createScheduleEntryForRow(row: Row, roleTodoMap: RoleTodoMap): string | undefined {
     const scheduleEntryRequest: BasecampScheduleEntryRequest = getScheduleEntryRequestForRow(row, roleTodoMap);
-    let scheduleEntryId: string = "";
+    let scheduleEntryId: string | undefined = undefined;
     try {
         scheduleEntryId = createScheduleEntry(scheduleEntryRequest, getDefaultScheduleIdentifier());
     } catch(error: any) {
