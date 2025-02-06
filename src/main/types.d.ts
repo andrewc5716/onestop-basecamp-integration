@@ -52,7 +52,7 @@ declare interface TabInfo {
 declare interface RowBasecampMapping {
   rowHash: string,
   roleTodoMap: RoleTodoMap
-  scheduleEntryId: string,
+  scheduleEntryId?: string,
   tabInfo: TabInfo
 }
 

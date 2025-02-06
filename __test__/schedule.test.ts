@@ -1,14 +1,14 @@
-import { Logger } from 'gasmask';
-import randomstring from "randomstring";
-import { getRandomBoolean, getRandomlyGeneratedScheduleEntry, Mock } from "./testUtils";
-import { getBasecampScheduleEntryRequest } from '../src/main/schedule';
-
+import { Logger, PropertiesService } from 'gasmask';
 global.Logger = Logger;
+global.PropertiesService = PropertiesService;
+import randomstring from "randomstring";
+import { getRandomBoolean, getRandomlyGeneratedRoleTodoMap, getRandomlyGeneratedRow, getRandomlyGeneratedScheduleEntryRequest, Mock } from "./testUtils";
+import { getBasecampScheduleEntryRequest } from '../src/main/schedule';
 
 describe("createScheduleEntry", () => {
     it("should send a post request with the right url", () => {
         // Arrange
-        const randomScheduleEntry = getRandomlyGeneratedScheduleEntry();
+        const randomScheduleEntry = getRandomlyGeneratedScheduleEntryRequest();
         const scheduleIdentifier: ScheduleIdentifier = {
             projectId: "TEST_PROJECT_ID",
             scheduleId: "TEST_SCHEDULE_ID"
@@ -37,7 +37,7 @@ describe("createScheduleEntry", () => {
 
     it("should return the created schedule entry id", () => {
         // Arrange
-        const randomScheduleEntry = getRandomlyGeneratedScheduleEntry();
+        const randomScheduleEntry = getRandomlyGeneratedScheduleEntryRequest();
         const scheduleIdentifier: ScheduleIdentifier = {
             projectId: randomstring.generate(),
             scheduleId: randomstring.generate()
@@ -62,7 +62,7 @@ describe("createScheduleEntry", () => {
 describe("updateScheduleEntry", () => {
     it("should send a put request with the right url", () => {
         // Arrange
-        const randomScheduleEntry = getRandomlyGeneratedScheduleEntry();
+        const randomScheduleEntry = getRandomlyGeneratedScheduleEntryRequest();
         const scheduleIdentifier: ScheduleEntryIdentifier = {
             projectId: "TEST_PROJECT_ID",
             scheduleEntryId: "TEST_SCHEDULE_ENTRY_ID"
@@ -184,5 +184,54 @@ describe("getScheduleEntryIdentifier", () => {
         const receivedScheduleEntryIdentifier: ScheduleIdentifier = getScheduleEntryIdentifier(scheduleEntryIdMock);
 
         expect(receivedScheduleEntryIdentifier).toStrictEqual(expectedScheduleEntryIdentifier);
+    });
+});
+
+describe("createScheduleEntryForRow", () => {
+    it("should create a schedule entry for the row when there are no exceptions thrown", () => {
+        const rowMock: Row = getRandomlyGeneratedRow();
+        const roleTodoMapMock: RoleTodoMap = getRandomlyGeneratedRoleTodoMap();
+        const scheduleEntryIdMock: string = randomstring.generate();
+
+        jest.mock("../src/main/row", () => ({
+            getScheduleEntryRequestForRow: jest.fn(() => getRandomlyGeneratedScheduleEntryRequest()),
+        }));
+
+        const sendBasecampPostRequestMock: Mock = jest.fn().mockReturnValue({ id: scheduleEntryIdMock });
+        jest.mock("../src/main/basecamp", () => ({
+            sendBasecampPostRequest: sendBasecampPostRequestMock,
+            getBasecampProjectUrl: jest.fn(() => randomstring.generate()),
+        }));
+
+        const { createScheduleEntryForRow } = require("../src/main/schedule");
+
+        const receivedScheduleEntryId: string = createScheduleEntryForRow(rowMock, roleTodoMapMock);
+
+        expect(sendBasecampPostRequestMock).toHaveBeenCalled();
+        expect(receivedScheduleEntryId).toBe(scheduleEntryIdMock);
+    });
+
+    it("should return undefined when there is an error creating the schedule entry", () => {
+        const rowMock: Row = getRandomlyGeneratedRow();
+        const roleTodoMapMock: RoleTodoMap = getRandomlyGeneratedRoleTodoMap();
+
+        jest.mock("../src/main/row", () => ({
+            getScheduleEntryRequestForRow: jest.fn(() => getRandomlyGeneratedScheduleEntryRequest()),
+        }));
+
+        const sendBasecampPostRequestMock: Mock = jest.fn().mockImplementation(() => {
+            throw new Error("Test error");
+        });
+        jest.mock("../src/main/basecamp", () => ({
+            sendBasecampPostRequest: sendBasecampPostRequestMock,
+            getBasecampProjectUrl: jest.fn(() => randomstring.generate()),
+        }));
+
+        const { createScheduleEntryForRow } = require("../src/main/schedule");
+
+        const receivedScheduleEntryId: string = createScheduleEntryForRow(rowMock, roleTodoMapMock);
+
+        expect(sendBasecampPostRequestMock).toHaveBeenCalled();
+        expect(receivedScheduleEntryId).toBe(undefined);
     });
 });

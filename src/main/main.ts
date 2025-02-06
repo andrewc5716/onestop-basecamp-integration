@@ -1,8 +1,8 @@
 import { deleteDocumentProperty, getAllDocumentProperties } from "./propertiesService";
-import { getRoleTodoMap, getSavedScheduleEntryId, getScheduleEntryRequestForRow } from "./row";
+import { getRoleTodoMap, getSavedScheduleEntryId, getScheduleEntryRequestForRow, isMissingScheduleEntry, isMissingTodos, toString } from "./row";
 import { generateIdForRow, getBasecampTodoRequestsForRow, getId, hasChanged, hasId, saveRow } from "./row";
 import { getEventRowsFromSpreadsheet } from "./scan";
-import { createScheduleEntry, deleteScheduleEntry, getDefaultScheduleIdentifier, getScheduleEntryIdentifier, updateScheduleEntry } from "./schedule";
+import { createScheduleEntryForRow, deleteScheduleEntry, getScheduleEntryIdentifier, updateScheduleEntry } from "./schedule";
 import { createNewTodos, createTodosForNewRoles, deleteObsoleteTodos, deleteTodos, updateTodosForExistingRoles } from "./todos";
 
 /**
@@ -46,11 +46,17 @@ export function importOnestopToBasecamp(): void {
  */
 function processExistingRow(row: Row): void {
 
-    if(hasChanged(row)) {
+    if(hasChanged(row) || isMissingTodos(row)) {
+        // Update Todos and Schedule Entry if the row has changed or if Todos are missing
         const updatedRoleTodoMap: RoleTodoMap = handleTodosForExistingRow(row);
-        const scheduleEntryId: string = handleScheduleEntryForExistingRow(row, updatedRoleTodoMap);
-
+        const scheduleEntryId: string | undefined = handleScheduleEntryForExistingRow(row, updatedRoleTodoMap);
         saveRow(row, updatedRoleTodoMap, scheduleEntryId);
+    } else if(isMissingScheduleEntry(row)) {
+        Logger.log(`Row for ${toString(row)} is missing a schedule entry. Creating one...`);
+        // Create the Schedule Entry if it is missing
+        const roleTodoMap: RoleTodoMap = getRoleTodoMap(row);
+        const scheduleEntryId: string | undefined = handleScheduleEntryForExistingRow(row, roleTodoMap);
+        saveRow(row, roleTodoMap, scheduleEntryId);
     }
 }
 
@@ -66,11 +72,23 @@ function handleTodosForExistingRow(row: Row): RoleTodoMap {
     return {...existingRoleTodoMap, ...newRoleTodoMap};
 }
 
-function handleScheduleEntryForExistingRow(row: Row, updatedRoleTodoMap: RoleTodoMap): string {
-    const scheduleEntryId: string = getSavedScheduleEntryId(row);
-    const scheduleEntryRequest: BasecampScheduleEntryRequest = getScheduleEntryRequestForRow(row, updatedRoleTodoMap);
-    const scheduleEntryIdentifier: ScheduleEntryIdentifier = getScheduleEntryIdentifier(scheduleEntryId);
-    updateScheduleEntry(scheduleEntryRequest, scheduleEntryIdentifier);
+function handleScheduleEntryForExistingRow(row: Row, updatedRoleTodoMap: RoleTodoMap): string | undefined {
+    let scheduleEntryId: string | undefined = getSavedScheduleEntryId(row);
+    
+    if(scheduleEntryId !== undefined) {
+        // Update the Schedule Entry if it exists
+        const scheduleEntryRequest: BasecampScheduleEntryRequest = getScheduleEntryRequestForRow(row, updatedRoleTodoMap);
+        const scheduleEntryIdentifier: ScheduleEntryIdentifier = getScheduleEntryIdentifier(scheduleEntryId);
+
+        try {
+            updateScheduleEntry(scheduleEntryRequest, scheduleEntryIdentifier);
+        } catch (error: any) {
+            Logger.log(`Error updating schedule entry for row ${toString(row)}: ${error}`);
+        }
+    } else {
+        // Create the Schedule Entry if it is missing
+        scheduleEntryId = createScheduleEntryForRow(row, updatedRoleTodoMap);
+    }
 
     return scheduleEntryId;
 }
@@ -85,9 +103,7 @@ function handleScheduleEntryForExistingRow(row: Row, updatedRoleTodoMap: RoleTod
 function processNewRow(row: Row): void {
     const roleRequestMap: RoleRequestMap = getBasecampTodoRequestsForRow(row);
     const roleTodoMap: RoleTodoMap = createNewTodos(roleRequestMap);
-
-    const scheduleEntryRequest: BasecampScheduleEntryRequest = getScheduleEntryRequestForRow(row, roleTodoMap);
-    const scheduleEntryId: string = createScheduleEntry(scheduleEntryRequest, getDefaultScheduleIdentifier());
+    const scheduleEntryId: string | undefined = createScheduleEntryForRow(row, roleTodoMap);
 
     generateIdForRow(row);
     saveRow(row, roleTodoMap, scheduleEntryId);
@@ -109,10 +125,15 @@ function deleteOldRows(processedRowIds: string[]): void {
             // Handle Schedule Entries
             // Have to use the Date constructor because GAS retrieves the date as a string
             const rowDate: Date = new Date(rowBasecampMapping.tabInfo.date);
-            if(isInFuture(rowDate)) {
+            if(isInFuture(rowDate) && rowBasecampMapping.scheduleEntryId !== undefined) {
                 const scheduleEntryId: string = rowBasecampMapping.scheduleEntryId;
                 const scheduleEntryIdentifier: ScheduleEntryIdentifier = getScheduleEntryIdentifier(scheduleEntryId);
-                deleteScheduleEntry(scheduleEntryIdentifier);
+
+                try {
+                    deleteScheduleEntry(scheduleEntryIdentifier);
+                } catch (error: any) {
+                    Logger.log(`Error deleting schedule entry for row ${rowId}: ${error}`);
+                }
             }
 
             deleteDocumentProperty(rowId);

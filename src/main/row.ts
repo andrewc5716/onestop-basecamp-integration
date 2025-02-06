@@ -92,7 +92,7 @@ export function hasId(row: Row): boolean {
  * @param roleTodoMap a map that has role titles as the keys and todo objects as the values
  * @param scheduleEntryId id of the schedule entry created for this row
  */
-export function saveRow(row: Row, roleTodoMap: RoleTodoMap, scheduleEntryId: string): void {
+export function saveRow(row: Row, roleTodoMap: RoleTodoMap, scheduleEntryId: string | undefined): void {
     if(!hasId(row)) {
         throw new RowMissingIdError(`Row does not have an id: ${toString(row)}`);
     }
@@ -208,6 +208,24 @@ function toHexString(byteArray: number[]): string {
         return hexByteString.length < HEXIDECIMAL_CHAR_LENGTH ? '0' + hexByteString : hexByteString;
     })
     .join('');
+}
+
+/**
+ * Returns the number of todos for a given row. Used to determine if there are any 
+ * missing Todos
+ * 
+ * @param row row to calculate the number of todos for
+ * @returns the number of todos for the given row
+ */
+function getNumTodosForRow(row: Row): number {
+    const leadIds: string[] = getLeadsBasecampIds(row);
+    const numLeadsTodos: number = leadIds.length > 0 ? 1 : 0;
+    const helperGroups: HelperGroup[] = getHelperGroups(row);
+
+    return helperGroups.reduce((numTodos, helperGroup) => {
+        const helperIds: string[] = getHelperIdsWithoutLeads(helperGroup, leadIds);
+        return helperIds.length > 0 ? numTodos + 1 : numTodos;
+    }, numLeadsTodos);
 }
 
 /**
@@ -374,7 +392,7 @@ export function getBasecampTodosForHelpers(row: Row): RoleRequestMap {
         const roleTitle: string = helperGroup.role ? `${helperGroup.role} Helper` : "Helper";
         const basecampTodoContent: string = `${roleTitle}: ${row.what.value}`;
         const basecampTodoDescription: string = getBasecampTodoDescription(row);
-        const assigneeIds = helperGroup.helperIds.filter(id => !leadIds.includes(id));
+        const assigneeIds = getHelperIdsWithoutLeads(helperGroup, leadIds);
         const basecampDueDate: string = getBasecampDueDate(row);
 
         if(assigneeIds.length > 0) {
@@ -387,6 +405,10 @@ export function getBasecampTodosForHelpers(row: Row): RoleRequestMap {
     }
 
     return helperRoleRequestMap;
+}
+
+function getHelperIdsWithoutLeads(helperGroup: HelperGroup, leadIds: string[]): string[] {
+    return helperGroup.helperIds.filter(id => !leadIds.includes(id));
 }
 
 /**
@@ -699,12 +721,29 @@ export function getRoleTodoMap(row: Row): RoleTodoMap {
     return savedRowBasecampMapping.roleTodoMap;
 }
 
-export function getSavedScheduleEntryId(row: Row): string {
+export function getSavedScheduleEntryId(row: Row): string | undefined {
     const savedRowBasecampMapping: RowBasecampMapping | null = getRowBasecampMapping(row);
     if(savedRowBasecampMapping === null) {
         throw new RowBasecampMappingMissingError("The rowBasecampMapping object is null!");
     }
     return savedRowBasecampMapping.scheduleEntryId;
+}
+
+export function isMissingTodos(row: Row): boolean {
+    const savedRowBasecampMapping: RowBasecampMapping | null = getRowBasecampMapping(row);
+    if(savedRowBasecampMapping === null) {
+        throw new RowBasecampMappingMissingError("The rowBasecampMapping object is null!");
+    }
+    const numExpectedTodos: number = getNumTodosForRow(row);
+    return Object.values(savedRowBasecampMapping.roleTodoMap).length !== numExpectedTodos;
+}
+
+export function isMissingScheduleEntry(row: Row): boolean {
+    const savedRowBasecampMapping: RowBasecampMapping | null = getRowBasecampMapping(row);
+    if(savedRowBasecampMapping === null) {
+        throw new RowBasecampMappingMissingError("The rowBasecampMapping object is null!");
+    }
+    return savedRowBasecampMapping.scheduleEntryId === undefined;
 }
 
 export function hasBasecampAttendees(row: Row): boolean {

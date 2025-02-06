@@ -1,4 +1,5 @@
 import { BASECAMP_CLIENT_ID, BASECAMP_CLIENT_SECRET } from "../../config/environmentVariables";
+import { fetchWithRetry } from "./retry";
 
 type HttpMethod = GoogleAppsScript.URL_Fetch.HttpMethod;
 
@@ -48,7 +49,7 @@ export function getBasecampUrl(): string {
 }
 
 export function sendBasecampPostRequest(requestUrl: string, requestPayload: JsonObject): JsonData {
-    const response: HTTPResponse = UrlFetchApp.fetch(requestUrl, {
+    const response: HTTPResponse = fetchWithRetry(requestUrl, {
         method: HTTP_POST_METHOD,
         headers: getHeaders(),
         payload: JSON.stringify(requestPayload)
@@ -57,7 +58,7 @@ export function sendBasecampPostRequest(requestUrl: string, requestPayload: Json
 }
 
 export function sendBasecampPutRequest(requestUrl: string, requestPayload: JsonObject): JsonData {
-    const response: HTTPResponse = UrlFetchApp.fetch(requestUrl, {
+    const response: HTTPResponse = fetchWithRetry(requestUrl, {
         method: HTTP_PUT_METHOD,
         headers: getHeaders(),
         payload: JSON.stringify(requestPayload)
@@ -172,7 +173,7 @@ function getHeaders(): Record<string, string> {
 }
 
 function sendBasecampGetRequest(requestUrl: string): HTTPResponse {
-    return UrlFetchApp.fetch(requestUrl, {
+    return fetchWithRetry(requestUrl, {
         method: HTTP_GET_METHOD,
         headers: getHeaders()
     });
