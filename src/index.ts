@@ -14,6 +14,7 @@ export * from './main/todos';
 export * from './main/schedule';
 export * from './main/utils';
 export * from './main/validation';
+export * from './main/todoist';
 
 // Re-export all the exports from `menu` module into Webpack `globalThis` scope, so they are available at runtime
 // for the Google Apps Script to call.
