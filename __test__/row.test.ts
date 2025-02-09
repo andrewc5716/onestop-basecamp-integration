@@ -4,7 +4,7 @@ import { Logger, PropertiesService } from 'gasmask';
 global.Logger = Logger;
 global.PropertiesService = PropertiesService;
 
-import { generateIdForRow, getId, getMetadata, getSavedScheduleEntryId, hasId, saveRow } from "../src/main/row";
+import { generateIdForRow, generateOneStopHyperLinkHtml, getId, getMetadata, getSavedScheduleEntryId, hasId, saveRow } from "../src/main/row";
 import { RowMissingIdError } from '../src/main/error/rowMissingIdError';
 import { getRandomlyGeneratedByteArray, getRandomlyGeneratedMember, getRandomlyGeneratedMetadata, getRandomlyGeneratedRange, getRandomlyGeneratedRoleTodoMap, getRandomlyGeneratedRow, getRandomlyGeneratedRowBasecampMapping, getRandomlyGeneratedText, Mock } from './testUtils';
 import randomstring from "randomstring";
@@ -1146,4 +1146,14 @@ describe("getScheduleEntryRequestForRow", () => {
         expect(scheduleEntryRequest.participant_ids).toContain(PEOPLE_MAP["jane smith"]);
         expect(scheduleEntryRequest.participant_ids).toContain(PEOPLE_MAP["alice johnson"]);
     });
+});
+
+describe("constructOneStopHyperLink", () => {
+
+    it("should generate a valid hyperlink html snippet", () => {
+        const rowMock: Row = getRandomlyGeneratedRow();
+        const hyperlink = generateOneStopHyperLinkHtml(rowMock);
+        expect(hyperlink).toBe(`<a href="https://docs.google.com/spreadsheets/d/1xdpnKWfW18nlGNexCxmUhdSgodj2IBgnuxu9SeURTBw/edit?gid=1379898132#gid=1379898132"><strong><em>ONESTOP LINK</em></strong></a>`);
+    });
+
 });

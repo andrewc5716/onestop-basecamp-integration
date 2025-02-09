@@ -304,6 +304,59 @@ function getLeadsNames(row: Row): string[] {
 }
 
 /**
+ * Gets the spreadsheet id from a row
+ * 
+ * @param row row to extract spreadsheet id from
+ * @returns spreadsheet ID string or undefined
+ */
+
+function getSpreadSheetIdFromRow(row: Row): string | undefined {
+    return row.metadata.getLocation().getSpreadsheet()?.getId();
+}
+
+/**
+ * Gets the sheet id from a row, corresponding to the tab that a row is from
+ * 
+ * @param row row to extract sheet id from
+ * @returns spreadsheet ID string or undefined
+ */
+
+function getSheetIdFromRow(row: Row): string | undefined {
+    return row.metadata.getLocation().getSheet()?.getSheetId().toString();
+}
+
+function generateHtmlAnchorTag(url: string, innerText: string, bold: boolean, italicize: boolean) {
+    
+    let formattedText = innerText;
+
+    if (italicize) {
+        formattedText = `<em>${formattedText}</em>`;
+    }
+    if (bold) {
+        formattedText = `<strong>${formattedText}</strong>`;
+    }
+
+    return `<a href="${url}">${formattedText}</a>`;
+}
+
+/**
+ * Constructs a link to the OneStop that is navigated to the tab in which the row is in
+ * 
+ * @param row row to construct the OneStop URL from
+ * @returns a string representing an HTML hyperlink for the OneStop tab corresponding to this row
+ */
+export function generateOneStopHyperLinkHtml(row: Row): string {
+
+    const baseUrl: string = "https://docs.google.com/spreadsheets"
+    const spreadSheetId: string | undefined = getSpreadSheetIdFromRow(row);
+    const sheetId: string | undefined = getSheetIdFromRow(row);
+    const oneStopUrl: string = `${baseUrl}/d/${spreadSheetId}/edit?gid=${sheetId}#gid=${sheetId}`;
+    const linkHtml: string = generateHtmlAnchorTag(oneStopUrl, "ONESTOP LINK", true, true);
+
+    return linkHtml;
+}
+
+/**
  * Constructs the Basecampe Todo description for a given row
  * 
  * @param row row to construct the Basecamp Todo for
@@ -320,17 +373,19 @@ function getBasecampTodoDescription(row: Row): string {
     const startTime: string = row.startTime.toLocaleTimeString(locales, options);
     const endTime: string = row.endTime.toLocaleTimeString(locales, options);
 
-    const time: string = `WHEN: ${startTime} - ${endTime}`;
+    const time: string = `<strong>WHEN:</strong> ${startTime} - ${endTime}`;
     const inCharge: string = getRichTextFromText("IN CHARGE", row.inCharge);
     const helpers: string = getRichTextFromText("HELPERS", row.helpers);
     const notes: string = getRichTextFromText("NOTES", row.notes);
+    const warning: string = `<strong><em>WARNING:</em><strong><em> If any event details need to change (assignees, time/location), they must be made on the OneStop. The OneStop is the source of truth and its contents get copied to this task, overriding its contents.</em>`;
+    const oneStopLinkMessage: string = `${generateOneStopHyperLinkHtml(row)} <strong><em><-- Click Here To Edit The OneStop Tab For This Task</em></strong>`;
 
-    return wrapWithDivTag(combineWithBreakTags([location, time, inCharge, helpers, notes]));
+    return wrapWithDivTag(combineWithBreakTags([location, time, inCharge, helpers, notes, warning, oneStopLinkMessage]));
 }
 
 function getRichTextFromText(prefix: string, text: Text): string {
     if(text.tokens.length === 1) {
-        return `${prefix}: ${replaceNewLinesWithBreakTags(text.value)}`;
+        return `**${prefix}:** ${replaceNewLinesWithBreakTags(text.value)}`;
     }
 
     const textTokens: TextData[] = text.tokens;
