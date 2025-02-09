@@ -190,6 +190,8 @@ describe('getAttendeesFromRow', () => {
 
                 } else if (key === "GROUPS_MAP") {
                     return {};
+                } else if (key === "ALIASES_MAP") {
+                    return {};
                 } 
             }),
         }));
