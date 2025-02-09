@@ -604,36 +604,6 @@ function getMinistryFilters(row: Row): string[] {
 }
 
 /**
- * Checks if the event has a who (ministy) column value of ROTATION
- * 
- * @param row - An event row
- * @returns true or false
- */
-export function checkForRotation(row: Row): boolean {
-    return splitWhoColumn(row)[0].toUpperCase() === "ROTATION";
-}
-
-/**
- * Checks if the event has a who (ministry) column value of VARIOUS
- * 
- * @param row - An event row
- * @returns true or false
- */
-export function checkForVarious(row: Row): boolean {
-    return splitWhoColumn(row)[0].toUpperCase() ===  "VARIOUS";
-}
-
-/**
- * Checks if the event has a who (ministry) column value of OTHER
- * 
- * @param row - An event row
- * @returns true or false
- */
-export function checkForOther(row: Row): boolean {
-    return splitWhoColumn(row)[0].toUpperCase() ===  "OTHER";
-}
-
-/**
  * Retrieves an array of names from a row.
  * 
  * @param row - Row to retrieve the different attendees from.
@@ -650,16 +620,10 @@ export function getAttendeesFromRow(row: Row): string[] {
     const domainNames = getDomainNames(row);
     const domainFilters = getDomainFilters(row);
 
-    const isRotation = checkForRotation(row);
-    const isVarious = checkForVarious(row);
-    const isOther = checkForOther(row);
-
+    attendees.push(...getLeadsNames(row));
     attendees.push(...getAllHelperNames(row));
 
-    if(isRotation || isVarious || isOther) {
-        attendees.push(...getLeadsNames(row));
-        
-    } else if(ministryNames.length > 0) {
+    if(ministryNames.length > 0) {
         // Process Ministry Attendees
         const ministryAttendees = filterMinistryAttendees(ministryNames, ministryFilters);
         attendees.push(...ministryAttendees);
@@ -760,15 +724,24 @@ export function getScheduleEntryRequestForRow(row: Row, roleTodoMap: RoleTodoMap
     return getBasecampScheduleEntryRequest(summary, startsAt, endsAt, description, participantIds, false, true);
 }
 
+/**
+ * Makes the "summary", or the title of the Basecamp schedule entry. Uses the attendee column, otherwise the domain column.
+ * @param row 
+ * @returns 
+ */
 function getScheduleEntrySummary(row: Row): string {
-    const ministryNames: string[] = getMinistryNames(row);
-    const uppercaseMinistryNames: string[] = ministryNames.map(name => name.toUpperCase());
-    const domainNames: string[] = getDomainNames(row);
-    const uppercaseDomainNames: string[] = domainNames.map(name => name.toUpperCase());
-    // Choose the ministry names if possible, otherwise use the domain names
-    const who: string = uppercaseMinistryNames.length > 0 ? uppercaseMinistryNames.join(" ") : uppercaseDomainNames.join(" ");
+    const attendeeGroups: string[] = splitWhoColumn(row);
+    if (attendeeGroups.length > 0 ) {
+        return buildScheduleEntrySummary(attendeeGroups, row.what.value);
+    } else {
+        const domainGroups: string[] = row.domain.split(COMMA_FORWARD_SLASH_DELIM_REGEX);
+        return buildScheduleEntrySummary(domainGroups, row.what.value);
+    }
+}
 
-    return `[${who}] ${row.what.value}`;
+function buildScheduleEntrySummary(groups: string[], eventName: string): string {
+    const group: string = groups.map(group => group.toUpperCase()).join(" ");
+    return`[${group}] ${eventName}`; 
 }
 
 function getScheduleEntryDescription(row: Row, roleTodoMap: RoleTodoMap): string {
@@ -782,13 +755,14 @@ function getScheduleEntryDescription(row: Row, roleTodoMap: RoleTodoMap): string
     const startTime: string = row.startTime.toLocaleTimeString(locales, options);
     const endTime: string = row.endTime.toLocaleTimeString(locales, options);
 
+    const what: string = getRichTextFromText("WHAT", row.what);
     const time: string = `WHEN: ${startTime} - ${endTime}`;
     const inCharge: string = getRichTextFromText("IN CHARGE", row.inCharge);
     const helpers: string = getRichTextFromText("HELPERS", row.helpers);
     const notes: string = getRichTextFromText("NOTES", row.notes);
     const relatedTodos: string = getRichTextForTodoLinks(roleTodoMap);
 
-    return wrapWithDivTag(combineWithBreakTags([location, time, inCharge, helpers, notes, relatedTodos]));
+    return wrapWithDivTag(combineWithBreakTags([what, location, time, inCharge, helpers, notes, relatedTodos]));
 }
 
 function getRichTextForTodoLinks(roleTodoMap: RoleTodoMap): string {
