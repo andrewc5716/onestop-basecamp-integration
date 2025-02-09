@@ -20,7 +20,7 @@ const NEW_LINE_DELIM: string = "\n";
 const COLON_DELIM: string = ":";
 const LEAD_ROLE_TITLE: string = "Lead";
 const COMMA_DELIMITER: string = ",";
-const DISCLAIMER: string = "<br>If any event details need to change (assignees, time/location), they must be made on the <a href=\"https://docs.google.com/spreadsheets/d/1xdpnKWfW18nlGNexCxmUhdSgodj2IBgnuxu9SeURTBw/edit?gid=1519427810#gid=1519427810\">Onestop</a>";
+const DISCLAIMER: string = "<br>If any event details need to change (assignees, time/location), they must be made on the <a href=\"https://docs.google.com/spreadsheets/d/1xdpnKWfW18nlGNexCxmUhdSgodj2IBgnuxu9SeURTBw/edit?gid=1519427810#gid=1519427810\">Onestop</a>.";
 
 /**
  * Retrieves the metadata object for a given range. If the metadata object does not exist,
