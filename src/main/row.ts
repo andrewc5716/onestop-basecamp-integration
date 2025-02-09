@@ -260,7 +260,7 @@ export function getBasecampTodoForLeads(row: Row): RoleRequestMap {
     const basecampDueDate: string = getBasecampDueDate(row);
 
     if(leadIds.length > 0) {
-        const leadsRequest: BasecampTodoRequest = getBasecampTodoRequest(basecampTodoContent, basecampTodoDescription, leadIds, leadIds, false, basecampDueDate);
+        const leadsRequest: BasecampTodoRequest = getBasecampTodoRequest(basecampTodoContent, basecampTodoDescription, leadIds, leadIds, true, basecampDueDate);
         leadsRoleRequestMap[LEAD_ROLE_TITLE] = leadsRequest;
     } else {
         Logger.log(`${getLeadsNames(row)} do not have any Basecamp ids. row: ${JSON.stringify(row)}`);
@@ -396,7 +396,7 @@ export function getBasecampTodosForHelpers(row: Row): RoleRequestMap {
         const basecampDueDate: string = getBasecampDueDate(row);
 
         if(assigneeIds.length > 0) {
-            const basecampTodoRequest: BasecampTodoRequest = getBasecampTodoRequest(basecampTodoContent, basecampTodoDescription, assigneeIds, leadIds, false, basecampDueDate);
+            const basecampTodoRequest: BasecampTodoRequest = getBasecampTodoRequest(basecampTodoContent, basecampTodoDescription, assigneeIds, leadIds, true, basecampDueDate);
             helperRoleRequestMap[roleTitle] = basecampTodoRequest;
 
         } else {
