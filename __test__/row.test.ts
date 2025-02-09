@@ -108,7 +108,7 @@ describe('getAttendeesFromRow', () => {
         const row: Row = getRandomlyGeneratedRow();
         row.domain = "INT'L";
         row.who = "IGSM";
-        row.helpers = getRandomlyGeneratedText(1);
+        row.inCharge.value = "";
         row.helpers.value = "";
 
         const MOCK_GROUPS_MAP = {
@@ -142,7 +142,7 @@ describe('getAttendeesFromRow', () => {
         const row: Row = getRandomlyGeneratedRow();
         row.domain = "INT'L";
         row.who = "";
-        row.helpers = getRandomlyGeneratedText(1);
+        row.inCharge.value = "";
         row.helpers.value = "";
 
         // Mocked GROUPS_MAP
@@ -203,7 +203,7 @@ describe('getAttendeesFromRow', () => {
         const row: Row = getRandomlyGeneratedRow();
         row.domain = "INT'L";
         row.who = "IGSM, Bros";
-        row.helpers = getRandomlyGeneratedText(1);
+        row.inCharge.value = "";
         row.helpers.value = "";
 
         const MOCK_GROUPS_MAP = {
@@ -236,7 +236,7 @@ describe('getAttendeesFromRow', () => {
         const row: Row = getRandomlyGeneratedRow();
         row.domain = "COLLEGE, Sis";
         row.who = "";
-        row.helpers = getRandomlyGeneratedText(1);
+        row.inCharge.value = "";
         row.helpers.value = "";
 
         const MOCK_GROUPS_MAP = {
@@ -270,7 +270,7 @@ describe('getAttendeesFromRow', () => {
         const row: Row = getRandomlyGeneratedRow();
         row.domain = "CHURCHWIDE";
         row.who = "Sis";
-        row.helpers = getRandomlyGeneratedText(1);
+        row.inCharge.value = "";
         row.helpers.value = "";
 
         // Mocked GROUPS_MAP
@@ -338,14 +338,14 @@ describe('getAttendeesFromRow', () => {
 
         const result = getAttendeesFromRow(row);
 
-        expect(result).toEqual(['josh wong', 'isaac otero', 'kevin lai']);
+        expect(result).toEqual(['kevin lai', 'josh wong', 'isaac otero']);
     });
 
     it('should return ministry members and helpers when ministry is populated', () => {
         const row: Row = getRandomlyGeneratedRow();
         row.domain = "int'l";
         row.who = "igsm";
-        row.helpers = getRandomlyGeneratedText(1);
+        row.inCharge.value = "";
         row.helpers.value = "john doe";
 
         const MOCK_GROUPS_MAP = {
@@ -382,8 +382,49 @@ describe('getAttendeesFromRow', () => {
         const row: Row = getRandomlyGeneratedRow();
         row.domain = "int'l";
         row.who = "";
-        row.helpers = getRandomlyGeneratedText(1);
+        row.inCharge.value = "";
         row.helpers.value = "john doe";
+
+        // Mocked GROUPS_MAP
+        const MOCK_GROUPS_MAP = {
+            "int'l": ['brian lin', 'james lee', 'jack zhang', 'angel zhang'],
+        };
+
+        // Mocked MEMBER MAP
+        const MOCK_MEMBER_MAP = {
+            "brian lin": {"gender": "Male"},
+            "james lee": {"gender": "Male"},
+            "jack zhang": {"gender": "Male"},
+            "angel zhang": {"gender": "Female"},
+            "john doe": {"gender": "Male"},
+        };
+
+        jest.mock('../src/main/propertiesService', () => ({
+            loadMapFromScriptProperties: jest.fn((key: string) => {
+                if (key === "MEMBER_MAP") {
+                    return MOCK_MEMBER_MAP;
+
+                } else if (key === "GROUPS_MAP") {
+                    return MOCK_GROUPS_MAP;
+                } else {
+                    return {};
+                }
+            }),
+        }));
+
+        const { getAttendeesFromRow } = require("../src/main/row");
+
+        const result = getAttendeesFromRow(row);
+
+        expect(result).toEqual(['john doe', 'brian lin', 'james lee', 'jack zhang', 'angel zhang']);
+    });
+
+    it('should always return the person in charge in attendees', () => {
+        const row: Row = getRandomlyGeneratedRow();
+        row.domain = "int'l";
+        row.who = "";
+        row.inCharge.value = "john doe";
+        row.helpers.value = "";
 
         // Mocked GROUPS_MAP
         const MOCK_GROUPS_MAP = {
