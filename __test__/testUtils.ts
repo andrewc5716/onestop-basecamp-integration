@@ -410,3 +410,10 @@ export function getRandomlyGeneratedScheduleEntryIdentifier(): ScheduleEntryIden
         scheduleEntryId: randomstring.generate(),
     }
 }
+
+export function getRandomlyGeneratedBasecampScheduleEntry(): BasecampScheduleEntry {
+    return {
+        id: randomstring.generate(),
+        url: randomstring.generate(),
+    }
+}

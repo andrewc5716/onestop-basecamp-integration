@@ -9,6 +9,7 @@ type Spreadsheet = GoogleAppsScript.Spreadsheet.Spreadsheet;
 type Sheet = GoogleAppsScript.Spreadsheet.Sheet;
 type Range = GoogleAppsScript.Spreadsheet.Range;
 type Metadata = GoogleAppsScript.Spreadsheet.DeveloperMetadata;
+type RichTextValue = GoogleAppsScript.Spreadsheet.RichTextValue;
 
 declare interface TextData {
   value: string,
@@ -39,6 +40,11 @@ declare interface Row {
 declare interface BasecampTodo {
   id: string,
   title: string,
+  url: string,
+}
+
+declare interface BasecampScheduleEntry {
+  id: string,
   url: string,
 }
 
@@ -120,7 +126,8 @@ declare interface ScheduleEntryIdentifier {
 
 // Response from Basecamp Schedule Entry. Only need id for now, can add more later
 declare interface BasecampScheduleEntryResponse extends JsonObject {
-  id: string // id of the created schedule entry
+  id: string, // id of the created schedule entry
+  app_url: string // url of the created schedule entry
 }
 
 declare interface BasecampScheduleEntryRequest extends JsonObject {

@@ -16,11 +16,11 @@ const TRASHED_STATUS_JSON_PATH: string = '/status/trashed' + JSON_PATH;
  * @param scheduleIdentifier schedule id where the schedule entry will be created in
  * @returns id of the created schedule entry
  */
-export function createScheduleEntry(request: BasecampScheduleEntryRequest, scheduleIdentifier: ScheduleIdentifier): string {
+export function createScheduleEntry(request: BasecampScheduleEntryRequest, scheduleIdentifier: ScheduleIdentifier): BasecampScheduleEntry {
     Logger.log(`Creating new schedule entry: "${request.summary}"`);
     const rawScheduleEntryResponse: JsonData = sendBasecampPostRequest(getCreateScheduleEntryUrl(scheduleIdentifier), request);
     const scheduleEntryResponse: BasecampScheduleEntryResponse = rawScheduleEntryResponse as BasecampScheduleEntryResponse;
-    return scheduleEntryResponse.id;
+    return { id: scheduleEntryResponse.id, url: scheduleEntryResponse.app_url };
 }
 
 /**
@@ -82,14 +82,14 @@ function getDeleteScheduleEntryUrl(scheduleEntryIdentifier: ScheduleEntryIdentif
     return getBasecampProjectUrl(scheduleEntryIdentifier.projectId) + RECORDINGS_PATH + scheduleEntryIdentifier.scheduleEntryId + TRASHED_STATUS_JSON_PATH;
 }
 
-export function createScheduleEntryForRow(row: Row, roleTodoMap: RoleTodoMap): string | undefined {
+export function createScheduleEntryForRow(row: Row, roleTodoMap: RoleTodoMap): BasecampScheduleEntry | undefined {
     const scheduleEntryRequest: BasecampScheduleEntryRequest = getScheduleEntryRequestForRow(row, roleTodoMap);
-    let scheduleEntryId: string | undefined = undefined;
+    let basecampScheduleEntry: BasecampScheduleEntry | undefined = undefined;
     try {
-        scheduleEntryId = createScheduleEntry(scheduleEntryRequest, getDefaultScheduleIdentifier());
+        basecampScheduleEntry = createScheduleEntry(scheduleEntryRequest, getDefaultScheduleIdentifier());
     } catch(error: any) {
         Logger.log(`Error creating schedule entry for ${toString(row)}: ${error}`);
     }
 
-    return scheduleEntryId;
+    return basecampScheduleEntry;
 }

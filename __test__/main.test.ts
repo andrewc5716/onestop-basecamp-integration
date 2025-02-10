@@ -2,7 +2,7 @@ import { Logger } from 'gasmask';
 global.Logger = Logger;
 
 import randomstring from "randomstring";
-import { getRandomlyGeneratedRoleRequestMap, getRandomlyGeneratedRoleTodoMap, getRandomlyGeneratedRow, getRandomlyGeneratedRowBasecampMapping, getRandomlyGeneratedScheduleEntryRequest, getRandomlyGeneratedScheduleEntryIdentifier, getRandomlyGeneratedScheduleIdentifier, Mock } from "./testUtils";
+import { getRandomlyGeneratedRoleRequestMap, getRandomlyGeneratedRoleTodoMap, getRandomlyGeneratedRow, getRandomlyGeneratedRowBasecampMapping, getRandomlyGeneratedScheduleEntryRequest, getRandomlyGeneratedScheduleEntryIdentifier, getRandomlyGeneratedScheduleIdentifier, Mock, getRandomlyGeneratedBasecampScheduleEntry } from "./testUtils";
 
 describe("importOnestopToBasecamp", () => {
     it("should create new Todos and Schedule Entries when a row is new", () => {
@@ -10,13 +10,13 @@ describe("importOnestopToBasecamp", () => {
         const roleRequestMapMock1: RoleRequestMap = getRandomlyGeneratedRoleRequestMap();
         const roleTodoMapMock1: RoleTodoMap = getRandomlyGeneratedRoleTodoMap();
         const scheduleEntryRequestMock1: BasecampScheduleEntryRequest = getRandomlyGeneratedScheduleEntryRequest();
-        const scheduleEntryIdMock1: string = randomstring.generate();
+        const scheduleEntryMock1: BasecampScheduleEntry = getRandomlyGeneratedBasecampScheduleEntry();
         const rowIdMock1: string = randomstring.generate();
         const rowMock2: Row = getRandomlyGeneratedRow();
         const roleRequestMapMock2: RoleRequestMap = getRandomlyGeneratedRoleRequestMap();
         const roleTodoMapMock2: RoleTodoMap = getRandomlyGeneratedRoleTodoMap();
         const scheduleEntryRequestMock2: BasecampScheduleEntryRequest = getRandomlyGeneratedScheduleEntryRequest();
-        const scheduleEntryIdMock2: string = randomstring.generate();
+        const scheduleEntryMock2: BasecampScheduleEntry = getRandomlyGeneratedBasecampScheduleEntry();
         const rowIdMock2: string = randomstring.generate();
         const documentPropertiesMock: DocumentProperties = {
             [rowIdMock1]: getRandomlyGeneratedRowBasecampMapping(),
@@ -45,6 +45,7 @@ describe("importOnestopToBasecamp", () => {
         const getIdMock: Mock = jest.fn()
             .mockReturnValueOnce(rowIdMock1)
             .mockReturnValueOnce(rowIdMock2);
+        const addBasecampLinkToRowMock: Mock = jest.fn();
 
         jest.mock("../src/main/row", () => ({
             hasId: hasIdMock,
@@ -53,6 +54,7 @@ describe("importOnestopToBasecamp", () => {
             generateIdForRow: generateIdForRowMock,
             saveRow: saveRowMock,
             getId: getIdMock,
+            addBasecampLinkToRow: addBasecampLinkToRowMock,
         }));
 
         const createNewTodosMock: Mock = jest.fn()
@@ -64,8 +66,8 @@ describe("importOnestopToBasecamp", () => {
         }));
 
         const createScheduleEntryForRowMock: Mock = jest.fn()
-            .mockReturnValueOnce(scheduleEntryIdMock1)
-            .mockReturnValueOnce(scheduleEntryIdMock2);
+            .mockReturnValueOnce(scheduleEntryMock1)
+            .mockReturnValueOnce(scheduleEntryMock2);
 
         jest.mock("../src/main/schedule", () => ({
             createScheduleEntryForRow: createScheduleEntryForRowMock,
@@ -85,22 +87,22 @@ describe("importOnestopToBasecamp", () => {
         // Asserts for new first row
         expect(createNewTodosMock).toHaveBeenNthCalledWith(1, roleRequestMapMock1);
         expect(createScheduleEntryForRowMock).toHaveBeenNthCalledWith(1, rowMock1, roleTodoMapMock1);
+        expect(addBasecampLinkToRowMock).toHaveBeenNthCalledWith(1, rowMock1, scheduleEntryMock1.url);
         expect(generateIdForRowMock).toHaveBeenNthCalledWith(1, rowMock1);
-        expect(saveRowMock).toHaveBeenNthCalledWith(1, rowMock1, roleTodoMapMock1, scheduleEntryIdMock1);
+        expect(saveRowMock).toHaveBeenNthCalledWith(1, rowMock1, roleTodoMapMock1, scheduleEntryMock1.id);
     
         // Asserts for new second row
         expect(createNewTodosMock).toHaveBeenNthCalledWith(2, roleRequestMapMock2);
         expect(createScheduleEntryForRowMock).toHaveBeenNthCalledWith(2, rowMock2, roleTodoMapMock2);
+        expect(addBasecampLinkToRowMock).toHaveBeenNthCalledWith(2, rowMock2, scheduleEntryMock2.url);
         expect(generateIdForRowMock).toHaveBeenNthCalledWith(2, rowMock2);
-        expect(saveRowMock).toHaveBeenNthCalledWith(2, rowMock2, roleTodoMapMock2, scheduleEntryIdMock2);
+        expect(saveRowMock).toHaveBeenNthCalledWith(2, rowMock2, roleTodoMapMock2, scheduleEntryMock2.id);
     });
 
     it("should skip existing rows when the row has not changed and there are no missing Todos or Schedule Entries", () => {
         const rowMock1: Row = getRandomlyGeneratedRow();
-        const scheduleEntryIdMock1: string = randomstring.generate();
         const rowIdMock1: string = randomstring.generate();
         const rowMock2: Row = getRandomlyGeneratedRow();
-        const scheduleEntryIdMock2: string = randomstring.generate();
         const rowIdMock2: string = randomstring.generate();
         const documentPropertiesMock: DocumentProperties = {
             [rowIdMock1]: getRandomlyGeneratedRowBasecampMapping(),
@@ -419,7 +421,7 @@ describe("importOnestopToBasecamp", () => {
         const rowMock1: Row = getRandomlyGeneratedRow();
         const roleRequestMapMock1: RoleRequestMap = getRandomlyGeneratedRoleRequestMap();
         const scheduleEntryRequestMock1: BasecampScheduleEntryRequest = getRandomlyGeneratedScheduleEntryRequest();
-        const scheduleEntryIdMock1: string = randomstring.generate();
+        const scheduleEntryMock1: BasecampScheduleEntry = getRandomlyGeneratedBasecampScheduleEntry();
         const rowIdMock1: string = randomstring.generate();
         const rowMock2: Row = getRandomlyGeneratedRow();
         const lastSavedRoleTodoMapMock1: RoleTodoMap = getRandomlyGeneratedRoleTodoMap();
@@ -428,7 +430,7 @@ describe("importOnestopToBasecamp", () => {
         const updatedRoleTodoMapMock1: RoleTodoMap = {...existingRoleTodoMapMock1, ...newRoleTodoMapMock1};
         const roleRequestMapMock2: RoleRequestMap = getRandomlyGeneratedRoleRequestMap();
         const scheduleEntryRequestMock2: BasecampScheduleEntryRequest = getRandomlyGeneratedScheduleEntryRequest();
-        const scheduleEntryIdMock2: string = randomstring.generate();
+        const scheduleEntryMock2: BasecampScheduleEntry = getRandomlyGeneratedBasecampScheduleEntry();
         const rowIdMock2: string = randomstring.generate();
         const lastSavedRoleTodoMapMock2: RoleTodoMap = getRandomlyGeneratedRoleTodoMap();
         const newRoleTodoMapMock2: RoleTodoMap = getRandomlyGeneratedRoleTodoMap();
@@ -467,6 +469,7 @@ describe("importOnestopToBasecamp", () => {
         const getSavedScheduleEntryIdMock: Mock = jest.fn()
             .mockReturnValueOnce(undefined)
             .mockReturnValueOnce(undefined);
+        const addBasecampLinkToRowMock: Mock = jest.fn();
 
         jest.mock("../src/main/row", () => ({
             hasId: hasIdMock,
@@ -477,6 +480,7 @@ describe("importOnestopToBasecamp", () => {
             getId: getIdMock,
             getRoleTodoMap: getRoleTodoMapMock,
             getSavedScheduleEntryId: getSavedScheduleEntryIdMock,
+            addBasecampLinkToRow: addBasecampLinkToRowMock,
         }));
 
         const deleteObsoleteTodosMock: Mock = jest.fn();
@@ -495,8 +499,8 @@ describe("importOnestopToBasecamp", () => {
 
         const updateScheduleEntryMock: Mock = jest.fn();
         const createScheduleEntryForRowMock: Mock = jest.fn()
-            .mockReturnValueOnce(scheduleEntryIdMock1)
-            .mockReturnValueOnce(scheduleEntryIdMock2);
+            .mockReturnValueOnce(scheduleEntryMock1)
+            .mockReturnValueOnce(scheduleEntryMock2);
 
         jest.mock("../src/main/schedule", () => ({
             updateScheduleEntry: updateScheduleEntryMock,
@@ -521,7 +525,8 @@ describe("importOnestopToBasecamp", () => {
         expect(updateTodosForExistingRolesMock).toHaveBeenNthCalledWith(1, roleRequestMapMock1, lastSavedRoleTodoMapMock1);
         expect(updateScheduleEntryMock).toHaveBeenCalledTimes(0);
         expect(createScheduleEntryForRowMock).toHaveBeenNthCalledWith(1, rowMock1, updatedRoleTodoMapMock1);
-        expect(saveRowMock).toHaveBeenNthCalledWith(1, rowMock1, updatedRoleTodoMapMock1, scheduleEntryIdMock1);
+        expect(addBasecampLinkToRowMock).toHaveBeenNthCalledWith(1, rowMock1, scheduleEntryMock1.url);
+        expect(saveRowMock).toHaveBeenNthCalledWith(1, rowMock1, updatedRoleTodoMapMock1, scheduleEntryMock1.id);
     
         // Asserts for changed second row
         expect(hasChangedMock).toHaveBeenNthCalledWith(2, rowMock2);
@@ -530,18 +535,19 @@ describe("importOnestopToBasecamp", () => {
         expect(updateTodosForExistingRolesMock).toHaveBeenNthCalledWith(2, roleRequestMapMock2, lastSavedRoleTodoMapMock2);
         expect(updateScheduleEntryMock).toHaveBeenCalledTimes(0);
         expect(createScheduleEntryForRowMock).toHaveBeenNthCalledWith(2, rowMock2, updatedRoleTodoMapMock2);
-        expect(saveRowMock).toHaveBeenNthCalledWith(2, rowMock2, updatedRoleTodoMapMock2, scheduleEntryIdMock2);
+        expect(addBasecampLinkToRowMock).toHaveBeenNthCalledWith(2, rowMock2, scheduleEntryMock2.url);
+        expect(saveRowMock).toHaveBeenNthCalledWith(2, rowMock2, updatedRoleTodoMapMock2, scheduleEntryMock2.id);
     });
 
     it("should create a new Schedule Entry when the row is not new and there are no changes but the Schedule Entry is missing", () => {
         const rowMock1: Row = getRandomlyGeneratedRow();
         const scheduleEntryRequestMock1: BasecampScheduleEntryRequest = getRandomlyGeneratedScheduleEntryRequest();
-        const scheduleEntryIdMock1: string = randomstring.generate();
+        const scheduleEntryMock1: BasecampScheduleEntry = getRandomlyGeneratedBasecampScheduleEntry();
         const rowIdMock1: string = randomstring.generate();
         const rowMock2: Row = getRandomlyGeneratedRow();
         const lastSavedRoleTodoMapMock1: RoleTodoMap = getRandomlyGeneratedRoleTodoMap();
         const scheduleEntryRequestMock2: BasecampScheduleEntryRequest = getRandomlyGeneratedScheduleEntryRequest();
-        const scheduleEntryIdMock2: string = randomstring.generate();
+        const scheduleEntryMock2: BasecampScheduleEntry = getRandomlyGeneratedBasecampScheduleEntry();
         const rowIdMock2: string = randomstring.generate();
         const lastSavedRoleTodoMapMock2: RoleTodoMap = getRandomlyGeneratedRoleTodoMap();
         const documentPropertiesMock: DocumentProperties = {
@@ -576,6 +582,7 @@ describe("importOnestopToBasecamp", () => {
         const getSavedScheduleEntryIdMock: Mock = jest.fn()
             .mockReturnValueOnce(undefined)
             .mockReturnValueOnce(undefined);
+        const addBasecampLinkToRowMock: Mock = jest.fn();
 
         jest.mock("../src/main/row", () => ({
             hasId: hasIdMock,
@@ -587,11 +594,12 @@ describe("importOnestopToBasecamp", () => {
             getId: getIdMock,
             getRoleTodoMap: getRoleTodoMapMock,
             getSavedScheduleEntryId: getSavedScheduleEntryIdMock,
+            addBasecampLinkToRow: addBasecampLinkToRowMock,
         }));
 
         const createScheduleEntryForRowMock: Mock = jest.fn()
-            .mockReturnValueOnce(scheduleEntryIdMock1)
-            .mockReturnValueOnce(scheduleEntryIdMock2);
+            .mockReturnValueOnce(scheduleEntryMock1)
+            .mockReturnValueOnce(scheduleEntryMock2);
 
         jest.mock("../src/main/schedule", () => ({
             createScheduleEntryForRow: createScheduleEntryForRowMock,
@@ -612,13 +620,15 @@ describe("importOnestopToBasecamp", () => {
         expect(hasChangedMock).toHaveBeenNthCalledWith(1, rowMock1);
         expect(isMissingScheduleEntryMock).toHaveBeenNthCalledWith(1, rowMock1);
         expect(createScheduleEntryForRowMock).toHaveBeenNthCalledWith(1, rowMock1, lastSavedRoleTodoMapMock1);
-        expect(saveRowMock).toHaveBeenNthCalledWith(1, rowMock1, lastSavedRoleTodoMapMock1, scheduleEntryIdMock1);
+        expect(addBasecampLinkToRowMock).toHaveBeenNthCalledWith(1, rowMock1, scheduleEntryMock1.url);
+        expect(saveRowMock).toHaveBeenNthCalledWith(1, rowMock1, lastSavedRoleTodoMapMock1, scheduleEntryMock1.id);
     
         // Asserts for changed second row
         expect(hasChangedMock).toHaveBeenNthCalledWith(2, rowMock2);
         expect(isMissingScheduleEntryMock).toHaveBeenNthCalledWith(2, rowMock2);
         expect(createScheduleEntryForRowMock).toHaveBeenNthCalledWith(2, rowMock2, lastSavedRoleTodoMapMock2);
-        expect(saveRowMock).toHaveBeenNthCalledWith(2, rowMock2, lastSavedRoleTodoMapMock2, scheduleEntryIdMock2);
+        expect(addBasecampLinkToRowMock).toHaveBeenNthCalledWith(2, rowMock2, scheduleEntryMock2.url);
+        expect(saveRowMock).toHaveBeenNthCalledWith(2, rowMock2, lastSavedRoleTodoMapMock2, scheduleEntryMock2.id);
     });
 
     it("should delete old Todos when a row is deleted", () => {
@@ -786,7 +796,7 @@ describe("importOnestopToBasecamp", () => {
         const roleRequestMapMock1: RoleRequestMap = {};
         const roleTodoMapMock1: RoleTodoMap = {};
         const scheduleEntryRequestMock1: BasecampScheduleEntryRequest = getRandomlyGeneratedScheduleEntryRequest();
-        const scheduleEntryIdMock1: string = randomstring.generate();
+        const scheduleEntryMock1: BasecampScheduleEntry = getRandomlyGeneratedBasecampScheduleEntry();
         const rowIdMock1: string = randomstring.generate();
         const documentPropertiesMock: DocumentProperties = {
             [rowIdMock1]: getRandomlyGeneratedRowBasecampMapping(),
@@ -809,6 +819,7 @@ describe("importOnestopToBasecamp", () => {
         const saveRowMock: Mock = jest.fn();
         const getIdMock: Mock = jest.fn()
             .mockReturnValueOnce(rowIdMock1);
+        const addBasecampLinkToRowMock: Mock = jest.fn();
 
         jest.mock("../src/main/row", () => ({
             hasId: hasIdMock,
@@ -817,6 +828,7 @@ describe("importOnestopToBasecamp", () => {
             generateIdForRow: generateIdForRowMock,
             saveRow: saveRowMock,
             getId: getIdMock,
+            addBasecampLinkToRow: addBasecampLinkToRowMock,
         }));
 
         const createNewTodosMock: Mock = jest.fn()
@@ -827,7 +839,7 @@ describe("importOnestopToBasecamp", () => {
         }));
 
         const createScheduleEntryForRowMock: Mock = jest.fn()
-            .mockReturnValueOnce(scheduleEntryIdMock1);
+            .mockReturnValueOnce(scheduleEntryMock1);
 
         jest.mock("../src/main/schedule", () => ({
             createScheduleEntryForRow: createScheduleEntryForRowMock,
@@ -846,7 +858,8 @@ describe("importOnestopToBasecamp", () => {
 
         // Asserts for new first row
         expect(createScheduleEntryForRowMock).toHaveBeenNthCalledWith(1, rowMock1, roleTodoMapMock1);
+        expect(addBasecampLinkToRowMock).toHaveBeenNthCalledWith(1, rowMock1, scheduleEntryMock1.url);
         expect(generateIdForRowMock).toHaveBeenNthCalledWith(1, rowMock1);
-        expect(saveRowMock).toHaveBeenNthCalledWith(1, rowMock1, roleTodoMapMock1, scheduleEntryIdMock1);
+        expect(saveRowMock).toHaveBeenNthCalledWith(1, rowMock1, roleTodoMapMock1, scheduleEntryMock1.id);
     });
 });
