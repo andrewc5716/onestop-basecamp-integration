@@ -2,7 +2,6 @@ import { TabNotFoundError } from "./error/tabNotFoundError";
 import { getMetadata } from "./row";
 
 type TextStyle = GoogleAppsScript.Spreadsheet.TextStyle;
-type RichTextValue = GoogleAppsScript.Spreadsheet.RichTextValue;
 
 // RegEx pattern used to identify daily tabs
 const DAILY_TAB_REGEX_PATTERN: RegExp = /^(MON|TUE|WED|THU|FRI|SAT|SUN) ([1-9]|1[0-2])\/([1-9]|[12][0-9]|3[01])$/;

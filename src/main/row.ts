@@ -22,6 +22,7 @@ const LEAD_ROLE_TITLE: string = "Lead";
 const COMMA_DELIMITER: string = ",";
 const DISCLAIMER: string = "<br>If any event details need to change (assignees, time/location), they must be made on the <a href=\"https://docs.google.com/spreadsheets/d/1xdpnKWfW18nlGNexCxmUhdSgodj2IBgnuxu9SeURTBw/edit?gid=1519427810#gid=1519427810\">Onestop</a>.";
 const BASECAMP_COL_INDEX: number = 11;
+const BASECAMP_LINK_TEXT: string = "Link";
 
 /**
  * Retrieves the metadata object for a given range. If the metadata object does not exist,
@@ -800,6 +801,10 @@ export function addBasecampLinkToRow(row: Row, link: string): void {
     // Google Sheets columns are 1 indexed
     const basecampCell: Range | undefined = row.metadata.getLocation().getRow()?.getCell(1, BASECAMP_COL_INDEX);
     if(basecampCell !== undefined) {
-        basecampCell.setValue(link);
+        const richTextValue: RichTextValue = SpreadsheetApp.newRichTextValue()
+            .setText(BASECAMP_LINK_TEXT)
+            .setLinkUrl(link)
+            .build();
+        basecampCell.setRichTextValue(richTextValue);
     }
 }
