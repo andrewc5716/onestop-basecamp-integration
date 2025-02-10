@@ -190,6 +190,8 @@ describe('getAttendeesFromRow', () => {
 
                 } else if (key === "GROUPS_MAP") {
                     return {};
+                } else if (key === "ALIASES_MAP") {
+                    return {};
                 } 
             }),
         }));
@@ -451,6 +453,51 @@ describe('getAttendeesFromRow', () => {
                     return {};
                 }
             }),
+        }));
+
+        const { getAttendeesFromRow } = require("../src/main/row");
+
+        const result = getAttendeesFromRow(row);
+
+        expect(result).toEqual(['john doe', 'brian lin', 'james lee', 'jack zhang', 'angel zhang']);
+    });
+
+    it('should return the person in charge in attendees, even if alias is used', () => {
+        const row: Row = getRandomlyGeneratedRow();
+        row.domain = "int'l";
+        row.who = "";
+        row.inCharge.value = "john";
+        row.helpers.value = "";
+
+        // Mocked GROUPS_MAP
+        const MOCK_GROUPS_MAP = {
+            "int'l": ['brian lin', 'james lee', 'jack zhang', 'angel zhang'],
+        };
+
+        // Mocked MEMBER MAP
+        const MOCK_MEMBER_MAP = {
+            "brian lin": {"gender": "Male"},
+            "james lee": {"gender": "Male"},
+            "jack zhang": {"gender": "Male"},
+            "angel zhang": {"gender": "Female"},
+            "john doe": {"gender": "Male"},
+        };
+
+        jest.mock('../src/main/propertiesService', () => ({
+            loadMapFromScriptProperties: jest.fn((key: string) => {
+                if (key === "MEMBER_MAP") {
+                    return MOCK_MEMBER_MAP;
+
+                } else if (key === "GROUPS_MAP") {
+                    return MOCK_GROUPS_MAP;
+                } else {
+                    return {};
+                }
+            }),
+        }));
+
+        jest.mock("../src/main/aliases", () => ({
+            ALIASES_MAP: { "john": ["john doe"] },
         }));
 
         const { getAttendeesFromRow } = require("../src/main/row");

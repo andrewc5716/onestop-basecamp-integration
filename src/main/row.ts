@@ -20,6 +20,7 @@ const NEW_LINE_DELIM: string = "\n";
 const COLON_DELIM: string = ":";
 const LEAD_ROLE_TITLE: string = "Lead";
 const COMMA_DELIMITER: string = ",";
+const DISCLAIMER: string = "<br>If any event details need to change (assignees, time/location), they must be made on the <a href=\"https://docs.google.com/spreadsheets/d/1xdpnKWfW18nlGNexCxmUhdSgodj2IBgnuxu9SeURTBw/edit?gid=1519427810#gid=1519427810\">Onestop</a>.";
 
 /**
  * Retrieves the metadata object for a given range. If the metadata object does not exist,
@@ -255,6 +256,7 @@ export function getBasecampTodoForLeads(row: Row): RoleRequestMap {
     const leadsRoleRequestMap: RoleRequestMap = {};
 
     const basecampTodoContent: string = `${LEAD_ROLE_TITLE}: ${row.what.value}`;
+    
     const leadIds: string[] = getLeadsBasecampIds(row);
     const basecampTodoDescription: string = getBasecampTodoDescription(row);
     const basecampDueDate: string = getBasecampDueDate(row);
@@ -263,7 +265,7 @@ export function getBasecampTodoForLeads(row: Row): RoleRequestMap {
         const leadsRequest: BasecampTodoRequest = getBasecampTodoRequest(basecampTodoContent, basecampTodoDescription, leadIds, leadIds, true, basecampDueDate);
         leadsRoleRequestMap[LEAD_ROLE_TITLE] = leadsRequest;
     } else {
-        Logger.log(`${getLeadsNames(row)} do not have any Basecamp ids. row: ${JSON.stringify(row)}`);
+        Logger.log(`${getRawLeadsNames(row)} do not have any Basecamp ids. row: ${JSON.stringify(row)}`);
     }
 
     return leadsRoleRequestMap;
@@ -276,8 +278,17 @@ export function getBasecampTodoForLeads(row: Row): RoleRequestMap {
  * @returns array of Basecamp ids for the leads of a row
  */
 function getLeadsBasecampIds(row: Row): string[] {
-    const leadNames: string[] = getLeadsNames(row).flatMap((name) => ALIASES_MAP.hasOwnProperty(name) ? ALIASES_MAP[name] : name);
+    const leadNames: string[] = getBasecampLeadNames(row);
     return getBasecampIdsFromPersonNameList(leadNames);
+}
+
+/**
+ * Returns names of leads from a row, mapping aliases if applicable
+ * @param row 
+ * @returns array of names of leads of a row, with aliases applied
+ */
+function getBasecampLeadNames(row: Row): string[] {
+    return getRawLeadsNames(row).flatMap((name) => ALIASES_MAP.hasOwnProperty(name) ? ALIASES_MAP[name] : name);
 }
 
 /**
@@ -292,12 +303,12 @@ function getBasecampIdsFromPersonNameList(personNameList: string[]): string[] {
 }
 
 /**
- * Retrieves an array of leads' names from a row
+ * Retrieves an array of raw leads' names from a row
  * 
  * @param row row to retrieve leads' names from
- * @returns array of leads names
+ * @returns array of raw leads names
  */
-function getLeadsNames(row: Row): string[] {
+function getRawLeadsNames(row: Row): string[] {
     return row.inCharge.value.split(COMMA_DELIMITER)
     .map(name => normalizePersonName(name))
     .filter(name => name !== "");
@@ -320,12 +331,13 @@ function getBasecampTodoDescription(row: Row): string {
     const startTime: string = row.startTime.toLocaleTimeString(locales, options);
     const endTime: string = row.endTime.toLocaleTimeString(locales, options);
 
+    const what: string = getRichTextFromText("WHAT", row.what);
     const time: string = `WHEN: ${startTime} - ${endTime}`;
     const inCharge: string = getRichTextFromText("IN CHARGE", row.inCharge);
     const helpers: string = getRichTextFromText("HELPERS", row.helpers);
     const notes: string = getRichTextFromText("NOTES", row.notes);
 
-    return wrapWithDivTag(combineWithBreakTags([location, time, inCharge, helpers, notes]));
+    return wrapWithDivTag(combineWithBreakTags([what, location, time, inCharge, helpers, notes, DISCLAIMER]));
 }
 
 function getRichTextFromText(prefix: string, text: Text): string {
@@ -612,6 +624,9 @@ function getMinistryFilters(row: Row): string[] {
 export function getAttendeesFromRow(row: Row): string[] {
     const attendees: string[] = [];
 
+    attendees.push(...getBasecampLeadNames(row));
+    attendees.push(...getAllHelperNames(row));
+
     // Step 1: Extract Ministry Names and Filters
     const ministryNames = getMinistryNames(row);
     const ministryFilters = getMinistryFilters(row);
@@ -619,9 +634,6 @@ export function getAttendeesFromRow(row: Row): string[] {
     // Step 2: Extract Domain Names and Filters
     const domainNames = getDomainNames(row);
     const domainFilters = getDomainFilters(row);
-
-    attendees.push(...getLeadsNames(row));
-    attendees.push(...getAllHelperNames(row));
 
     if(ministryNames.length > 0) {
         // Process Ministry Attendees
@@ -638,10 +650,7 @@ export function getAttendeesFromRow(row: Row): string[] {
         const domainAttendees = filterDomainAttendees(domainNames, ministryFilters);
         attendees.push(...domainAttendees);
 
-    } else  {
-        // Step 5: Handle Missing Data
-        Logger.log("ERROR: Unable to get attendees from row becuase both domain and ministry columns are empty!")
-    }
+    } 
 
     return attendees;
 }
@@ -746,23 +755,13 @@ function buildScheduleEntrySummary(groups: string[], eventName: string): string 
 
 function getScheduleEntryDescription(row: Row, roleTodoMap: RoleTodoMap): string {
     const location: string = getRichTextFromText("WHERE", row.where);
-    const locales: Intl.LocalesArgument = 'en-us';
-    const options: Intl.DateTimeFormatOptions = {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true
-    }
-    const startTime: string = row.startTime.toLocaleTimeString(locales, options);
-    const endTime: string = row.endTime.toLocaleTimeString(locales, options);
-
     const what: string = getRichTextFromText("WHAT", row.what);
-    const time: string = `WHEN: ${startTime} - ${endTime}`;
     const inCharge: string = getRichTextFromText("IN CHARGE", row.inCharge);
     const helpers: string = getRichTextFromText("HELPERS", row.helpers);
     const notes: string = getRichTextFromText("NOTES", row.notes);
     const relatedTodos: string = getRichTextForTodoLinks(roleTodoMap);
 
-    return wrapWithDivTag(combineWithBreakTags([what, location, time, inCharge, helpers, notes, relatedTodos]));
+    return wrapWithDivTag(combineWithBreakTags([what, location, inCharge, helpers, notes, relatedTodos, DISCLAIMER]));
 }
 
 function getRichTextForTodoLinks(roleTodoMap: RoleTodoMap): string {
