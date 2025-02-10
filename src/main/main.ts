@@ -91,8 +91,8 @@ function handleScheduleEntryForExistingRow(row: Row, updatedRoleTodoMap: RoleTod
         const basecampScheduleEntry: BasecampScheduleEntry | undefined = createScheduleEntryForRow(row, updatedRoleTodoMap);
         scheduleEntryId = basecampScheduleEntry?.id;
 
-        if(scheduleEntryId !== undefined) {
-            addBasecampLinkToRow(row, scheduleEntryId);
+        if(basecampScheduleEntry !== undefined) {
+            addBasecampLinkToRow(row, basecampScheduleEntry.url);
         }
     }
 
