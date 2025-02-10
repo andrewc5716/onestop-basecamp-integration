@@ -140,7 +140,6 @@ export function hasChanged(row: Row): boolean {
         throw new RowNotSavedError(`Row has not yet been saved: ${toString(row)}`);
     }
 
-    const rowId: string = getId(row);
     const currentRowHash: string = toHexString(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, toString(row)));
     const storedRowHash: string | null = getSavedHash(row);
 
@@ -192,7 +191,7 @@ export function getRowBasecampMapping(row: Row): RowBasecampMapping | null {
  * @returns string representation of the given row
  */
 export function toString(row: Row): string {
-    return `[${row.startTime}, ${row.endTime}, ${row.who}, ${row.numAttendees}, ${row.what.value}, 
+    return `[${row.startTime}, ${row.endTime}, ${row.domain}, ${row.who}, ${row.numAttendees}, ${row.what.value}, 
     ${row.where.value}, ${row.inCharge.value}, ${row.helpers.value}, ${row.notes.value}]`;
 }
 
