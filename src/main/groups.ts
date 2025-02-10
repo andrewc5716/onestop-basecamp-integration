@@ -106,7 +106,7 @@ function addGroupAliasesToMap(groupsAliasMap: AliasMap, groupAliases: string[], 
 
     for(const alias of groupAliases) {
         if(groupsAliasMap.hasOwnProperty(alias)) {
-            Logger.log(`Warning: Duplicate alias ${alias} detected`);
+            Logger.log(`WARN: Duplicate alias ${alias} detected`);
             newGroupsAliasMap[alias] = newGroupsAliasMap[alias].concat(groupMemberNames);
         } else {
             newGroupsAliasMap[alias] = [...groupMemberNames];
@@ -259,7 +259,7 @@ function mergeGroupsMaps(firstGroupsMap: GroupsMap, secondGroupsMap: GroupsMap):
     const groups: string[] = Object.keys(secondGroupsMap);
     for(const group of groups) {
         if(finalGroupsMap.hasOwnProperty(group)) {
-            Logger.log(`Warning: Duplicate group ${group} detected`);
+            Logger.log(`WARN: Duplicate group ${group} detected`);
             finalGroupsMap[group] = finalGroupsMap[group].concat(secondGroupsMap[group]);
         } else {
             finalGroupsMap[group] = secondGroupsMap[group];

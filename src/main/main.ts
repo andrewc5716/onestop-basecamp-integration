@@ -47,6 +47,7 @@ export function importOnestopToBasecamp(): void {
 function processExistingRow(row: Row): void {
 
     if(hasChanged(row) || isMissingTodos(row)) {
+        Logger.log("Row has changed, or is missing todos. Updating...");
         // Update Todos and Schedule Entry if the row has changed or if Todos are missing
         const updatedRoleTodoMap: RoleTodoMap = handleTodosForExistingRow(row);
         const scheduleEntryId: string | undefined = handleScheduleEntryForExistingRow(row, updatedRoleTodoMap);

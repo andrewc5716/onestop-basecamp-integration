@@ -265,7 +265,7 @@ export function getBasecampTodoForLeads(row: Row): RoleRequestMap {
         const leadsRequest: BasecampTodoRequest = getBasecampTodoRequest(basecampTodoContent, basecampTodoDescription, leadIds, leadIds, true, basecampDueDate);
         leadsRoleRequestMap[LEAD_ROLE_TITLE] = leadsRequest;
     } else {
-        Logger.log(`${getRawLeadsNames(row)} do not have any Basecamp ids. row: ${JSON.stringify(row)}`);
+        Logger.log(`WARN: ${getRawLeadsNames(row)} do not have any Basecamp ids, no lead todos were created`);
     }
 
     return leadsRoleRequestMap;
@@ -298,8 +298,13 @@ function getBasecampLeadNames(row: Row): string[] {
  * @returns array of Basecamp ids
  */
 function getBasecampIdsFromPersonNameList(personNameList: string[]): string[] {
-    return personNameList.map((name) => getPersonId(name))
-        .filter((personId) => personId !== undefined);
+    return personNameList.map((name) => {
+        const personId: string | undefined = getPersonId(name);
+        if (personId === undefined) {
+            Logger.log(`WARN: No Basecamp person ID found for: ${name}`);
+        }
+        return personId;
+    }).filter((personId) => personId !== undefined);
 }
 
 /**
@@ -412,7 +417,7 @@ export function getBasecampTodosForHelpers(row: Row): RoleRequestMap {
             helperRoleRequestMap[roleTitle] = basecampTodoRequest;
 
         } else {
-            Logger.log(`${row.helpers.value} do not have any Basecamp ids. row: ${row}`);
+            Logger.log(`WARN: ${row.helpers.value} do not have any Basecamp ids, no helper todos were created`);
         }
     }
 
@@ -615,6 +620,18 @@ function getMinistryFilters(row: Row): string[] {
     .filter(value => isFilter(value));
 }
 
+function isRotationInAttendees(row: Row): boolean {
+    return splitWhoColumn(row)
+    .map(group => group.toLowerCase().trim())
+    .includes("rotation");
+}
+
+function isVariousInAttendees(row: Row): boolean {
+    return splitWhoColumn(row)
+    .map(group => group.toLowerCase().trim())
+    .includes("various");
+}
+
 /**
  * Retrieves an array of names from a row.
  * 
@@ -626,6 +643,11 @@ export function getAttendeesFromRow(row: Row): string[] {
 
     attendees.push(...getBasecampLeadNames(row));
     attendees.push(...getAllHelperNames(row));
+
+    // Ignore domain column if attendees is rotation or various
+    if (isRotationInAttendees(row) || isVariousInAttendees(row)) {
+        return attendees;
+    }
 
     // Step 1: Extract Ministry Names and Filters
     const ministryNames = getMinistryNames(row);
