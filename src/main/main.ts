@@ -88,12 +88,8 @@ function handleScheduleEntryForExistingRow(row: Row, updatedRoleTodoMap: RoleTod
         }
     } else {
         // Create the Schedule Entry if it is missing
-        const basecampScheduleEntry: BasecampScheduleEntry | undefined = createScheduleEntryForRow(row, updatedRoleTodoMap);
+        const basecampScheduleEntry: BasecampScheduleEntry | undefined = createNewScheduleEntry(row, updatedRoleTodoMap);
         scheduleEntryId = basecampScheduleEntry?.id;
-
-        if(basecampScheduleEntry !== undefined) {
-            addBasecampLinkToRow(row, basecampScheduleEntry.url);
-        }
     }
 
     return scheduleEntryId;
@@ -109,14 +105,20 @@ function handleScheduleEntryForExistingRow(row: Row, updatedRoleTodoMap: RoleTod
 function processNewRow(row: Row): void {
     const roleRequestMap: RoleRequestMap = getBasecampTodoRequestsForRow(row);
     const roleTodoMap: RoleTodoMap = createNewTodos(roleRequestMap);
+    const basecampScheduleEntry: BasecampScheduleEntry | undefined = createNewScheduleEntry(row, roleTodoMap);
+
+    generateIdForRow(row);
+    saveRow(row, roleTodoMap, basecampScheduleEntry?.id);
+}
+
+function createNewScheduleEntry(row: Row, roleTodoMap: RoleTodoMap): BasecampScheduleEntry | undefined {
     const basecampScheduleEntry: BasecampScheduleEntry | undefined = createScheduleEntryForRow(row, roleTodoMap);
 
     if(basecampScheduleEntry !== undefined) {
         addBasecampLinkToRow(row, basecampScheduleEntry.url);
     }
 
-    generateIdForRow(row);
-    saveRow(row, roleTodoMap, basecampScheduleEntry?.id);
+    return basecampScheduleEntry;
 }
 
 function deleteOldRows(processedRowIds: string[]): void {
