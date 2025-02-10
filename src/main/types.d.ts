@@ -42,6 +42,11 @@ declare interface BasecampTodo {
   url: string,
 }
 
+declare interface BasecampScheduleEntry {
+  id: string,
+  url: string,
+}
+
 // The key string represents a role and the value represents a todo object
 type RoleTodoMap = { [role: string]: BasecampTodo };
 
@@ -120,7 +125,8 @@ declare interface ScheduleEntryIdentifier {
 
 // Response from Basecamp Schedule Entry. Only need id for now, can add more later
 declare interface BasecampScheduleEntryResponse extends JsonObject {
-  id: string // id of the created schedule entry
+  id: string, // id of the created schedule entry
+  app_url: string // url of the created schedule entry
 }
 
 declare interface BasecampScheduleEntryRequest extends JsonObject {

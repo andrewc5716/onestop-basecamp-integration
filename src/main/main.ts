@@ -1,5 +1,5 @@
 import { deleteDocumentProperty, getAllDocumentProperties } from "./propertiesService";
-import { getRoleTodoMap, getSavedScheduleEntryId, getScheduleEntryRequestForRow, isMissingScheduleEntry, isMissingTodos, toString } from "./row";
+import { addBasecampLinkToRow, getRoleTodoMap, getSavedScheduleEntryId, getScheduleEntryRequestForRow, isMissingScheduleEntry, isMissingTodos, toString } from "./row";
 import { generateIdForRow, getBasecampTodoRequestsForRow, getId, hasChanged, hasId, saveRow } from "./row";
 import { getEventRowsFromSpreadsheet } from "./scan";
 import { createScheduleEntryForRow, deleteScheduleEntry, getScheduleEntryIdentifier, updateScheduleEntry } from "./schedule";
@@ -88,7 +88,12 @@ function handleScheduleEntryForExistingRow(row: Row, updatedRoleTodoMap: RoleTod
         }
     } else {
         // Create the Schedule Entry if it is missing
-        scheduleEntryId = createScheduleEntryForRow(row, updatedRoleTodoMap);
+        const basecampScheduleEntry: BasecampScheduleEntry | undefined = createScheduleEntryForRow(row, updatedRoleTodoMap);
+        scheduleEntryId = basecampScheduleEntry?.id;
+
+        if(scheduleEntryId !== undefined) {
+            addBasecampLinkToRow(row, scheduleEntryId);
+        }
     }
 
     return scheduleEntryId;
@@ -104,10 +109,14 @@ function handleScheduleEntryForExistingRow(row: Row, updatedRoleTodoMap: RoleTod
 function processNewRow(row: Row): void {
     const roleRequestMap: RoleRequestMap = getBasecampTodoRequestsForRow(row);
     const roleTodoMap: RoleTodoMap = createNewTodos(roleRequestMap);
-    const scheduleEntryId: string | undefined = createScheduleEntryForRow(row, roleTodoMap);
+    const basecampScheduleEntry: BasecampScheduleEntry | undefined = createScheduleEntryForRow(row, roleTodoMap);
+
+    if(basecampScheduleEntry !== undefined) {
+        addBasecampLinkToRow(row, basecampScheduleEntry.url);
+    }
 
     generateIdForRow(row);
-    saveRow(row, roleTodoMap, scheduleEntryId);
+    saveRow(row, roleTodoMap, basecampScheduleEntry?.id);
 }
 
 function deleteOldRows(processedRowIds: string[]): void {
