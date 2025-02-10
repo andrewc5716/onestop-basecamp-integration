@@ -14,7 +14,7 @@ export function mergeAliasMaps(firstAliasMap: AliasMap, secondAliasMap: AliasMap
     const aliases: string[] = Object.keys(secondAliasMap);
     for(const alias of aliases) {
         if(finalAliasMap.hasOwnProperty(alias)) {
-            Logger.log(`Warning: Duplicate alias ${alias} detected`);
+            Logger.log(`WARN: Duplicate alias ${alias} detected`);
             finalAliasMap[alias] = finalAliasMap[alias].concat(secondAliasMap[alias]);
         } else {
             finalAliasMap[alias] = secondAliasMap[alias];
