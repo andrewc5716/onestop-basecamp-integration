@@ -93,7 +93,7 @@ export function sendPaginatedBasecampGetRequest(requestUrl: string): JsonData {
     while (hasNextPageUrlFromGetResponse(getResponse)) {
         getResponse = sendBasecampGetRequest(getNextPageUrlFromGetResponse(getResponse));
         const jsonResponse: JsonData = JSON.parse(getResponse.getContentText());
-        cumulativeResponse.concat(jsonResponse);
+        cumulativeResponse = cumulativeResponse.concat(jsonResponse);
     }
 
     return cumulativeResponse;
