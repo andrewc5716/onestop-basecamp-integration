@@ -1237,8 +1237,12 @@ describe("getScheduleEntryRequestForRow", () => {
         rowMock.who = "UCSD";
         rowMock.inCharge = getRandomlyGeneratedText(1);
         rowMock.inCharge.value = "John Doe";
+        rowMock.inCharge.tokens[0].value = "John Doe";
+        rowMock.inCharge.tokens.forEach((token) => token.hyperlink = null);
         rowMock.helpers = getRandomlyGeneratedText(1);
         rowMock.helpers.value = "Jane Smith, Alice Johnson";
+        rowMock.helpers.tokens.forEach((token) => token.hyperlink = null);
+        rowMock.helpers.tokens[0].value = "Jane Smith, Alice Johnson";
         const roleTodoMapMock: RoleTodoMap = getRandomlyGeneratedRoleTodoMap();
 
         jest.mock("../src/main/groups", () => ({
@@ -1274,5 +1278,53 @@ describe("getScheduleEntryRequestForRow", () => {
         expect(scheduleEntryRequest.participant_ids).toContain(PEOPLE_MAP["john doe"]);
         expect(scheduleEntryRequest.participant_ids).toContain(PEOPLE_MAP["jane smith"]);
         expect(scheduleEntryRequest.participant_ids).toContain(PEOPLE_MAP["alice johnson"]);
+    });
+
+    it("should include hyperlinks and strikethrough when the entire cell is a hyperlink", () => {
+        const rowMock: Row = getRandomlyGeneratedRow();
+        rowMock.domain = "College";
+        rowMock.who = "UCSD";
+        rowMock.inCharge = getRandomlyGeneratedText(1);
+        rowMock.inCharge.value = "John Doe";
+        rowMock.inCharge.tokens[0].value = "John Doe";
+        rowMock.helpers = getRandomlyGeneratedText(2);
+        rowMock.helpers.value = "Jane Smith, Alice Johnson";
+        rowMock.helpers.tokens[0].value = "Jane Smith, ";
+        rowMock.helpers.tokens[1].value = "Alice Johnson";
+        rowMock.helpers.tokens[1].strikethrough = true;
+        const hyperlink: string = randomstring.generate();
+        rowMock.helpers.tokens[1].hyperlink = hyperlink;
+        const whatHyperlink: string = randomstring.generate();
+        rowMock.what = getRandomlyGeneratedText(1);
+        rowMock.what.tokens[0].hyperlink = whatHyperlink;
+        const whyHyperlink: string = randomstring.generate();
+        rowMock.where = getRandomlyGeneratedText(1);
+        rowMock.where.tokens[0].hyperlink = whyHyperlink;
+        const roleTodoMapMock: RoleTodoMap = getRandomlyGeneratedRoleTodoMap();
+
+        jest.mock("../src/main/groups", () => ({
+            GROUP_NAMES: ["ucsd"],
+            GROUPS_MAP: { "ucsd": ["john doe", "jane smith", "alice johnson"] },
+            getMembersFromGroups: jest.fn(() => ["john doe", "jane smith", "alice johnson"]),
+        }));
+
+        const PEOPLE_MAP: { [name: string]: string } = {
+            "john doe": "1",
+            "jane smith": "2",
+            "alice johnson": "3",
+        };
+
+        jest.mock("../src/main/people", () => ({
+            normalizePersonName: jest.fn((personName) => personName.toLowerCase().trim()),
+            getPersonId: jest.fn((personName) => PEOPLE_MAP.hasOwnProperty(personName) ? PEOPLE_MAP[personName] : randomstring.generate()),
+        }));
+
+        const { getScheduleEntryRequestForRow } = require("../src/main/row");
+
+        const scheduleEntryRequest: BasecampScheduleEntryRequest = getScheduleEntryRequestForRow(rowMock, roleTodoMapMock);
+        expect(scheduleEntryRequest).toBeDefined();
+        expect(scheduleEntryRequest.description).toContain(whatHyperlink);
+        expect(scheduleEntryRequest.description).toContain(whyHyperlink);
+        expect(scheduleEntryRequest.description).toContain(`<strike><a href="${hyperlink}">Alice Johnson</a></strike>`);
     });
 });

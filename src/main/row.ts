@@ -347,20 +347,18 @@ function getBasecampTodoDescription(row: Row): string {
 }
 
 function getRichTextFromText(prefix: string, text: Text): string {
-    if(text.tokens.length === 1) {
-        return `${prefix}: ${replaceNewLinesWithBreakTags(text.value)}`;
-    }
-
     const textTokens: TextData[] = text.tokens;
     let richText: string = `${prefix}: `;
     for(const token of textTokens) {
+        let richTextToken: string = replaceNewLinesWithBreakTags(token.value);
         if(token.hyperlink !== null) {
-            richText += `<a href="${token.hyperlink}">${replaceNewLinesWithBreakTags(token.value)}</a>`;
-        } else if(token.strikethrough) {
-            richText += `<strike>${replaceNewLinesWithBreakTags(token.value)}</strike>`;
-        } else {
-            richText += replaceNewLinesWithBreakTags(token.value);
+            richTextToken = `<a href="${token.hyperlink}">${richTextToken}</a>`;
+        } 
+        if(token.strikethrough) {
+            richTextToken = `<strike>${richTextToken}</strike>`;
         }
+
+        richText += richTextToken;
     }
 
     return richText;
