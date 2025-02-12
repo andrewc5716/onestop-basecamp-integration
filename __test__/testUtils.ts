@@ -1,9 +1,48 @@
 import randomstring from "randomstring";
 import { randomBytes } from 'crypto';
+import { RangeOptions } from "gasmask/dist/SpreadsheetApp/Range";
+import Sheet from "gasmask/dist/SpreadsheetApp/Sheet";
+import { Range } from "gasmask/dist/SpreadsheetApp";
 
 const BOOLEAN_UPPERBOUND: number = 2;
 
 export type Mock = jest.Mock;
+
+export class SheetMock extends Sheet {
+    private hidden: boolean;
+
+    constructor(name: string, hidden: boolean = false) {
+        super(name);
+        this.hidden = hidden;
+    }
+
+    isSheetHidden(): boolean {
+        return this.hidden;
+    }
+}
+
+export class RangeMock extends Range {
+    private cellValues: any[][];
+    private richTextValues: RichTextValue[][];
+
+    constructor(cellValues: any[][], criteria: RangeOptions, sheet: Sheet, richTextValues: RichTextValue[][]) {
+        super(cellValues, criteria, sheet);
+        this.cellValues = cellValues;
+        this.richTextValues = richTextValues;
+    }
+
+    getRichTextValues(): RichTextValue[][] {
+        return this.richTextValues;
+    }
+
+    getNumRows(): number {
+        return this.cellValues.length;
+    }
+
+    getNumColumns(): number {
+        return this.cellValues[0].length;
+    }
+}
 
 export function getRandomlyGeneratedMetadata(): Metadata {
     return {
@@ -416,4 +455,36 @@ export function getRandomlyGeneratedBasecampScheduleEntry(): BasecampScheduleEnt
         id: randomstring.generate(),
         url: randomstring.generate(),
     }
+}
+
+export function getRandomlyGeneratedRichTextValues(numRows: number = 5, numColumns: number = 5): RichTextValue[][] {
+    return Array.from({ length: numRows }, () =>
+        Array.from({ length: numColumns }, () => getRandomlyGeneratedRichTextValue())
+    );
+}
+
+export function getRandomlyGeneratedRichTextValue(): RichTextValue {
+    return {
+        copy: jest.fn(),
+        getEndIndex: jest.fn(() => getRandomNumber()),
+        getLinkUrl: jest.fn(() => randomstring.generate()),
+        getRuns: jest.fn(() => []),
+        getStartIndex: jest.fn(() => getRandomNumber()),
+        getText: jest.fn(() => randomstring.generate()),
+        getTextStyle: jest.fn(() => getRandomlyGeneratedTextStyle()),
+    };
+}
+
+export function getRandomlyGeneratedTextStyle(): TextStyle {
+    return {
+        copy: jest.fn(),
+        getFontFamily: jest.fn(() => randomstring.generate()),
+        getFontSize: jest.fn(() => getRandomNumber()),
+        getForegroundColor: jest.fn(() => randomstring.generate()),
+        getForegroundColorObject: jest.fn(() => null),
+        isBold: jest.fn(() => getRandomBoolean()),
+        isItalic: jest.fn(() => getRandomBoolean()),
+        isStrikethrough: jest.fn(() => getRandomBoolean()),
+        isUnderline: jest.fn(() => getRandomBoolean()),
+    };
 }

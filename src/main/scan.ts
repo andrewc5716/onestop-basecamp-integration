@@ -1,8 +1,6 @@
 import { TabNotFoundError } from "./error/tabNotFoundError";
 import { getMetadata } from "./row";
 
-type TextStyle = GoogleAppsScript.Spreadsheet.TextStyle;
-
 // RegEx pattern used to identify daily tabs
 const DAILY_TAB_REGEX_PATTERN: RegExp = /^(MON|TUE|WED|THU|FRI|SAT|SUN) ([1-9]|1[0-2])\/([1-9]|[12][0-9]|3[01])$/;
 
@@ -50,7 +48,7 @@ export function getEventRowsFromSpreadsheet(): Row[] {
  *
  * @returns an array of spreadsheet tabs
  */
-export function getAllSpreadsheetTabs(): Sheet[] {
+function getAllSpreadsheetTabs(): Sheet[] {
     const spreadsheet: Spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
     return spreadsheet.getSheets();
 }
@@ -61,7 +59,7 @@ export function getAllSpreadsheetTabs(): Sheet[] {
  * @param spreadsheetTabs array of spreadsheet tabs to search through
  * @returns array of active daily tabs
  */
-export function getActiveDailyTabs(spreadsheetTabs: Sheet[]): Sheet[] {
+function getActiveDailyTabs(spreadsheetTabs: Sheet[]): Sheet[] {
     const dailyActiveTabs: Sheet[] = [];
     for(const tab of spreadsheetTabs) {
         if(isActiveDailyTab(tab)) {
@@ -78,7 +76,7 @@ export function getActiveDailyTabs(spreadsheetTabs: Sheet[]): Sheet[] {
  * @param spreadsheetTab spreadsheet tab to search through
  * @returns an array of Row objects
  */
-export function getRowsWithEvents(spreadsheetTab: Sheet): Row[] {
+function getRowsWithEvents(spreadsheetTab: Sheet): Row[] {
     const dataRange: Range = spreadsheetTab.getDataRange();
     const cellData: CellData[][] = getCellData(dataRange);
     const currentDate: Date = getDateOfDailyTab(cellData);
@@ -176,16 +174,6 @@ function getColumnData(numCols: number, cellRichTextData: RichTextValue[], cellV
 }
 
 /**
- * Returns whether a cell has strikethrough set
- * 
- * @param textStyle style object for a particular cell
- * @returns the strikethrough value of the cell if it is not null, otherwise defaults to false
- */
-function getCellStrikethrough(textStyle: TextStyle): boolean {
-    return textStyle.isStrikethrough() !== null ? textStyle.isStrikethrough() as boolean : false;
-}
-
-/**
  * Retrieves the date for a particular daily tab. For a daily tab, the date is located in the top left cell. Because Google Sheets stores 
  * our Date values in local time and the Google Apps Script API attempts to readjust these Date values assuming they are in UTC, we must 
  * re-add the UTC offset in order get back to local time (PDT)
@@ -214,23 +202,16 @@ function isValidEventRow(rowData: CellData[]): boolean {
 }
 
 /**
- * Determines whether a given row has been crossed out (strikethrough) or not. A row is considered crossed out if all cells in the row that have
- * text have their strikethrough property set to true. The first Date objects in the first two columns are ignored as their strikethrough values
- * are always set as false according to the Google Apps Script api
+ * Determines whether a given row has been crossed out (strikethrough) or not. A row is considered crossed out if the WHAT cell has been crossed out
  * 
  * @param rowData data for this row
  * @returns boolean representing whether the given row has been crossed out or not
  */
 function isRowStrikethrough(rowData: CellData[]): boolean {
-    // Filters out all cells without any values
-    // Need to skip the time columns because their strikethrough values are incorrectly returned by the TextStyle object
-    const nonEmptyCells: CellData[] = rowData.filter((cellData, index) => cellData.value !== "" && index > END_TIME_COL_INDEX);
-
-    // Incrementally ands all of the strikethrough values together
-    return nonEmptyCells.every((cellData) => {
-        const runs: RichTextValue[] = cellData.richTextValue.getRuns();
-        return runs.every((run) => run.getTextStyle().isStrikethrough())
-    });
+    const whatCell: CellData = rowData[WHAT_COL_INDEX];
+    const whatCellRuns: RichTextValue[] = whatCell.richTextValue.getRuns();
+    // Incrementally ands all of the strikethrough values together to determine if the entire cell has strikethrough
+    return whatCellRuns.every((run) => run.getTextStyle().isStrikethrough());
 }
 
 /**
