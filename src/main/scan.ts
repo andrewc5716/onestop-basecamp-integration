@@ -211,7 +211,7 @@ function isRowStrikethrough(rowData: CellData[]): boolean {
     const whatCell: CellData = rowData[WHAT_COL_INDEX];
     const whatCellRuns: RichTextValue[] = whatCell.richTextValue.getRuns();
     // Incrementally ands all of the strikethrough values together to determine if the entire cell has strikethrough
-    return whatCellRuns.every((run) => run.getTextStyle().isStrikethrough());
+    return whatCellRuns.some((run) => run.getTextStyle().isStrikethrough());
 }
 
 /**
