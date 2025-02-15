@@ -10,6 +10,7 @@ type Sheet = GoogleAppsScript.Spreadsheet.Sheet;
 type Range = GoogleAppsScript.Spreadsheet.Range;
 type Metadata = GoogleAppsScript.Spreadsheet.DeveloperMetadata;
 type RichTextValue = GoogleAppsScript.Spreadsheet.RichTextValue;
+type TextStyle = GoogleAppsScript.Spreadsheet.TextStyle;
 
 declare interface TextData {
   value: string,
