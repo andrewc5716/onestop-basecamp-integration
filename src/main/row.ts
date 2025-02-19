@@ -125,6 +125,10 @@ export function hasBeenSaved(row: Row): boolean {
     return rowHash !== null;
 }
 
+export function hasBeenPreviouslyDeleted(row: Row): boolean {
+    return !hasBeenSaved(row);
+}
+
 /**
  * Checks if a given row's contents has been changed
  * 
