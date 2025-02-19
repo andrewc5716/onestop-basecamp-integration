@@ -796,9 +796,10 @@ function getRichTextForTodoLinks(roleTodoMap: RoleTodoMap): string {
 }
 
 export function addBasecampLinkToRow(row: Row, link: string): void {
+    const basecampRow: Range | null = row.metadata.getLocation().getRow();
     // Google Sheets columns are 1 indexed
-    const basecampCell: Range | undefined = row.metadata.getLocation().getRow()?.getCell(1, BASECAMP_COL_INDEX);
-    if(basecampCell !== undefined) {
+    if(basecampRow !== null && basecampRow.getNumColumns() >= BASECAMP_COL_INDEX) {
+        const basecampCell: Range = basecampRow.getCell(1, BASECAMP_COL_INDEX);
         const richTextValue: RichTextValue = SpreadsheetApp.newRichTextValue()
             .setText(BASECAMP_LINK_TEXT)
             .setLinkUrl(link)
