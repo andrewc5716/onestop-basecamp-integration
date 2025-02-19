@@ -1,5 +1,5 @@
 import { deleteDocumentProperty, getAllDocumentProperties } from "./propertiesService";
-import { addBasecampLinkToRow, getRoleTodoMap, getSavedScheduleEntryId, getScheduleEntryRequestForRow, isMissingScheduleEntry, isMissingTodos, toString } from "./row";
+import { addBasecampLinkToRow, getRoleTodoMap, getSavedScheduleEntryId, getScheduleEntryRequestForRow, hasBeenPreviouslyDeleted, isMissingScheduleEntry, isMissingTodos, toString } from "./row";
 import { generateIdForRow, getBasecampTodoRequestsForRow, getId, hasChanged, hasId, saveRow } from "./row";
 import { getEventRowsFromSpreadsheet } from "./scan";
 import { createScheduleEntryForRow, deleteScheduleEntry, getScheduleEntryIdentifier, updateScheduleEntry } from "./schedule";
@@ -16,7 +16,7 @@ export function importOnestopToBasecamp(): void {
     const processedRowIds: string[] = [];
 
     for(const eventRow of eventRows) {
-        if(hasId(eventRow)) {
+        if(hasId(eventRow) && !hasBeenPreviouslyDeleted(eventRow)) {
             Logger.log(`Row for ${eventRow.what.value} on ${eventRow.startTime} already exists! Processing it as an existing row...\n`);
             processExistingRow(eventRow);
         } else {

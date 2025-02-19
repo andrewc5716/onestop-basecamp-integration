@@ -101,9 +101,7 @@ describe("generateIdForRow", () => {
     });
 });
 
-
 describe('getAttendeesFromRow', () => {
-
     it('should return ministry members instead of all domain members when ministry is populated', () => {
         const row: Row = getRandomlyGeneratedRow();
         row.domain = "INT'L";
@@ -590,7 +588,6 @@ describe('getAttendeesFromRow', () => {
     });
 });
 
-
 describe("hasId", () => {
     it("should return true when the row has already been assigned an id", () => {
         const uuid: string = "51ab21eb-0e29-4173-8f37-b3e1f9d65c71";
@@ -679,6 +676,39 @@ describe("saveRow", () => {
 
 describe("hasBeenSaved", () => {
 
+});
+
+describe("hasBeenPreviouslyDeleted", () => {
+    it("should return true when the row's saved hash is not present", () => {
+        const rowMock: Row = getRandomlyGeneratedRow();
+        const metadataMock: Metadata = getRandomlyGeneratedMetadata();
+        metadataMock.getValue = jest.fn(() => randomstring.generate());
+
+        jest.mock("../src/main/propertiesService", () => ({
+            loadMapFromScriptProperties: jest.fn(() => ({})),
+            getDocumentProperty: jest.fn(() => null),
+        }));
+
+        const { hasBeenPreviouslyDeleted } = require("../src/main/row");
+
+        expect(hasBeenPreviouslyDeleted(rowMock)).toBe(true);
+    });
+
+    it("should return false when the row's saved hash is present", () => {
+        const rowMock: Row = getRandomlyGeneratedRow();
+        const metadataMock: Metadata = getRandomlyGeneratedMetadata();
+        metadataMock.getValue = jest.fn(() => randomstring.generate());
+        const rowBasecampMappingMock: RowBasecampMapping = getRandomlyGeneratedRowBasecampMapping();
+
+        jest.mock("../src/main/propertiesService", () => ({
+            loadMapFromScriptProperties: jest.fn(() => ({})),
+            getDocumentProperty: jest.fn(() => JSON.stringify(rowBasecampMappingMock)),
+        }));
+
+        const { hasBeenPreviouslyDeleted } = require("../src/main/row");
+
+        expect(hasBeenPreviouslyDeleted(rowMock)).toBe(false);
+    });
 });
 
 describe("hasChanged", () => {
