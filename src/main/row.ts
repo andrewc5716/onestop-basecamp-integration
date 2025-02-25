@@ -755,7 +755,7 @@ export function getScheduleEntryRequestForRow(row: Row, roleTodoMap: RoleTodoMap
     const description: string = getScheduleEntryDescription(row, roleTodoMap);
     const participantIds: string[] = getBasecampIdsFromPersonNameList(getAttendeesFromRow(row));
 
-    return getBasecampScheduleEntryRequest(summary, startsAt, endsAt, description, participantIds, false, true);
+    return getBasecampScheduleEntryRequest(summary, startsAt, endsAt, description, participantIds, false, false);
 }
 
 /**
