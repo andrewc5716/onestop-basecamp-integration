@@ -196,8 +196,8 @@ export function getRowBasecampMapping(row: Row): RowBasecampMapping | null {
  * @returns string representation of the given row
  */
 export function toString(row: Row): string {
-    return `[${row.startTime}, ${row.endTime}, ${row.domain}, ${row.who}, ${row.numAttendees}, ${row.what.value}, 
-    ${row.where.value}, ${row.inCharge.value}, ${row.helpers.value}, ${row.notes.value}]`;
+    return `[${row.startTime}, ${row.endTime}, ${row.domain}, ${row.who}, ${row.numAttendees}, ${JSON.stringify(row.what)}, 
+    ${JSON.stringify(row.where)}, ${JSON.stringify(row.inCharge)}, ${JSON.stringify(row.helpers)}, ${JSON.stringify(row.notes)}]`;
 }
 
 /**
