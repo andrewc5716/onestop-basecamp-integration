@@ -48,7 +48,8 @@ function generateValidationMessage(invalidHelperTokens: string[]): string {
 }
 
 function getInvalidLeadTokens(leadLine: string): string[] {
-    const leads: string[] = leadLine.split(COMMA_DELIMITER);
+    const leadList: string = removeRoleText(leadLine);
+    const leads: string[] = leadList.split(COMMA_DELIMITER);
 
     const invalidLeadTokens: string[] = [];
 
@@ -63,7 +64,7 @@ function getInvalidLeadTokens(leadLine: string): string[] {
 }
 
 function getInvalidHelperTokens(helperLine: string): string[] {
-    const helperList: string = removeRoleTextFromHelperLine(helperLine);
+    const helperList: string = removeRoleText(helperLine);
     const helpers: string[] = helperList.split(COMMA_DELIMITER);
 
     const invalidHelperTokens: string[] = [];
@@ -77,12 +78,12 @@ function getInvalidHelperTokens(helperLine: string): string[] {
     return invalidHelperTokens;
 }
 
-function removeRoleTextFromHelperLine(helperLine: string): string {
-    const colonIndex = helperLine.indexOf(COLON_DELIM);
+function removeRoleText(line: string): string {
+    const colonIndex = line.indexOf(COLON_DELIM);
     if(colonIndex !== -1) {
-        return helperLine.substring(colonIndex + 1).trim();
+        return line.substring(colonIndex + 1).trim();
     }
-    return helperLine;
+    return line;
 }
 
 function isHelperTokenValid(helperTokenWithFilters: string): boolean {

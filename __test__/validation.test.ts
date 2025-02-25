@@ -374,18 +374,11 @@ describe("validateLeadCellText", ()=> {
     it("should report invalid aliases, and members", () => {
         jest.mock('../src/main/propertiesService', () => ({
             loadMapFromScriptProperties: jest.fn((key: string) => {
-                if (key === "GROUPS_MAP") {
+                if (key === "MEMBER_MAP") {
                     return {
-                        "sdsu": ['josh wong']
-                    }
-                } else if (key === "ALIASES_MAP") {
-                    return {
-                        "jack/angel": ['jack zhang', 'angel zhang']
-                    }
-                } else if (key === "MEMBER_MAP") {
-                    return {
-                        "andrew chan": {"gender": "Male"},
                         "janice chan": {"gender": "Female"},
+                        "jack zhang": {"gender": "Male"},
+                        "angel zhang": {"gender": "Female"},
                     }
                 } 
                 return {};
@@ -393,6 +386,27 @@ describe("validateLeadCellText", ()=> {
         }));
         const { validateLeadCellText } = require("../src/main/validation");
 
-        expect(validateLeadCellText("SDSU, Jack/Angel\nFood: Andrew Chan\nJanice Chan")).toBe("Invalid identifier(s): SDSU, Food: Andrew Chan");
+        expect(validateLeadCellText("Jack/Angel\nFood: Andrew Chan\nJanice Chan")).toBe("Invalid identifier(s): Jack/Angel, Andrew Chan");
+    });
+
+    it("should allow for a role", () => {
+jest.mock('../src/main/propertiesService', () => ({
+            loadMapFromScriptProperties: jest.fn((key: string) => {
+                if (key === "ALIASES_MAP") {
+                    return {
+                        "kegan": ['kegan wong']
+                    }
+                } else if (key === "MEMBER_MAP") {
+                    return {
+                        "kegan wong": {"gender": "Male"},
+                    }
+                } 
+                return {};
+            }),
+        }));
+
+        const { validateLeadCellText } = require("../src/main/validation");
+
+        expect(validateLeadCellText("Tech: Kegan")).toBe("");
     });
 });
