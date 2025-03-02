@@ -1,3 +1,4 @@
+import { BasecampUnauthError } from "./error/basecampUnauthError";
 import { deleteDocumentProperty, getAllDocumentProperties } from "./propertiesService";
 import { addBasecampLinkToRow, getRoleTodoMap, getSavedScheduleEntryId, getScheduleEntryRequestForRow, hasBeenPreviouslyDeleted, isMissingScheduleEntry, isMissingTodos, toString } from "./row";
 import { generateIdForRow, getBasecampTodoRequestsForRow, getId, hasChanged, hasId, saveRow } from "./row";
@@ -84,6 +85,9 @@ function handleScheduleEntryForExistingRow(row: Row, updatedRoleTodoMap: RoleTod
         try {
             updateScheduleEntry(scheduleEntryRequest, scheduleEntryIdentifier);
         } catch (error: any) {
+            if(error instanceof BasecampUnauthError) {
+                throw error;
+            }
             Logger.log(`Error updating schedule entry for row ${toString(row)}: ${error}`);
         }
     } else {
@@ -144,6 +148,9 @@ function deleteOldRows(processedRowIds: string[]): void {
                 try {
                     deleteScheduleEntry(scheduleEntryIdentifier);
                 } catch (error: any) {
+                    if(error instanceof BasecampUnauthError) {
+                        throw error;
+                    }
                     Logger.log(`Error deleting schedule entry for row ${rowId}: ${error}`);
                 }
             }

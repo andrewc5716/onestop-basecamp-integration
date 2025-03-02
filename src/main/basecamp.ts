@@ -1,4 +1,5 @@
 import { BASECAMP_CLIENT_ID, BASECAMP_CLIENT_SECRET } from "../../config/environmentVariables";
+import { BasecampUnauthError } from "./error/basecampUnauthError";
 import { fetchWithRetry } from "./retry";
 
 type HttpMethod = GoogleAppsScript.URL_Fetch.HttpMethod;
@@ -119,6 +120,12 @@ export function logout(): void {
 }
 
 export function checkAuthorization(): void {
+    const basecampService: OAuth2 = getUnvalidatedBasecampService();
+
+    if (!basecampService.hasAccess()) {
+        showAuthorizationDialog(basecampService.getAuthorizationUrl());
+    }
+
     Logger.log(sendBasecampGetRequest(BASECAMP_AUTH_CHECK_URL));
 }
 
@@ -152,8 +159,7 @@ function getValidatedBasecampService(): OAuth2 {
     if (basecampService.hasAccess()) {
         return basecampService;
     } else {
-        showAuthorizationDialog(basecampService.getAuthorizationUrl());
-        throw new Error(BASECAMP_UNAUTH_ERROR_MSG);
+        throw new BasecampUnauthError(BASECAMP_UNAUTH_ERROR_MSG);
     }
 }
 
