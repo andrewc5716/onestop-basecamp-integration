@@ -1,6 +1,7 @@
 import { BASECAMP_PROJECT_ID, BASECAMP_TODOLIST_ID } from "../../config/environmentVariables";
 import { getBasecampProjectUrl, sendBasecampPostRequest, sendBasecampPutRequest } from "./basecamp";
 import { BasecampRequestMissingError } from "./error/basecampRequestMissingError";
+import { BasecampUnauthError } from "./error/basecampUnauthError";
 import { TodoIdMissingError } from "./error/todoIdMissingError";
 import { getExistingRoles, getNewRoles, getRemovedRoles } from "./role";
 
@@ -99,6 +100,9 @@ export function createNewTodos(roleRequestMap: RoleRequestMap): RoleTodoMap {
             let basecampTodo: BasecampTodo = createTodo(request, getDefaultTodoListIdentifier());
             roleTodoMap[role] = basecampTodo;
         } catch(error: any) {
+            if(error instanceof BasecampUnauthError) {
+                throw error;
+            }
             Logger.log(`Error creating todo for role ${role}: ${error}`);
         }
     });
@@ -123,6 +127,9 @@ export function deleteTodos(todoIds: string[]): void {
         try {
             deleteTodo(todoIdentifier);
         } catch(error: any) {
+            if(error instanceof BasecampUnauthError) {
+                throw error;
+            }
             Logger.log(`Error deleting todo with id ${id}: ${error}`);
         }
     }
@@ -204,6 +211,9 @@ export function updateTodosForExistingRoles(currentRoleRequestMap: RoleRequestMa
             updateTodo(request, todoIdentifier);
             existingRoleTodoMap[role] = existingTodo;
         } catch(error: any) {
+            if(error instanceof BasecampUnauthError) {
+                throw error;
+            }
             Logger.log(`Error updating todo for role ${role}: ${error}`);
         }
     }
@@ -237,6 +247,9 @@ export function createTodosForNewRoles(currentRoleRequestMap: RoleRequestMap, la
                 let newTodoId = createTodo(request, getDefaultTodoListIdentifier());
                 newRoleTodoMap[role] = newTodoId;
             } catch(error: any) {
+                if(error instanceof BasecampUnauthError) {
+                    throw error;
+                }
                 Logger.log(`Error creating todo for role ${role}: ${error}`);
             }
         }
