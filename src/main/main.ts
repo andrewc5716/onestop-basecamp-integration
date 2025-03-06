@@ -1,3 +1,4 @@
+import { verifyBasecampAuthorization } from "./basecamp";
 import { BasecampUnauthError } from "./error/basecampUnauthError";
 import { deleteDocumentProperty, getAllDocumentProperties } from "./propertiesService";
 import { addBasecampLinkToRow, getRoleTodoMap, getSavedScheduleEntryId, getScheduleEntryRequestForRow, hasBeenPreviouslyDeleted, isMissingScheduleEntry, isMissingTodos, toString } from "./row";
@@ -12,6 +13,7 @@ import { createNewTodos, createTodosForNewRoles, deleteObsoleteTodos, deleteTodo
  * create a menu item to give users the ability to manually trigger the import process. 
  */
 export function importOnestopToBasecamp(): void {
+    verifyBasecampAuthorization();
 
     const eventRows: Row[] = getEventRowsFromSpreadsheet();
     const processedRowIds: string[] = [];

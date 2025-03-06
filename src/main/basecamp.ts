@@ -129,6 +129,10 @@ export function checkAuthorization(): void {
     Logger.log(sendBasecampGetRequest(BASECAMP_AUTH_CHECK_URL));
 }
 
+export function verifyBasecampAuthorization(): void {
+    getValidatedBasecampService();
+}
+
 /**
  * Gets the OAuth service to interact with Basecamp.
  * "Unvalidated" because there may not be an active access token, see getValidatedBasecampService()
