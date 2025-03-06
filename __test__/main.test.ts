@@ -3,6 +3,7 @@ global.Logger = Logger;
 
 import randomstring from "randomstring";
 import { getRandomlyGeneratedRoleRequestMap, getRandomlyGeneratedRoleTodoMap, getRandomlyGeneratedRow, getRandomlyGeneratedRowBasecampMapping, getRandomlyGeneratedScheduleEntryRequest, getRandomlyGeneratedScheduleEntryIdentifier, getRandomlyGeneratedScheduleIdentifier, Mock, getRandomlyGeneratedBasecampScheduleEntry } from "./testUtils";
+import { BasecampUnauthError } from '../src/main/error/basecampUnauthError';
 
 describe("importOnestopToBasecamp", () => {
     it("should create new Todos and Schedule Entries when a row is new", () => {
@@ -22,6 +23,10 @@ describe("importOnestopToBasecamp", () => {
             [rowIdMock1]: getRandomlyGeneratedRowBasecampMapping(),
             [rowIdMock2]: getRandomlyGeneratedRowBasecampMapping(),
         };
+
+        jest.mock("../src/main/basecamp", () => ({
+            verifyBasecampAuthorization: jest.fn(),
+        }));
 
         const getEventRowsFromSpreadsheetMock: Mock = jest.fn(() => [rowMock1, rowMock2]);
 
@@ -108,6 +113,10 @@ describe("importOnestopToBasecamp", () => {
             [rowIdMock1]: getRandomlyGeneratedRowBasecampMapping(),
             [rowIdMock2]: getRandomlyGeneratedRowBasecampMapping(),
         };
+
+        jest.mock("../src/main/basecamp", () => ({
+            verifyBasecampAuthorization: jest.fn(),
+        }));
 
         const getEventRowsFromSpreadsheetMock: Mock = jest.fn(() => [rowMock1, rowMock2]);
 
@@ -204,6 +213,10 @@ describe("importOnestopToBasecamp", () => {
             [rowIdMock1]: getRandomlyGeneratedRowBasecampMapping(),
             [rowIdMock2]: getRandomlyGeneratedRowBasecampMapping(),
         };
+
+        jest.mock("../src/main/basecamp", () => ({
+            verifyBasecampAuthorization: jest.fn(),
+        }));
 
         const getEventRowsFromSpreadsheetMock: Mock = jest.fn(() => [rowMock1, rowMock2]);
 
@@ -324,6 +337,10 @@ describe("importOnestopToBasecamp", () => {
             [rowIdMock1]: getRandomlyGeneratedRowBasecampMapping(),
             [rowIdMock2]: getRandomlyGeneratedRowBasecampMapping(),
         };
+
+        jest.mock("../src/main/basecamp", () => ({
+            verifyBasecampAuthorization: jest.fn(),
+        }));
 
         const getEventRowsFromSpreadsheetMock: Mock = jest.fn(() => [rowMock1, rowMock2]);
 
@@ -447,6 +464,10 @@ describe("importOnestopToBasecamp", () => {
             [rowIdMock2]: getRandomlyGeneratedRowBasecampMapping(),
         };
 
+        jest.mock("../src/main/basecamp", () => ({
+            verifyBasecampAuthorization: jest.fn(),
+        }));
+
         const getEventRowsFromSpreadsheetMock: Mock = jest.fn(() => [rowMock1, rowMock2]);
 
         jest.mock("../src/main/scan", () => ({
@@ -563,6 +584,10 @@ describe("importOnestopToBasecamp", () => {
             [rowIdMock2]: getRandomlyGeneratedRowBasecampMapping(),
         };
 
+        jest.mock("../src/main/basecamp", () => ({
+            verifyBasecampAuthorization: jest.fn(),
+        }));
+
         const getEventRowsFromSpreadsheetMock: Mock = jest.fn(() => [rowMock1, rowMock2]);
 
         jest.mock("../src/main/scan", () => ({
@@ -651,6 +676,10 @@ describe("importOnestopToBasecamp", () => {
             [rowIdMock2]: rowBasecampMappingMock2,
         };
 
+        jest.mock("../src/main/basecamp", () => ({
+            verifyBasecampAuthorization: jest.fn(),
+        }));
+
         const getEventRowsFromSpreadsheetMock: Mock = jest.fn(() => []);
 
         jest.mock("../src/main/scan", () => ({
@@ -701,6 +730,10 @@ describe("importOnestopToBasecamp", () => {
             [rowIdMock1]: rowBasecampMappingMock1,
             [rowIdMock2]: rowBasecampMappingMock2,
         };
+
+        jest.mock("../src/main/basecamp", () => ({
+            verifyBasecampAuthorization: jest.fn(),
+        }));
 
         const getEventRowsFromSpreadsheetMock: Mock = jest.fn(() => []);
 
@@ -759,6 +792,10 @@ describe("importOnestopToBasecamp", () => {
             [rowIdMock2]: rowBasecampMappingMock2,
         };
 
+        jest.mock("../src/main/basecamp", () => ({
+            verifyBasecampAuthorization: jest.fn(),
+        }));
+
         const getEventRowsFromSpreadsheetMock: Mock = jest.fn(() => []);
 
         jest.mock("../src/main/scan", () => ({
@@ -811,6 +848,10 @@ describe("importOnestopToBasecamp", () => {
         const documentPropertiesMock: DocumentProperties = {
             [rowIdMock1]: getRandomlyGeneratedRowBasecampMapping(),
         };
+
+        jest.mock("../src/main/basecamp", () => ({
+            verifyBasecampAuthorization: jest.fn(),
+        }));
 
         const getEventRowsFromSpreadsheetMock: Mock = jest.fn(() => [rowMock1]);
 
@@ -891,6 +932,10 @@ describe("importOnestopToBasecamp", () => {
             [rowIdMock2]: getRandomlyGeneratedRowBasecampMapping(),
         };
 
+        jest.mock("../src/main/basecamp", () => ({
+            verifyBasecampAuthorization: jest.fn(),
+        }));
+
         const getEventRowsFromSpreadsheetMock: Mock = jest.fn(() => [rowMock1, rowMock2]);
 
         jest.mock("../src/main/scan", () => ({
@@ -964,5 +1009,20 @@ describe("importOnestopToBasecamp", () => {
         expect(addBasecampLinkToRowMock).toHaveBeenNthCalledWith(2, rowMock2, scheduleEntryMock2.url);
         expect(generateIdForRowMock).toHaveBeenNthCalledWith(2, rowMock2);
         expect(saveRowMock).toHaveBeenNthCalledWith(2, rowMock2, roleTodoMapMock2, scheduleEntryMock2.id);
+    });
+
+    it("should throw an error when Basecamp is not authorized", () => {
+        jest.mock("../src/main/basecamp", () => ({
+            verifyBasecampAuthorization: jest.fn().mockImplementation(() => {
+                throw new BasecampUnauthError("Basecamp not authorized");
+            })
+        }));
+
+        jest.mock("../src/main/propertiesService", () => ({
+            loadMapFromScriptProperties: jest.fn(() => ({})),
+        }));
+
+        const { importOnestopToBasecamp } = require("../src/main/main");
+        expect(() => importOnestopToBasecamp()).toThrow(BasecampUnauthError);
     });
 });

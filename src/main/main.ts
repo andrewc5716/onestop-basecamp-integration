@@ -1,3 +1,5 @@
+import { verifyBasecampAuthorization } from "./basecamp";
+import { BasecampUnauthError } from "./error/basecampUnauthError";
 import { deleteDocumentProperty, getAllDocumentProperties } from "./propertiesService";
 import { addBasecampLinkToRow, getRoleTodoMap, getSavedScheduleEntryId, getScheduleEntryRequestForRow, hasBeenPreviouslyDeleted, isMissingScheduleEntry, isMissingTodos, toString } from "./row";
 import { generateIdForRow, getBasecampTodoRequestsForRow, getId, hasChanged, hasId, saveRow } from "./row";
@@ -11,6 +13,7 @@ import { createNewTodos, createTodosForNewRoles, deleteObsoleteTodos, deleteTodo
  * create a menu item to give users the ability to manually trigger the import process. 
  */
 export function importOnestopToBasecamp(): void {
+    verifyBasecampAuthorization();
 
     const eventRows: Row[] = getEventRowsFromSpreadsheet();
     const processedRowIds: string[] = [];
@@ -84,6 +87,9 @@ function handleScheduleEntryForExistingRow(row: Row, updatedRoleTodoMap: RoleTod
         try {
             updateScheduleEntry(scheduleEntryRequest, scheduleEntryIdentifier);
         } catch (error: any) {
+            if(error instanceof BasecampUnauthError) {
+                throw error;
+            }
             Logger.log(`Error updating schedule entry for row ${toString(row)}: ${error}`);
         }
     } else {
@@ -144,6 +150,9 @@ function deleteOldRows(processedRowIds: string[]): void {
                 try {
                     deleteScheduleEntry(scheduleEntryIdentifier);
                 } catch (error: any) {
+                    if(error instanceof BasecampUnauthError) {
+                        throw error;
+                    }
                     Logger.log(`Error deleting schedule entry for row ${rowId}: ${error}`);
                 }
             }
