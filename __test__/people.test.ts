@@ -18,4 +18,7 @@ describe("normalizePersonName", () => {
     it("should not remove middle names", () => {
         expect(normalizePersonName("jonathan koby cayaban")).toEqual("jonathan koby cayaban");
     });
+    it("should remove word 'staff'", () => {
+        expect(normalizePersonName("hg1 staff")).toEqual("hg1");
+    });
 });

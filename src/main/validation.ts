@@ -91,7 +91,7 @@ function isHelperTokenValid(helperTokenWithFilters: string): boolean {
         return true;
     }
     const { stringWithoutFilters: helperWithoutFilters } = removeFilters(helperTokenWithFilters);
-    const normalizedHelper: string = normalizeHelper(helperWithoutFilters)
+    const normalizedHelper: string = normalizePersonName(helperWithoutFilters)
 
     if(GROUPS_MAP.hasOwnProperty(normalizedHelper)) {
         return true;
@@ -113,9 +113,4 @@ function isLeadTokenValid(leadToken: string): boolean {
         return true;
     }
     return false;
-}
-
-function normalizeHelper(helper: string): string {
-    const normalizedHelper: string = normalizePersonName(helper);
-    return normalizedHelper.replace(STAFF_REGEX, '').toLowerCase().trim();
 }
