@@ -1,5 +1,6 @@
 import { BASECAMP_PROJECT_ID, BASECAMP_SCHEDULE_ID } from "../../config/environmentVariables";
 import { getBasecampProjectUrl, sendBasecampPostRequest, sendBasecampPutRequest } from "./basecamp";
+import { BasecampUnauthError } from "./error/basecampUnauthError";
 import { getScheduleEntryRequestForRow, toString } from "./row";
 
 const SCHEDULES_PATH: string = '/schedules/';
@@ -87,7 +88,10 @@ export function createScheduleEntryForRow(row: Row, roleTodoMap: RoleTodoMap): B
     let basecampScheduleEntry: BasecampScheduleEntry | undefined = undefined;
     try {
         basecampScheduleEntry = createScheduleEntry(scheduleEntryRequest, getDefaultScheduleIdentifier());
-    } catch(error: any) {
+    } catch(error: any) {   
+        if(error instanceof BasecampUnauthError) {
+            throw error;
+        }
         Logger.log(`Error creating schedule entry for ${toString(row)}: ${error}`);
     }
 
