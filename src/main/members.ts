@@ -6,12 +6,13 @@ import { getCellValues } from "./scan";
 
 const MEMBERS_TAB_NAME: string = "Members";
 const COUPLES_TAB_NAME: string = "Couples";
-const NAME_COLUMN_INDEX: number = 0;
-const GENDER_COLUMN_INDEX: number = 1;
-const MARRIED_COLUMN_INDEX: number = 2;
-const PARENT_COLUMN_INDEX: number = 3;
-const CLASS_COLUMN_INDEX: number = 4;
-const ALTERNATE_NAMES_COLUMN_INDEX: number = 5;
+const NAME_COLUMN_INDEX: number = 28;
+const GENDER_COLUMN_INDEX: number = 4;
+const MARRIED_COLUMN_INDEX: number = 6;
+const PARENT_COLUMN_INDEX: number = 7;
+const CLASS_COLUMN_INDEX: number = 8;
+const ALTERNATE_NAMES_COLUMN_INDEX: number = 29;
+const BASECAMP_ID_COLUMN_INDEX: number = 30;
 const HUSBAND_COLUMN_INDEX: number = 0;
 const WIFE_COLUMN_INDEX: number = 1;
 const COUPLES_ALIASES_COLUMN_INDEX: number = 2;
@@ -39,8 +40,8 @@ function loadMembersFromOnestop(): { memberMap: MemberMap, alternateNamesMap: Al
     const memberMap: MemberMap = {};
     let alternateNamesMap: AliasMap = {};
 
-    // Start at row 1 to skip the table header row
-    for(let i = 1; i < cellValues.length; i++) {
+    // Start at row 3 to skip the table header row
+    for(let i = 3; i < cellValues.length; i++) {
         const rowValues: any[] = cellValues[i];
         const currentMember: Member = constructMember(rowValues);
         memberMap[currentMember.name] = currentMember;
@@ -55,16 +56,21 @@ function loadMembersFromOnestop(): { memberMap: MemberMap, alternateNamesMap: Al
 function constructMember(rowValues: any): Member {
     return {
         name: normalizePersonName(rowValues[NAME_COLUMN_INDEX]),
-        gender: rowValues[GENDER_COLUMN_INDEX],
+        gender: getGender(rowValues[GENDER_COLUMN_INDEX]),
         married: rowValues[MARRIED_COLUMN_INDEX],
         parent: rowValues[PARENT_COLUMN_INDEX],
-        class: rowValues[CLASS_COLUMN_INDEX]
+        class: rowValues[CLASS_COLUMN_INDEX],
+        basecampId: rowValues[BASECAMP_ID_COLUMN_INDEX],
     };
+}
+
+function getGender(rowValue: any): string {
+    return rowValue === "M" ? "Male" : "Female";
 }
 
 function getAliasList(rowValues: any, index: number): string[] {
     const aliasList: string = rowValues[index];
-    return aliasList.split(COMMA_DELIMITER).map(alias => alias.trim());
+    return aliasList.split(COMMA_DELIMITER).map(alias => alias.trim()).filter(alias => alias !== "");
 }
 
 function addAlternateNamesToMap(alternateNamesMap: AliasMap, alternateNames: string[], currentMember: Member): AliasMap {

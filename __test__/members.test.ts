@@ -7,12 +7,13 @@ global.SpreadsheetApp = SpreadsheetApp;
 import { getRandomlyGeneratedAliasTable, getRandomlyGeneratedMemberMap, getRandomlyGeneratedMemberTable, Mock } from './testUtils';
 import { PersonAliasClashError } from '../src/main/error/personAliasClashError';
 
-const NAME_COLUMN_INDEX: number = 0;
-const GENDER_COLUMN_INDEX: number = 1;
-const MARRIED_COLUMN_INDEX: number = 2;
-const PARENT_COLUMN_INDEX: number = 3;
-const CLASS_COLUMN_INDEX: number = 4;
-const ALTERNATE_NAMES_COLUMN_INDEX: number = 5;
+const NAME_COLUMN_INDEX: number = 28;
+const GENDER_COLUMN_INDEX: number = 4;
+const MARRIED_COLUMN_INDEX: number = 6;
+const PARENT_COLUMN_INDEX: number = 7;
+const CLASS_COLUMN_INDEX: number = 8;
+const ALTERNATE_NAMES_COLUMN_INDEX: number = 29;
+const BASECAMP_ID_COLUMN_INDEX: number = 30;
 
 describe("MEMBER_MAP", () => {
     it("should return the member map from the script properties when it is present", () => {
@@ -43,16 +44,21 @@ describe("MEMBER_MAP", () => {
 describe("loadMembersFromOnestopIntoScriptProperties", () => {
     it("should load the members and couples table from the onestop into the script properties when the members and couples table are present on the onestop", () => {
         const membersDataValuesMock: any[][] = getRandomlyGeneratedMemberTable(5, 1);
-        membersDataValuesMock[1][NAME_COLUMN_INDEX] = "John Doe";
-        membersDataValuesMock[1][ALTERNATE_NAMES_COLUMN_INDEX] = "John,John D";
-        membersDataValuesMock[2][NAME_COLUMN_INDEX] = "James Brown";
-        membersDataValuesMock[2][ALTERNATE_NAMES_COLUMN_INDEX] = "James,James B";
-        membersDataValuesMock[3][NAME_COLUMN_INDEX] = "Mary Brown";
-        membersDataValuesMock[3][ALTERNATE_NAMES_COLUMN_INDEX] = "Mary,Mary B";
-        membersDataValuesMock[4][NAME_COLUMN_INDEX] = "Robert White";
-        membersDataValuesMock[4][ALTERNATE_NAMES_COLUMN_INDEX] = "Robert,Robert W";
-        membersDataValuesMock[5][NAME_COLUMN_INDEX] = "Emily White";
-        membersDataValuesMock[5][ALTERNATE_NAMES_COLUMN_INDEX] = "Emily,Emily W";
+        membersDataValuesMock[3][NAME_COLUMN_INDEX] = "John Doe";
+        membersDataValuesMock[3][GENDER_COLUMN_INDEX] = "M";
+        membersDataValuesMock[3][ALTERNATE_NAMES_COLUMN_INDEX] = "John,John D";
+        membersDataValuesMock[4][NAME_COLUMN_INDEX] = "James Brown";
+        membersDataValuesMock[4][GENDER_COLUMN_INDEX] = "M";
+        membersDataValuesMock[4][ALTERNATE_NAMES_COLUMN_INDEX] = "James,James B";
+        membersDataValuesMock[5][NAME_COLUMN_INDEX] = "Mary Brown";
+        membersDataValuesMock[5][GENDER_COLUMN_INDEX] = "F";
+        membersDataValuesMock[5][ALTERNATE_NAMES_COLUMN_INDEX] = "Mary,Mary B";
+        membersDataValuesMock[6][NAME_COLUMN_INDEX] = "Robert White";
+        membersDataValuesMock[6][GENDER_COLUMN_INDEX] = "M";
+        membersDataValuesMock[6][ALTERNATE_NAMES_COLUMN_INDEX] = "Robert,Robert W";
+        membersDataValuesMock[7][NAME_COLUMN_INDEX] = "Emily White";
+        membersDataValuesMock[7][GENDER_COLUMN_INDEX] = "F";
+        membersDataValuesMock[7][ALTERNATE_NAMES_COLUMN_INDEX] = "Emily,Emily W";
         
         const couplesDataValuesMock: any[][] = getRandomlyGeneratedAliasTable(2);
         couplesDataValuesMock[1] = ["James Brown", "Mary Brown", "James/Mary,Browns"];
@@ -74,11 +80,11 @@ describe("loadMembersFromOnestopIntoScriptProperties", () => {
         const receivedAliasMap: AliasMap = loadMembersFromOnestopIntoScriptProperties();
 
         const expectedMemberMap: MemberMap = {
-            "john doe": {name: "john doe", gender: membersDataValuesMock[1][GENDER_COLUMN_INDEX], married: membersDataValuesMock[1][MARRIED_COLUMN_INDEX], parent: membersDataValuesMock[1][PARENT_COLUMN_INDEX], class: membersDataValuesMock[1][CLASS_COLUMN_INDEX]},
-            "james brown": {name: "james brown", gender: membersDataValuesMock[2][GENDER_COLUMN_INDEX], married: membersDataValuesMock[2][MARRIED_COLUMN_INDEX], parent: membersDataValuesMock[2][PARENT_COLUMN_INDEX], class: membersDataValuesMock[2][CLASS_COLUMN_INDEX]},
-            "mary brown": {name: "mary brown", gender: membersDataValuesMock[3][GENDER_COLUMN_INDEX], married: membersDataValuesMock[3][MARRIED_COLUMN_INDEX], parent: membersDataValuesMock[3][PARENT_COLUMN_INDEX], class: membersDataValuesMock[3][CLASS_COLUMN_INDEX]},
-            "robert white": {name: "robert white", gender: membersDataValuesMock[4][GENDER_COLUMN_INDEX], married: membersDataValuesMock[4][MARRIED_COLUMN_INDEX], parent: membersDataValuesMock[4][PARENT_COLUMN_INDEX], class: membersDataValuesMock[4][CLASS_COLUMN_INDEX]},
-            "emily white": {name: "emily white", gender: membersDataValuesMock[5][GENDER_COLUMN_INDEX], married: membersDataValuesMock[5][MARRIED_COLUMN_INDEX], parent: membersDataValuesMock[5][PARENT_COLUMN_INDEX], class: membersDataValuesMock[5][CLASS_COLUMN_INDEX]},
+            "john doe": {name: "john doe", gender: "Male", married: membersDataValuesMock[3][MARRIED_COLUMN_INDEX], parent: membersDataValuesMock[3][PARENT_COLUMN_INDEX], class: membersDataValuesMock[3][CLASS_COLUMN_INDEX], basecampId: membersDataValuesMock[3][BASECAMP_ID_COLUMN_INDEX]},
+            "james brown": {name: "james brown", gender: "Male", married: membersDataValuesMock[4][MARRIED_COLUMN_INDEX], parent: membersDataValuesMock[4][PARENT_COLUMN_INDEX], class: membersDataValuesMock[4][CLASS_COLUMN_INDEX], basecampId: membersDataValuesMock[4][BASECAMP_ID_COLUMN_INDEX]},
+            "mary brown": {name: "mary brown", gender: "Female", married: membersDataValuesMock[5][MARRIED_COLUMN_INDEX], parent: membersDataValuesMock[5][PARENT_COLUMN_INDEX], class: membersDataValuesMock[5][CLASS_COLUMN_INDEX], basecampId: membersDataValuesMock[5][BASECAMP_ID_COLUMN_INDEX]},
+            "robert white": {name: "robert white", gender: "Male", married: membersDataValuesMock[6][MARRIED_COLUMN_INDEX], parent: membersDataValuesMock[6][PARENT_COLUMN_INDEX], class: membersDataValuesMock[6][CLASS_COLUMN_INDEX], basecampId: membersDataValuesMock[6][BASECAMP_ID_COLUMN_INDEX]},
+            "emily white": {name: "emily white", gender: "Female", married: membersDataValuesMock[7][MARRIED_COLUMN_INDEX], parent: membersDataValuesMock[7][PARENT_COLUMN_INDEX], class: membersDataValuesMock[7][CLASS_COLUMN_INDEX], basecampId: membersDataValuesMock[7][BASECAMP_ID_COLUMN_INDEX]},
         };
 
         const expectedAliasMap: AliasMap = {
@@ -127,10 +133,10 @@ describe("loadMembersFromOnestopIntoScriptProperties", () => {
 
     it("should load a object of just the member alternate names when the couples table is empty", () => {
         const membersDataValuesMock: any[][] = getRandomlyGeneratedMemberTable(2, 1);
-        membersDataValuesMock[1][NAME_COLUMN_INDEX] = "John Doe";
-        membersDataValuesMock[1][ALTERNATE_NAMES_COLUMN_INDEX] = "John,John D";
-        membersDataValuesMock[2][NAME_COLUMN_INDEX] = "James Brown";
-        membersDataValuesMock[2][ALTERNATE_NAMES_COLUMN_INDEX] = "James,James B";
+        membersDataValuesMock[3][NAME_COLUMN_INDEX] = "John Doe";
+        membersDataValuesMock[3][ALTERNATE_NAMES_COLUMN_INDEX] = "John,John D";
+        membersDataValuesMock[4][NAME_COLUMN_INDEX] = "James Brown";
+        membersDataValuesMock[4][ALTERNATE_NAMES_COLUMN_INDEX] = "James,James B";
 
         const couplesDataValuesMock: any[][] = getRandomlyGeneratedAliasTable(0);
 
@@ -166,10 +172,10 @@ describe("loadMembersFromOnestopIntoScriptProperties", () => {
 
     it("should throw an error when multiple people share the same alternate name", () => {
         const membersDataValuesMock: any[][] = getRandomlyGeneratedMemberTable(2, 1);
-        membersDataValuesMock[1][NAME_COLUMN_INDEX] = "John Doe";
-        membersDataValuesMock[1][ALTERNATE_NAMES_COLUMN_INDEX] = "John,John D";
-        membersDataValuesMock[2][NAME_COLUMN_INDEX] = "John Brown";
-        membersDataValuesMock[2][ALTERNATE_NAMES_COLUMN_INDEX] = "John,John B";
+        membersDataValuesMock[3][NAME_COLUMN_INDEX] = "John Doe";
+        membersDataValuesMock[3][ALTERNATE_NAMES_COLUMN_INDEX] = "John,John D";
+        membersDataValuesMock[4][NAME_COLUMN_INDEX] = "John Brown";
+        membersDataValuesMock[4][ALTERNATE_NAMES_COLUMN_INDEX] = "John,John B";
 
         const couplesDataValuesMock: any[][] = getRandomlyGeneratedAliasTable(0);
 
@@ -191,12 +197,12 @@ describe("loadMembersFromOnestopIntoScriptProperties", () => {
     it("should map an alias to both a person and a couple when a person's alternate name is the same as a couple's alias", () => {
         const membersDataValuesMock: any[][] = getRandomlyGeneratedMemberTable(3, 1);
 
-        membersDataValuesMock[1][NAME_COLUMN_INDEX] = "John Miller";
-        membersDataValuesMock[1][ALTERNATE_NAMES_COLUMN_INDEX] = "John,John M, JM";
-        membersDataValuesMock[2][NAME_COLUMN_INDEX] = "James Brown";
-        membersDataValuesMock[2][ALTERNATE_NAMES_COLUMN_INDEX] = "James,James B";
-        membersDataValuesMock[3][NAME_COLUMN_INDEX] = "Mary Brown";
-        membersDataValuesMock[3][ALTERNATE_NAMES_COLUMN_INDEX] = "Mary,Mary B";
+        membersDataValuesMock[3][NAME_COLUMN_INDEX] = "John Miller";
+        membersDataValuesMock[3][ALTERNATE_NAMES_COLUMN_INDEX] = "John,John M, JM";
+        membersDataValuesMock[4][NAME_COLUMN_INDEX] = "James Brown";
+        membersDataValuesMock[4][ALTERNATE_NAMES_COLUMN_INDEX] = "James,James B";
+        membersDataValuesMock[5][NAME_COLUMN_INDEX] = "Mary Brown";
+        membersDataValuesMock[5][ALTERNATE_NAMES_COLUMN_INDEX] = "Mary,Mary B";
         
         const couplesDataValuesMock: any[][] = getRandomlyGeneratedAliasTable(1);
         couplesDataValuesMock[1] = ["James Brown", "Mary Brown", "JM"];
