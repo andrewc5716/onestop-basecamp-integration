@@ -55,6 +55,7 @@ export function getPersonId(personName: string): string | undefined {
     }
 
     // Otherwise fallback on the legacy method that relies on the basecamp people endpoint
+    Logger.log("Falling back to legacy method to fetch person basecamp id");
 
     // Check the in memory cache first
     if(cachedPersonNameIdMap !== null) {

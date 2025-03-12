@@ -18,6 +18,8 @@ const WIFE_COLUMN_INDEX: number = 1;
 const COUPLES_ALIASES_COLUMN_INDEX: number = 2;
 const COMMA_DELIMITER: string = ",";
 const MEMBER_MAP_KEY: string = "MEMBER_MAP";
+const MALE_GENDER: string = "Male";
+const FEMALE_GENDER: string = "Female";
 
 export const MEMBER_MAP: MemberMap = loadMapFromScriptProperties(MEMBER_MAP_KEY) as MemberMap;
 
@@ -65,7 +67,7 @@ function constructMember(rowValues: any): Member {
 }
 
 function getGender(rowValue: any): string {
-    return rowValue === "M" ? "Male" : "Female";
+    return rowValue === "M" ? MALE_GENDER : FEMALE_GENDER;
 }
 
 function getAliasList(rowValues: any, index: number): string[] {
