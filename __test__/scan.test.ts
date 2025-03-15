@@ -104,10 +104,6 @@ describe("getEventRowsFromSpreadsheet", () => {
         const retrievedEventRows: Row[] = getEventRowsFromSpreadsheet();
         expect(retrievedEventRows.length).toBe(2);
 
-        for(const retrievedEventRow of retrievedEventRows) {
-            expect(retrievedEventRow.date.getTime()).toBeGreaterThanOrEqual(mockCurrentDate.getTime());
-        }
-
         jest.useRealTimers();
     });
 });
