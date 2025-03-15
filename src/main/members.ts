@@ -20,6 +20,7 @@ const COMMA_DELIMITER: string = ",";
 const MEMBER_MAP_KEY: string = "MEMBER_MAP";
 const MALE_GENDER: string = "Male";
 const FEMALE_GENDER: string = "Female";
+const MEMBER_TABLE_FIRST_ROW: number = 3;
 
 export const MEMBER_MAP: MemberMap = loadMapFromScriptProperties(MEMBER_MAP_KEY) as MemberMap;
 
@@ -42,8 +43,8 @@ function loadMembersFromOnestop(): { memberMap: MemberMap, alternateNamesMap: Al
     const memberMap: MemberMap = {};
     let alternateNamesMap: AliasMap = {};
 
-    // Start at row 3 to skip the table header row
-    for(let i = 3; i < cellValues.length; i++) {
+    // Start at MEMBER_TABLE_FIRST_ROW to skip the table header rows
+    for(let i = MEMBER_TABLE_FIRST_ROW; i < cellValues.length; i++) {
         const rowValues: any[] = cellValues[i];
         const currentMember: Member = constructMember(rowValues);
         memberMap[currentMember.name] = currentMember;

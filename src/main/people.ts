@@ -50,12 +50,12 @@ export function getPersonId(personName: string): string | undefined {
     const normalizedPersonName: string = normalizePersonName(personName);
 
     // Pull the basecamp id from the member properties if possible
-    if(MEMBER_MAP.hasOwnProperty(normalizedPersonName)) {
+    if(MEMBER_MAP.hasOwnProperty(normalizedPersonName) && MEMBER_MAP[normalizedPersonName].basecampId !== "") {
         return MEMBER_MAP[normalizedPersonName].basecampId;
     }
 
     // Otherwise fallback on the legacy method that relies on the basecamp people endpoint
-    Logger.log("Falling back to legacy method to fetch person basecamp id");
+    Logger.log(`Falling back to legacy method to fetch basecamp id for ${normalizedPersonName}`);
 
     // Check the in memory cache first
     if(cachedPersonNameIdMap !== null) {
