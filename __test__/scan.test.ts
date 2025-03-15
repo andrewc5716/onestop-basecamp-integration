@@ -39,6 +39,8 @@ describe("getEventRowsFromSpreadsheet", () => {
     });
 
     it("should skip tabs that are in the past when old tabs are unhidden", () => {
+        jest.useFakeTimers();
+
         const spreadsheetMock: Spreadsheet = new Spreadsheet("mock spreadsheet");
         const tabMock1: SheetMock = new SheetMock("SAT 3/15", false);
         const tabMock2: SheetMock = new SheetMock("SUN 3/16", false);
@@ -91,7 +93,6 @@ describe("getEventRowsFromSpreadsheet", () => {
         jest.spyOn(dataRangeMock3, "getValues").mockReturnValue(cellValuesMock3);
 
         const mockCurrentDate = new Date("2025-03-16T12:30:20Z");
-        jest.useFakeTimers();
         jest.setSystemTime(mockCurrentDate);
 
         jest.mock("../src/main/row", () => ({
@@ -106,6 +107,8 @@ describe("getEventRowsFromSpreadsheet", () => {
         for(const retrievedEventRow of retrievedEventRows) {
             expect(retrievedEventRow.date.getTime()).toBeGreaterThanOrEqual(mockCurrentDate.getTime());
         }
+
+        jest.useRealTimers();
     });
 });
 
