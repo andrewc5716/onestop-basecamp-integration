@@ -1026,3 +1026,238 @@ describe("importOnestopToBasecamp", () => {
         expect(() => importOnestopToBasecamp()).toThrow(BasecampUnauthError);
     });
 });
+
+describe("forceUpdate", () => {
+    it("should create new Todos and Schedule Entries when a row is new", () => {
+        const rowMock1: Row = getRandomlyGeneratedRow();
+        const roleRequestMapMock1: RoleRequestMap = getRandomlyGeneratedRoleRequestMap();
+        const roleTodoMapMock1: RoleTodoMap = getRandomlyGeneratedRoleTodoMap();
+        const scheduleEntryRequestMock1: BasecampScheduleEntryRequest = getRandomlyGeneratedScheduleEntryRequest();
+        const scheduleEntryMock1: BasecampScheduleEntry = getRandomlyGeneratedBasecampScheduleEntry();
+        const rowIdMock1: string = randomstring.generate();
+        const rowMock2: Row = getRandomlyGeneratedRow();
+        const roleRequestMapMock2: RoleRequestMap = getRandomlyGeneratedRoleRequestMap();
+        const roleTodoMapMock2: RoleTodoMap = getRandomlyGeneratedRoleTodoMap();
+        const scheduleEntryRequestMock2: BasecampScheduleEntryRequest = getRandomlyGeneratedScheduleEntryRequest();
+        const scheduleEntryMock2: BasecampScheduleEntry = getRandomlyGeneratedBasecampScheduleEntry();
+        const rowIdMock2: string = randomstring.generate();
+        const documentPropertiesMock: DocumentProperties = {
+            [rowIdMock1]: getRandomlyGeneratedRowBasecampMapping(),
+            [rowIdMock2]: getRandomlyGeneratedRowBasecampMapping(),
+        };
+
+        jest.mock("../src/main/basecamp", () => ({
+            verifyBasecampAuthorization: jest.fn(),
+        }));
+
+        const getEventRowsFromSpreadsheetMock: Mock = jest.fn(() => [rowMock1, rowMock2]);
+
+        jest.mock("../src/main/scan", () => ({
+            getEventRowsFromSpreadsheet: getEventRowsFromSpreadsheetMock,
+        }));
+
+        const hasIdMock: Mock = jest.fn()
+            .mockReturnValueOnce(false)
+            .mockReturnValueOnce(true)
+            .mockReturnValueOnce(false)
+            .mockReturnValueOnce(true);
+        const getBasecampTodoRequestsForRowMock: Mock = jest.fn()
+            .mockReturnValueOnce(roleRequestMapMock1)
+            .mockReturnValueOnce(roleRequestMapMock2);
+        const getScheduleEntryRequestForRowMock: Mock = jest.fn()
+            .mockReturnValueOnce(scheduleEntryRequestMock1)
+            .mockReturnValueOnce(scheduleEntryRequestMock2);
+        const generateIdForRowMock: Mock = jest.fn();
+        const saveRowMock: Mock = jest.fn();
+        const getIdMock: Mock = jest.fn()
+            .mockReturnValueOnce(rowIdMock1)
+            .mockReturnValueOnce(rowIdMock2);
+        const addBasecampLinkToRowMock: Mock = jest.fn();
+
+        jest.mock("../src/main/row", () => ({
+            hasId: hasIdMock,
+            getBasecampTodoRequestsForRow: getBasecampTodoRequestsForRowMock,
+            getScheduleEntryRequestForRow: getScheduleEntryRequestForRowMock,
+            generateIdForRow: generateIdForRowMock,
+            saveRow: saveRowMock,
+            getId: getIdMock,
+            addBasecampLinkToRow: addBasecampLinkToRowMock,
+        }));
+
+        const createNewTodosMock: Mock = jest.fn()
+            .mockReturnValueOnce(roleTodoMapMock1)
+            .mockReturnValueOnce(roleTodoMapMock2);
+
+        jest.mock("../src/main/todos", () => ({
+            createNewTodos: createNewTodosMock,
+        }));
+
+        const createScheduleEntryForRowMock: Mock = jest.fn()
+            .mockReturnValueOnce(scheduleEntryMock1)
+            .mockReturnValueOnce(scheduleEntryMock2);
+
+        jest.mock("../src/main/schedule", () => ({
+            createScheduleEntryForRow: createScheduleEntryForRowMock,
+        }));
+
+        const getAllDocumentPropertiesMock: Mock = jest.fn(() => documentPropertiesMock);
+
+        jest.mock("../src/main/propertiesService", () => ({
+            getAllDocumentProperties: getAllDocumentPropertiesMock,
+        }));
+
+        const { forceUpdate } = require("../src/main/main");
+        forceUpdate();
+
+        expect(getEventRowsFromSpreadsheetMock).toHaveBeenCalledTimes(1);
+
+        // Asserts for new first row
+        expect(createNewTodosMock).toHaveBeenNthCalledWith(1, roleRequestMapMock1);
+        expect(createScheduleEntryForRowMock).toHaveBeenNthCalledWith(1, rowMock1, roleTodoMapMock1);
+        expect(addBasecampLinkToRowMock).toHaveBeenNthCalledWith(1, rowMock1, scheduleEntryMock1.url);
+        expect(generateIdForRowMock).toHaveBeenNthCalledWith(1, rowMock1);
+        expect(saveRowMock).toHaveBeenNthCalledWith(1, rowMock1, roleTodoMapMock1, scheduleEntryMock1.id);
+    
+        // Asserts for new second row
+        expect(createNewTodosMock).toHaveBeenNthCalledWith(2, roleRequestMapMock2);
+        expect(createScheduleEntryForRowMock).toHaveBeenNthCalledWith(2, rowMock2, roleTodoMapMock2);
+        expect(addBasecampLinkToRowMock).toHaveBeenNthCalledWith(2, rowMock2, scheduleEntryMock2.url);
+        expect(generateIdForRowMock).toHaveBeenNthCalledWith(2, rowMock2);
+        expect(saveRowMock).toHaveBeenNthCalledWith(2, rowMock2, roleTodoMapMock2, scheduleEntryMock2.id);
+    });
+
+    it("should update existing Todos and Schedule Entries when a row is not new", () => {
+        const rowMock1: Row = getRandomlyGeneratedRow();
+        const roleRequestMapMock1: RoleRequestMap = getRandomlyGeneratedRoleRequestMap();
+        const scheduleEntryRequestMock1: BasecampScheduleEntryRequest = getRandomlyGeneratedScheduleEntryRequest();
+        const scheduleEntryIdMock1: string = randomstring.generate();
+        const scheduleEntryIdentifierMock1: ScheduleEntryIdentifier = getRandomlyGeneratedScheduleEntryIdentifier();
+        const rowIdMock1: string = randomstring.generate();
+        const rowMock2: Row = getRandomlyGeneratedRow();
+        const lastSavedRoleTodoMapMock1: RoleTodoMap = getRandomlyGeneratedRoleTodoMap();
+        const newRoleTodoMapMock1: RoleTodoMap = getRandomlyGeneratedRoleTodoMap();
+        const existingRoleTodoMapMock1: RoleTodoMap = getRandomlyGeneratedRoleTodoMap();
+        const updatedRoleTodoMapMock1: RoleTodoMap = {...existingRoleTodoMapMock1, ...newRoleTodoMapMock1};
+        const roleRequestMapMock2: RoleRequestMap = getRandomlyGeneratedRoleRequestMap();
+        const scheduleEntryRequestMock2: BasecampScheduleEntryRequest = getRandomlyGeneratedScheduleEntryRequest();
+        const scheduleEntryIdMock2: string = randomstring.generate();
+        const scheduleEntryIdentifierMock2: ScheduleEntryIdentifier = getRandomlyGeneratedScheduleEntryIdentifier();
+        const rowIdMock2: string = randomstring.generate();
+        const lastSavedRoleTodoMapMock2: RoleTodoMap = getRandomlyGeneratedRoleTodoMap();
+        const newRoleTodoMapMock2: RoleTodoMap = getRandomlyGeneratedRoleTodoMap();
+        const existingRoleTodoMapMock2: RoleTodoMap = getRandomlyGeneratedRoleTodoMap();
+        const updatedRoleTodoMapMock2: RoleTodoMap = {...existingRoleTodoMapMock2, ...newRoleTodoMapMock2};
+        const documentPropertiesMock: DocumentProperties = {
+            [rowIdMock1]: getRandomlyGeneratedRowBasecampMapping(),
+            [rowIdMock2]: getRandomlyGeneratedRowBasecampMapping(),
+        };
+
+        jest.mock("../src/main/basecamp", () => ({
+            verifyBasecampAuthorization: jest.fn(),
+        }));
+
+        const getEventRowsFromSpreadsheetMock: Mock = jest.fn(() => [rowMock1, rowMock2]);
+
+        jest.mock("../src/main/scan", () => ({
+            getEventRowsFromSpreadsheet: getEventRowsFromSpreadsheetMock,
+        }));
+
+        const hasIdMock: Mock = jest.fn()
+            .mockReturnValueOnce(true)
+            .mockReturnValueOnce(true)
+            .mockReturnValueOnce(true)
+            .mockReturnValueOnce(true);
+        const hasBeenPreviouslyDeletedMock: Mock = jest.fn(() => false);
+        const getBasecampTodoRequestsForRowMock: Mock = jest.fn()
+            .mockReturnValueOnce(roleRequestMapMock1)
+            .mockReturnValueOnce(roleRequestMapMock2);
+        const getScheduleEntryRequestForRowMock: Mock = jest.fn()
+            .mockReturnValueOnce(scheduleEntryRequestMock1)
+            .mockReturnValueOnce(scheduleEntryRequestMock2);
+        const saveRowMock: Mock = jest.fn();
+        const getIdMock: Mock = jest.fn()
+            .mockReturnValueOnce(rowIdMock1)
+            .mockReturnValueOnce(rowIdMock2);
+        const getRoleTodoMapMock: Mock = jest.fn()
+            .mockReturnValueOnce(lastSavedRoleTodoMapMock1)
+            .mockReturnValueOnce(lastSavedRoleTodoMapMock2);
+        const getSavedScheduleEntryIdMock: Mock = jest.fn()
+            .mockReturnValueOnce(scheduleEntryIdMock1)
+            .mockReturnValueOnce(scheduleEntryIdMock2);
+
+        jest.mock("../src/main/row", () => ({
+            hasId: hasIdMock,
+            hasBeenPreviouslyDeleted: hasBeenPreviouslyDeletedMock,
+            getBasecampTodoRequestsForRow: getBasecampTodoRequestsForRowMock,
+            getScheduleEntryRequestForRow: getScheduleEntryRequestForRowMock,
+            saveRow: saveRowMock,
+            getId: getIdMock,
+            getRoleTodoMap: getRoleTodoMapMock,
+            getSavedScheduleEntryId: getSavedScheduleEntryIdMock,
+        }));
+
+        const deleteObsoleteTodosMock: Mock = jest.fn();
+        const createTodosForNewRolesMock: Mock = jest.fn()
+            .mockReturnValueOnce(newRoleTodoMapMock1)
+            .mockReturnValueOnce(newRoleTodoMapMock2);
+        const updateTodosForExistingRolesMock: Mock = jest.fn()
+            .mockReturnValueOnce(existingRoleTodoMapMock1)
+            .mockReturnValueOnce(existingRoleTodoMapMock2);
+
+        jest.mock("../src/main/todos", () => ({
+            deleteObsoleteTodos: deleteObsoleteTodosMock,
+            createTodosForNewRoles: createTodosForNewRolesMock,
+            updateTodosForExistingRoles: updateTodosForExistingRolesMock,
+        }));
+
+        const getScheduleEntryIdentifierMock: Mock = jest.fn()
+            .mockReturnValueOnce(scheduleEntryIdentifierMock1)
+            .mockReturnValueOnce(scheduleEntryIdentifierMock2);
+        const updateScheduleEntryMock: Mock = jest.fn();
+
+        jest.mock("../src/main/schedule", () => ({
+            getScheduleEntryIdentifier: getScheduleEntryIdentifierMock,
+            updateScheduleEntry: updateScheduleEntryMock,
+        }));
+
+        const getAllDocumentPropertiesMock: Mock = jest.fn(() => documentPropertiesMock);
+
+        jest.mock("../src/main/propertiesService", () => ({
+            getAllDocumentProperties: getAllDocumentPropertiesMock,
+        }));
+
+        const { forceUpdate } = require("../src/main/main");
+        forceUpdate();
+
+        expect(getEventRowsFromSpreadsheetMock).toHaveBeenCalledTimes(1);
+
+        // Asserts for changed first row
+        expect(deleteObsoleteTodosMock).toHaveBeenNthCalledWith(1, roleRequestMapMock1, lastSavedRoleTodoMapMock1);
+        expect(createTodosForNewRolesMock).toHaveBeenNthCalledWith(1, roleRequestMapMock1, lastSavedRoleTodoMapMock1);
+        expect(updateTodosForExistingRolesMock).toHaveBeenNthCalledWith(1, roleRequestMapMock1, lastSavedRoleTodoMapMock1);
+        expect(updateScheduleEntryMock).toHaveBeenNthCalledWith(1, scheduleEntryRequestMock1, scheduleEntryIdentifierMock1);
+        expect(saveRowMock).toHaveBeenNthCalledWith(1, rowMock1, updatedRoleTodoMapMock1, scheduleEntryIdMock1);
+    
+        // Asserts for changed second row
+        expect(deleteObsoleteTodosMock).toHaveBeenNthCalledWith(2, roleRequestMapMock2, lastSavedRoleTodoMapMock2);
+        expect(createTodosForNewRolesMock).toHaveBeenNthCalledWith(2, roleRequestMapMock2, lastSavedRoleTodoMapMock2);
+        expect(updateTodosForExistingRolesMock).toHaveBeenNthCalledWith(2, roleRequestMapMock2, lastSavedRoleTodoMapMock2);
+        expect(updateScheduleEntryMock).toHaveBeenNthCalledWith(2, scheduleEntryRequestMock2, scheduleEntryIdentifierMock2);
+        expect(saveRowMock).toHaveBeenNthCalledWith(2, rowMock2, updatedRoleTodoMapMock2, scheduleEntryIdMock2);
+    });
+
+    it("should throw an error when Basecamp is not authorized", () => {
+        jest.mock("../src/main/basecamp", () => ({
+            verifyBasecampAuthorization: jest.fn().mockImplementation(() => {
+                throw new BasecampUnauthError("Basecamp not authorized");
+            })
+        }));
+
+        jest.mock("../src/main/propertiesService", () => ({
+            loadMapFromScriptProperties: jest.fn(() => ({})),
+        }));
+
+        const { forceUpdate } = require("../src/main/main");
+        expect(() => forceUpdate()).toThrow(BasecampUnauthError);
+    });
+});
