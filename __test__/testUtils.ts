@@ -265,6 +265,7 @@ export function getRandomlyGeneratedMember(): Member {
         married: getRandomBoolean(),
         parent: getRandomBoolean(),
         class: getRandomNumber(),
+        basecampId: randomstring.generate(),
     };
 }
 
@@ -279,11 +280,11 @@ export function getRandomlyGeneratedMemberMap(numMembers: number = 10): MemberMa
 }
 
 function getRandomlyGeneratedMemberRow(numAlternateNames: number = 3): any[] {
-    return [randomstring.generate(), randomstring.generate(), getRandomBoolean(), getRandomBoolean(), getRandomNumber(), Array.from({length: numAlternateNames}, () => randomstring.generate()).join(",")];
+    return [randomstring.generate(), randomstring.generate(), randomstring.generate(), randomstring.generate(), randomstring.generate(), getRandomBoolean(), getRandomBoolean(), getRandomBoolean(), getRandomNumber(), randomstring.generate(), randomstring.generate(), randomstring.generate(), getRandomBoolean(), getRandomBoolean(), getRandomBoolean(), getRandomBoolean(), getRandomBoolean(), getRandomBoolean(), getRandomBoolean(), getRandomBoolean(), getRandomBoolean(), getRandomBoolean(), getRandomBoolean(), getRandomBoolean(), getRandomBoolean(), getRandomBoolean(), getRandomBoolean(), getRandomBoolean(), randomstring.generate(), Array.from({length: numAlternateNames}, () => randomstring.generate()).join(","), randomstring.generate()];
 }
 
 export function getRandomlyGeneratedMemberTable(numMembers: number = 10, numAlternateNames: number = 3): any[][] {
-    const memberTable: any[][] = [["Name", "Gender", "Married", "Parent", "Class", "Alertnate Names (comma separated)"]];
+    const memberTable: any[][] = [[],[],["Key", "First Name", "Last Name", "Ministry", "Gender", "Student", "Married", "Parent", "Class", "Email", "Phone", "Birthday", "UCSD SWS", "Setup Lead (SWS)", "Setup Lead (MBS)", "Sound Mixing (Prayer Meeting)", "Sound Mixing (Small Event)", "Propre", "Camera Operator", "Switcher/Stream", "Lightboard", "House Lights", "Trailer (Lead)", "Trailer (Helper)", "Instruments", "Tables", "Stage Hand", "Name", "Aliases", "Basecamp ID"]];
     for(let i = 0; i < numMembers; i++) {
         memberTable.push(getRandomlyGeneratedMemberRow(numAlternateNames));
     }
