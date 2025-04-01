@@ -1,3 +1,5 @@
+import { verifyBasecampAuthorization } from "./basecamp";
+import { BasecampUnauthError } from "./error/basecampUnauthError";
 import { deleteDocumentProperty, getAllDocumentProperties } from "./propertiesService";
 import { addBasecampLinkToRow, getRoleTodoMap, getSavedScheduleEntryId, getScheduleEntryRequestForRow, hasBeenPreviouslyDeleted, isMissingScheduleEntry, isMissingTodos, toString } from "./row";
 import { generateIdForRow, getBasecampTodoRequestsForRow, getId, hasChanged, hasId, saveRow } from "./row";
@@ -11,6 +13,7 @@ import { createNewTodos, createTodosForNewRoles, deleteObsoleteTodos, deleteTodo
  * create a menu item to give users the ability to manually trigger the import process. 
  */
 export function importOnestopToBasecamp(): void {
+    verifyBasecampAuthorization();
 
     const eventRows: Row[] = getEventRowsFromSpreadsheet();
     const processedRowIds: string[] = [];
@@ -34,6 +37,41 @@ export function importOnestopToBasecamp(): void {
 }
 
 /**
+ * Mirror of the importOnestopToBasecamp function that force updates all existing rows regardless
+ * of whether they have changed or not
+ */
+export function forceUpdate(): void {
+    verifyBasecampAuthorization();
+
+    const eventRows: Row[] = getEventRowsFromSpreadsheet();
+    const processedRowIds: string[] = [];
+
+    for(const eventRow of eventRows) {
+        if(hasId(eventRow) && !hasBeenPreviouslyDeleted(eventRow)) {
+            Logger.log(`Force updating row for ${eventRow.what.value} on ${eventRow.startTime}...`);
+            updateExistingRow(eventRow);
+        } else {
+            Logger.log(`Row for ${eventRow.what.value} on ${eventRow.startTime} is new! Processing it as a new row...`);
+            processNewRow(eventRow);
+        }
+
+        // Some rows may not have an id if a todo request isn't successfully made
+        if (hasId(eventRow)) {
+            processedRowIds.push(getId(eventRow));
+        }
+    }
+
+    deleteOldRows(processedRowIds);
+}
+
+function updateExistingRow(row: Row): void {
+    // Update Todos and Schedule Entry if the row has changed or if Todos are missing
+    const updatedRoleTodoMap: RoleTodoMap = handleTodosForExistingRow(row);
+    const scheduleEntryId: string | undefined = handleScheduleEntryForExistingRow(row, updatedRoleTodoMap);
+    saveRow(row, updatedRoleTodoMap, scheduleEntryId);
+}
+
+/**
  * Processes existing event rows by checking whether the row has been modified and if so indiscriminately
  * updates all the tasks in basecamp with the new information while updating backend metadata
  * 
@@ -49,9 +87,7 @@ function processExistingRow(row: Row): void {
     if(hasChanged(row) || isMissingTodos(row)) {
         Logger.log("Row has changed, or is missing todos. Updating...");
         // Update Todos and Schedule Entry if the row has changed or if Todos are missing
-        const updatedRoleTodoMap: RoleTodoMap = handleTodosForExistingRow(row);
-        const scheduleEntryId: string | undefined = handleScheduleEntryForExistingRow(row, updatedRoleTodoMap);
-        saveRow(row, updatedRoleTodoMap, scheduleEntryId);
+        updateExistingRow(row);
     } else if(isMissingScheduleEntry(row)) {
         Logger.log(`Row for ${toString(row)} is missing a schedule entry. Creating one...`);
         // Create the Schedule Entry if it is missing
@@ -84,6 +120,9 @@ function handleScheduleEntryForExistingRow(row: Row, updatedRoleTodoMap: RoleTod
         try {
             updateScheduleEntry(scheduleEntryRequest, scheduleEntryIdentifier);
         } catch (error: any) {
+            if(error instanceof BasecampUnauthError) {
+                throw error;
+            }
             Logger.log(`Error updating schedule entry for row ${toString(row)}: ${error}`);
         }
     } else {
@@ -144,6 +183,9 @@ function deleteOldRows(processedRowIds: string[]): void {
                 try {
                     deleteScheduleEntry(scheduleEntryIdentifier);
                 } catch (error: any) {
+                    if(error instanceof BasecampUnauthError) {
+                        throw error;
+                    }
                     Logger.log(`Error deleting schedule entry for row ${rowId}: ${error}`);
                 }
             }

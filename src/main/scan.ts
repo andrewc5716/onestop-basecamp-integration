@@ -36,8 +36,9 @@ export function getEventRowsFromSpreadsheet(): Row[] {
     
     const tabs: Sheet[] = getAllSpreadsheetTabs();
     const dailyActiveTabs: Sheet[] = getActiveDailyTabs(tabs);
+    const dailyActiveTabsTodayOrInFuture: Sheet[] = getActiveDailyTabsTodayOrInFuture(dailyActiveTabs);
     // Fetches all event rows from all of the daily active tabs
-    const eventRows: Row[] = dailyActiveTabs.flatMap((dailyActiveTab) => getRowsWithEvents(dailyActiveTab));
+    const eventRows: Row[] = dailyActiveTabsTodayOrInFuture.flatMap((dailyActiveTab) => getRowsWithEvents(dailyActiveTab));
     
     Logger.log(`Found ${eventRows.length} active rows from the spreadsheet...`)
     return eventRows;
@@ -68,6 +69,20 @@ function getActiveDailyTabs(spreadsheetTabs: Sheet[]): Sheet[] {
     }
 
     return dailyActiveTabs;
+}
+
+function getActiveDailyTabsTodayOrInFuture(spreadsheetTabs: Sheet[]): Sheet[] {
+    return spreadsheetTabs.filter((tab) => {
+        const dataRange: Range = tab.getDataRange();
+        const cellData: CellData[][] = getCellData(dataRange);
+        const tabDate: Date = getDateOfDailyTab(cellData);
+
+        const currentDate: Date = new Date();
+        // Set the time of the today's date to the start of the day
+        currentDate.setHours(0, 0, 0, 0);
+
+        return tabDate.getTime() >= currentDate.getTime();
+    });
 }
 
 /**

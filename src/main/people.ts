@@ -10,6 +10,7 @@ const PROJECTS_PATH: string = "/projects/";
 const PEOPLE_MAP_KEY: string = "PEOPLE_MAP";
 const REMOVE_PARENTHESES_REGEX: RegExp = /\(.*?\)/g;
 const REMOVE_EXTRA_WHITESPACE_REGEX: RegExp = /\s+/g;
+const STAFF_REGEX: RegExp = /\bstaff\b/gi;
 
 let cachedPersonNameIdMap: PersonNameIdMap | null = null;
 
@@ -106,5 +107,6 @@ function getPersonIdFromCache(personName: string): string | undefined {
 export function normalizePersonName(rawPersonName: string): string {
     const withoutParentheses: string = rawPersonName.replace(REMOVE_PARENTHESES_REGEX, '');
     const withoutExtraWhitespace: string = withoutParentheses.replace(REMOVE_EXTRA_WHITESPACE_REGEX, ' ');
-    return withoutExtraWhitespace.toLowerCase().trim();
+    const withoutStaffWord: string = withoutExtraWhitespace.replace(STAFF_REGEX, '');
+    return withoutStaffWord.toLowerCase().trim();
 }
