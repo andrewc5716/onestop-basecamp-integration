@@ -276,7 +276,8 @@ function constructDate(currentDate: Date, currentTime: Date): Date {
     combinedDate.setMilliseconds(currentTime.getMilliseconds());
 
     // Date must be set after the hours are set in case adding the timezoneOffset causes the date to rollover and increment
-    combinedDate.setMonth(currentDate.getMonth());
+    combinedDate.setDate(1); // This is necessary because if the month is set in the next line without the date being set to something safe like the 1st, if the date is 31st and the month is set to a month without a 31st (April), it rolls up to the next month (May)
+    combinedDate.setMonth(currentDate.getMonth()); // Month must be set first before the date, given the date is set to something safe first (every month has a 1st).
     combinedDate.setDate(currentDate.getDate());
     combinedDate.setFullYear(currentDate.getFullYear());
 
