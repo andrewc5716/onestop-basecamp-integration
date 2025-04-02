@@ -303,13 +303,7 @@ function getBasecampLeadNames(row: Row): string[] {
  * @returns array of Basecamp ids
  */
 function getBasecampIdsFromPersonNameList(personNameList: string[]): string[] {
-    return personNameList.map((name) => {
-        const personId: string | undefined = getPersonId(name);
-        if (personId === undefined) {
-            Logger.log(`WARN: No Basecamp person ID found for: ${name}`);
-        }
-        return personId;
-    }).filter((personId) => personId !== undefined);
+    return personNameList.map((name) => getPersonId(name)).filter((personId) => personId !== undefined);
 }
 
 /**
