@@ -196,7 +196,8 @@ function isDateFromTabNameNextYear(date: Date): boolean {
 /**
  * Retrieves the date for a particular daily tab. For a daily tab, the date is located in the top left cell. Because Google Sheets stores 
  * our Date values in local time and the Google Apps Script API attempts to readjust these Date values assuming they are in UTC, we must 
- * re-add the UTC offset in order get back to local time (PDT)
+ * re-add the UTC offset in order get back to local time (PDT). If the date in the top left cell is malformed and cannot be parsed as a 
+ * Date object, we will parse the date from the tab name instead.
  * 
  * @param dailyTab the daily tab to retrieve the date from
  * @param cellData cell data for this particular tab
