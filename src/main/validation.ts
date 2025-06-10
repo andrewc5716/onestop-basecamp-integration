@@ -3,7 +3,7 @@ import { MEMBER_MAP } from "./members";
 import { removeFilters } from "./filter";
 import { normalizePersonName } from "./people";
 import { ALIASES_MAP } from "./aliases";
-import { isActiveDailyTab } from "./scan";
+import { isDailyTab } from "./scan";
 
 const NEW_LINE_DELIM: string = "\n";
 const COLON_DELIM: string = ":";
@@ -60,7 +60,7 @@ export function onSpreadsheetChange(e: GoogleAppsScript.Events.SheetsOnChange): 
         
         const sheet = SpreadsheetApp.getActiveSheet();
         
-        if (!isActiveDailyTab(sheet)) {
+        if (!isDailyTab(sheet)) {
             return;
         }
         

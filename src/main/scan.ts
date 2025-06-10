@@ -119,7 +119,7 @@ function getRowsWithEvents(spreadsheetTab: Sheet): Row[] {
  * @param tab the tab to check
  * @returns boolean representing the tab is an active and daily tab
  */
-export function isActiveDailyTab(tab: Sheet): boolean {
+function isActiveDailyTab(tab: Sheet): boolean {
     return !isTabHidden(tab) && isDailyTab(tab);
 }
 
@@ -139,7 +139,7 @@ function isTabHidden(tab: Sheet): boolean {
  * @param tab the tab to check
  * @returns boolean representing whether the tab is a daily tab or not
  */
-function isDailyTab(tab: Sheet): boolean {
+export function isDailyTab(tab: Sheet): boolean {
     const tabName: string = tab.getName();
     const matchResult: RegExpMatchArray | null = tabName.match(DAILY_TAB_REGEX_PATTERN);
     // null indicates that the tab name did not match the regex pattern for the daily tab

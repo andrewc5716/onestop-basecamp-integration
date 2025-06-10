@@ -438,7 +438,7 @@ describe("onSpreadsheetChange", () => {
         jest.spyOn(SpreadsheetApp, "getActiveSheet").mockReturnValue(mockSheet);
         
         jest.mock('../src/main/scan', () => ({
-            isActiveDailyTab: jest.fn()
+            isDailyTab: jest.fn()
         }));
     });
 
@@ -456,7 +456,7 @@ describe("onSpreadsheetChange", () => {
 
     it("should return early if sheet is not an active daily tab", () => {
         jest.mock('../src/main/scan', () => ({
-            isActiveDailyTab: jest.fn().mockReturnValue(false)
+            isDailyTab: jest.fn().mockReturnValue(false)
         }));
         
         const mockEvent = {
@@ -472,7 +472,7 @@ describe("onSpreadsheetChange", () => {
 
     it("should process inserted rows when conditions are met", () => {
         jest.mock('../src/main/scan', () => ({
-            isActiveDailyTab: jest.fn().mockReturnValue(true)
+            isDailyTab: jest.fn().mockReturnValue(true)
         }));
         
         const mockEvent = {
@@ -489,7 +489,7 @@ describe("onSpreadsheetChange", () => {
 
     it("should handle missing active range gracefully", () => {
         jest.mock('../src/main/scan', () => ({
-            isActiveDailyTab: jest.fn().mockReturnValue(true)
+            isDailyTab: jest.fn().mockReturnValue(true)
         }));
         mockSpreadsheet.getActiveRange.mockReturnValue(null);
         
@@ -504,7 +504,7 @@ describe("onSpreadsheetChange", () => {
 
     it("should add validation formulas for multiple inserted rows", () => {
         jest.mock('../src/main/scan', () => ({
-            isActiveDailyTab: jest.fn().mockReturnValue(true)
+            isDailyTab: jest.fn().mockReturnValue(true)
         }));
         jest.spyOn(mockActiveRange, 'getRow').mockReturnValue(3);
         jest.spyOn(mockActiveRange, 'getNumRows').mockReturnValue(3);
@@ -539,7 +539,7 @@ describe("onSpreadsheetChange", () => {
 
     it("should handle errors gracefully", () => {
         jest.mock('../src/main/scan', () => ({
-            isActiveDailyTab: jest.fn().mockReturnValue(true)
+            isDailyTab: jest.fn().mockReturnValue(true)
         }));
         jest.spyOn(mockSpreadsheet, 'getActiveRange').mockImplementation(() => {
             throw new Error('Test error');
@@ -559,7 +559,7 @@ describe("onSpreadsheetChange", () => {
 
     it("should use correct change type constant", () => {
         jest.mock('../src/main/scan', () => ({
-            isActiveDailyTab: jest.fn().mockReturnValue(true)
+            isDailyTab: jest.fn().mockReturnValue(true)
         }));
 
         const mockEvent = {
