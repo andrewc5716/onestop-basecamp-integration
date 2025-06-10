@@ -1,5 +1,7 @@
-import { PropertiesService } from 'gasmask';
+import { Logger, PropertiesService, SpreadsheetApp } from 'gasmask';
+global.Logger = Logger;
 global.PropertiesService = PropertiesService;
+global.SpreadsheetApp = SpreadsheetApp;
 import {validateHelperCellText, validateLeadCellText} from "../src/main/validation";
 
 describe("validateHelperCellText", () => {
@@ -408,5 +410,177 @@ jest.mock('../src/main/propertiesService', () => ({
         const { validateLeadCellText } = require("../src/main/validation");
 
         expect(validateLeadCellText("Tech: Kegan")).toBe("");
+    });
+});
+
+describe("onSpreadsheetChange", () => {
+    let mockSpreadsheet: any;
+    let mockSheet: any;
+    let mockActiveRange: any;
+    let mockRange: any;
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        mockRange = {
+            setFormula: jest.fn()
+        };
+        mockSheet = {
+            getName: jest.fn().mockReturnValue('MON 8/13'),
+            getRange: jest.fn().mockReturnValue(mockRange)
+        };
+        mockActiveRange = {
+            getRow: jest.fn().mockReturnValue(5),
+            getNumRows: jest.fn().mockReturnValue(2)
+        };
+        mockSpreadsheet = {
+            getActiveRange: jest.fn().mockReturnValue(mockActiveRange)
+        };
+        jest.spyOn(SpreadsheetApp, "getActiveSheet").mockReturnValue(mockSheet);
+        
+        jest.mock('../src/main/scan', () => ({
+            isActiveDailyTab: jest.fn()
+        }));
+    });
+
+    it("should return early for non-INSERT_ROW events", () => {
+        const mockEvent = {
+            changeType: 'EDIT',
+            source: mockSpreadsheet
+        } as any;
+
+        const { onSpreadsheetChange } = require('../src/main/validation');
+        onSpreadsheetChange(mockEvent);
+
+        expect(SpreadsheetApp.getActiveSheet).not.toHaveBeenCalled();
+    });
+
+    it("should return early if sheet is not an active daily tab", () => {
+        jest.mock('../src/main/scan', () => ({
+            isActiveDailyTab: jest.fn().mockReturnValue(false)
+        }));
+        
+        const mockEvent = {
+            changeType: 'INSERT_ROW',
+            source: mockSpreadsheet
+        } as any;
+
+        const { onSpreadsheetChange } = require('../src/main/validation');
+        onSpreadsheetChange(mockEvent);
+
+        expect(SpreadsheetApp.getActiveSheet).toHaveBeenCalled();
+    });
+
+    it("should process inserted rows when conditions are met", () => {
+        jest.mock('../src/main/scan', () => ({
+            isActiveDailyTab: jest.fn().mockReturnValue(true)
+        }));
+        
+        const mockEvent = {
+            changeType: 'INSERT_ROW',
+            source: mockSpreadsheet
+        } as any;
+
+        const { onSpreadsheetChange } = require('../src/main/validation');
+        onSpreadsheetChange(mockEvent);
+
+        expect(SpreadsheetApp.getActiveSheet).toHaveBeenCalled();
+        expect(mockSpreadsheet.getActiveRange).toHaveBeenCalled();
+    });
+
+    it("should handle missing active range gracefully", () => {
+        jest.mock('../src/main/scan', () => ({
+            isActiveDailyTab: jest.fn().mockReturnValue(true)
+        }));
+        mockSpreadsheet.getActiveRange.mockReturnValue(null);
+        
+        const mockEvent = {
+            changeType: 'INSERT_ROW',
+            source: mockSpreadsheet
+        } as any;
+
+        const { onSpreadsheetChange } = require('../src/main/validation');
+        onSpreadsheetChange(mockEvent);
+    });
+
+    it("should add validation formulas for multiple inserted rows", () => {
+        jest.mock('../src/main/scan', () => ({
+            isActiveDailyTab: jest.fn().mockReturnValue(true)
+        }));
+        jest.spyOn(mockActiveRange, 'getRow').mockReturnValue(3);
+        jest.spyOn(mockActiveRange, 'getNumRows').mockReturnValue(3);
+
+        const mockEvent = {
+            changeType: 'INSERT_ROW',
+            source: mockSpreadsheet
+        } as any;
+
+        const { onSpreadsheetChange } = require('../src/main/validation');
+        onSpreadsheetChange(mockEvent);
+
+        // Should call getRange for both validation columns for each row (3 rows × 2 columns = 6 calls)
+        expect(mockSheet.getRange).toHaveBeenCalledTimes(6);
+        
+        // Check that validation formulas are set for rows 3, 4, and 5
+        expect(mockSheet.getRange).toHaveBeenCalledWith(3, 12); // Row 3, Column L
+        expect(mockSheet.getRange).toHaveBeenCalledWith(3, 13); // Row 3, Column M
+        expect(mockSheet.getRange).toHaveBeenCalledWith(4, 12); // Row 4, Column L
+        expect(mockSheet.getRange).toHaveBeenCalledWith(4, 13); // Row 4, Column M
+        expect(mockSheet.getRange).toHaveBeenCalledWith(5, 12); // Row 5, Column L
+        expect(mockSheet.getRange).toHaveBeenCalledWith(5, 13); // Row 5, Column M
+        
+        // Check that the correct formulas are set for each row
+        expect(mockRange.setFormula).toHaveBeenCalledWith('=validateLeadCellText(H3)');
+        expect(mockRange.setFormula).toHaveBeenCalledWith('=validateHelperCellText(I3)');
+        expect(mockRange.setFormula).toHaveBeenCalledWith('=validateLeadCellText(H4)');
+        expect(mockRange.setFormula).toHaveBeenCalledWith('=validateHelperCellText(I4)');
+        expect(mockRange.setFormula).toHaveBeenCalledWith('=validateLeadCellText(H5)');
+        expect(mockRange.setFormula).toHaveBeenCalledWith('=validateHelperCellText(I5)');
+    });
+
+    it("should handle errors gracefully", () => {
+        jest.mock('../src/main/scan', () => ({
+            isActiveDailyTab: jest.fn().mockReturnValue(true)
+        }));
+        jest.spyOn(mockSpreadsheet, 'getActiveRange').mockImplementation(() => {
+            throw new Error('Test error');
+        });
+        
+        const mockEvent = {
+            changeType: 'INSERT_ROW',
+            source: mockSpreadsheet
+        } as any;
+
+        const { onSpreadsheetChange } = require('../src/main/validation');
+        onSpreadsheetChange(mockEvent);
+
+        // The function should not throw and should handle the error
+        expect(SpreadsheetApp.getActiveSheet).toHaveBeenCalled();
+    });
+
+    it("should use correct change type constant", () => {
+        jest.mock('../src/main/scan', () => ({
+            isActiveDailyTab: jest.fn().mockReturnValue(true)
+        }));
+
+        const mockEvent = {
+            changeType: 'INSERT_ROW',
+            source: mockSpreadsheet
+        } as any;
+
+        const { onSpreadsheetChange } = require('../src/main/validation');
+        
+        // Test that it only processes INSERT_ROW
+        onSpreadsheetChange(mockEvent);
+        expect(SpreadsheetApp.getActiveSheet).toHaveBeenCalled();
+
+        // Test that other change types are ignored
+        const otherEvent = {
+            changeType: 'EDIT',
+            source: mockSpreadsheet
+        } as any;
+
+        jest.clearAllMocks();
+        onSpreadsheetChange(otherEvent);
+        expect(SpreadsheetApp.getActiveSheet).not.toHaveBeenCalled();
     });
 });

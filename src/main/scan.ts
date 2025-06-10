@@ -119,7 +119,7 @@ function getRowsWithEvents(spreadsheetTab: Sheet): Row[] {
  * @param tab the tab to check
  * @returns boolean representing the tab is an active and daily tab
  */
-function isActiveDailyTab(tab: Sheet): boolean {
+export function isActiveDailyTab(tab: Sheet): boolean {
     return !isTabHidden(tab) && isDailyTab(tab);
 }
 
