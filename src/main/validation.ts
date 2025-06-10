@@ -11,25 +11,25 @@ const COMMA_DELIMITER: string = ",";
 const STAFF_REGEX: RegExp = /\bstaff\b/gi;
 
 // Constants for onChange functionality
-const TRIGGER_HANDLER_FUNCTION_NAME = 'onSpreadsheetChange';
-const CHANGE_TYPE_INSERT_ROW = 'INSERT_ROW';
-const IN_CHARGE_COLUMN_LETTER = 'H';
-const HELPERS_COLUMN_LETTER = 'I';
-const VALIDATION_LEAD_COLUMN_INDEX = 12; // Column L (1-indexed)
-const VALIDATION_HELPER_COLUMN_INDEX = 13; // Column M (1-indexed)
-const VALIDATE_LEAD_FUNCTION_NAME = 'validateLeadCellText';
-const VALIDATE_HELPER_FUNCTION_NAME = 'validateHelperCellText';
+const TRIGGER_HANDLER_FUNCTION_NAME: string = 'onSpreadsheetChange';
+const CHANGE_TYPE_INSERT_ROW: string = 'INSERT_ROW';
+const IN_CHARGE_COLUMN_LETTER: string = 'H';
+const HELPERS_COLUMN_LETTER: string = 'I';
+const VALIDATION_LEAD_COLUMN_INDEX: number = 12; // Column L (1-indexed)
+const VALIDATION_HELPER_COLUMN_INDEX: number = 13; // Column M (1-indexed)
+const VALIDATE_LEAD_FUNCTION_NAME: string = 'validateLeadCellText';
+const VALIDATE_HELPER_FUNCTION_NAME: string = 'validateHelperCellText';
 
 /**
  * Sets up the onChange trigger for the spreadsheet to automatically add validation 
  * formulas when new rows are added to daily tabs. Replaces any existing trigger with the same name.
  */
 export function setupOnChangeTrigger(): void {
-    const sheet = SpreadsheetApp.getActive();
+    const sheet: Spreadsheet = SpreadsheetApp.getActive();
     
     // Get all existing triggers and delete any with the same handler function name
-    const triggers = ScriptApp.getProjectTriggers();
-    triggers.forEach(trigger => {
+    const triggers: Trigger[] = ScriptApp.getProjectTriggers();
+    triggers.forEach((trigger: Trigger) => {
         if (trigger.getHandlerFunction() === TRIGGER_HANDLER_FUNCTION_NAME) {
             ScriptApp.deleteTrigger(trigger);
             Logger.log('Deleted existing onChange trigger');
@@ -51,14 +51,14 @@ export function setupOnChangeTrigger(): void {
  * 
  * @param e The change event object from Google Sheets
  */
-export function onSpreadsheetChange(e: GoogleAppsScript.Events.SheetsOnChange): void {
+export function onSpreadsheetChange(e: SheetsOnChange): void {
     try {
         // Only process INSERT_ROW events
         if (e.changeType !== CHANGE_TYPE_INSERT_ROW) {
             return;
         }
         
-        const sheet = SpreadsheetApp.getActiveSheet();
+        const sheet: Sheet = SpreadsheetApp.getActiveSheet();
         
         if (!isDailyTab(sheet)) {
             return;
@@ -78,18 +78,18 @@ export function onSpreadsheetChange(e: GoogleAppsScript.Events.SheetsOnChange): 
  * @param spreadsheet The spreadsheet source from the change event
  * @param sheet The sheet where rows were inserted
  */
-function processInsertedRows(spreadsheet: GoogleAppsScript.Spreadsheet.Spreadsheet, sheet: GoogleAppsScript.Spreadsheet.Sheet): void {
-    const activeRange = spreadsheet.getActiveRange();
+function processInsertedRows(spreadsheet: Spreadsheet, sheet: Sheet): void {
+    const activeRange: Range | null = spreadsheet.getActiveRange();
     if (!activeRange) {
         Logger.log('No active range found, skipping validation formula addition');
         return;
     }
     
-    const insertedRowStart = activeRange.getRow();
-    const numInsertedRows = activeRange.getNumRows();
+    const insertedRowStart: number = activeRange.getRow();
+    const numInsertedRows: number = activeRange.getNumRows();
     
     for (let i = 0; i < numInsertedRows; i++) {
-        const rowNumber = insertedRowStart + i;
+        const rowNumber: number = insertedRowStart + i;
         addValidationFormulas(sheet, rowNumber);
     }
 }
@@ -100,7 +100,7 @@ function processInsertedRows(spreadsheet: GoogleAppsScript.Spreadsheet.Spreadshe
  * @param sheet The sheet to add formulas to
  * @param rowNumber The row number to add formulas to (1-indexed)
  */
-function addValidationFormulas(sheet: GoogleAppsScript.Spreadsheet.Sheet, rowNumber: number): void {
+function addValidationFormulas(sheet: Sheet, rowNumber: number): void {
     try {
         setupLeadValidationCell(sheet, rowNumber);
         setupHelperValidationCell(sheet, rowNumber);
@@ -109,12 +109,12 @@ function addValidationFormulas(sheet: GoogleAppsScript.Spreadsheet.Sheet, rowNum
     }
 }
 
-function setupLeadValidationCell(sheet: GoogleAppsScript.Spreadsheet.Sheet, rowNumber: number): void {
+function setupLeadValidationCell(sheet: Sheet, rowNumber: number): void {
     const leadValidationCell = sheet.getRange(rowNumber, VALIDATION_LEAD_COLUMN_INDEX);
     leadValidationCell.setFormula(`=${VALIDATE_LEAD_FUNCTION_NAME}(${IN_CHARGE_COLUMN_LETTER}${rowNumber})`);
 }
 
-function setupHelperValidationCell(sheet: GoogleAppsScript.Spreadsheet.Sheet, rowNumber: number): void {
+function setupHelperValidationCell(sheet: Sheet, rowNumber: number): void {
     const helperValidationCell = sheet.getRange(rowNumber, VALIDATION_HELPER_COLUMN_INDEX);
     helperValidationCell.setFormula(`=${VALIDATE_HELPER_FUNCTION_NAME}(${HELPERS_COLUMN_LETTER}${rowNumber})`);
 }
