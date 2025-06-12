@@ -106,6 +106,94 @@ describe("getEventRowsFromSpreadsheet", () => {
 
         jest.useRealTimers();
     });
+
+    it("should parse the tab when the top left date is malformed", () => {
+        jest.useFakeTimers();
+
+        const spreadsheetMock: Spreadsheet = new Spreadsheet("mock spreadsheet");
+        const tabMock: SheetMock = new SheetMock("TUE 2/11", false);
+        const cellValuesMock: any[][] = getRandomlyGeneratedCellValues(2, 11);
+        // Set the start and end time to pass validation
+        cellValuesMock[1][0] = new Date("2025-02-11T07:00:00Z");
+        cellValuesMock[1][1] = new Date("2025-02-11T08:00:00Z");
+        const richTextValuesMock: RichTextValue[][] = getRandomlyGeneratedRichTextValues(2, 11);
+        // Set the strikethrough for the WHAT column to true
+        const whatColumnRichTextValueMock: RichTextValue = getRandomlyGeneratedRichTextValue();
+        const whatColumnTextStyleMock: TextStyle = getRandomlyGeneratedTextStyle();
+        jest.spyOn(whatColumnTextStyleMock, "isStrikethrough").mockReturnValue(false);
+        jest.spyOn(whatColumnRichTextValueMock, "getRuns").mockReturnValue([whatColumnRichTextValueMock]);
+        jest.spyOn(whatColumnRichTextValueMock, "getTextStyle").mockReturnValue(whatColumnTextStyleMock);
+        richTextValuesMock[1][5] = whatColumnRichTextValueMock;
+        const dataRangeMock: RangeMock = new RangeMock(cellValuesMock, {}, tabMock, richTextValuesMock);
+
+        jest.spyOn(SpreadsheetApp, "getActiveSpreadsheet").mockReturnValue(spreadsheetMock);
+        jest.spyOn(spreadsheetMock, "getSheets").mockReturnValue([tabMock]);
+        jest.spyOn(tabMock, "getDataRange").mockReturnValue(dataRangeMock);
+        jest.spyOn(dataRangeMock, "getValues").mockReturnValue(cellValuesMock);
+        jest.spyOn(dataRangeMock, "getRichTextValues").mockReturnValue(richTextValuesMock);
+
+        const mockCurrentDate = new Date("2025-02-05T12:30:20Z");
+        jest.setSystemTime(mockCurrentDate);
+
+        jest.mock("../src/main/row", () => ({
+            getMetadata: jest.fn(() => getRandomlyGeneratedMetadata()),
+        }));
+
+        const { getEventRowsFromSpreadsheet } = require('../src/main/scan');
+
+        const retrievedEventRows: Row[] = getEventRowsFromSpreadsheet();
+        expect(retrievedEventRows.length).toBe(1);
+        const retrievedEventRow: Row = retrievedEventRows[0];
+        expect(retrievedEventRow.date.getMonth()).toBe(1);
+        expect(retrievedEventRow.date.getDate()).toBe(11);
+        expect(retrievedEventRow.date.getFullYear()).toBe(2025);
+
+        jest.useRealTimers();
+    });
+
+    it("should parse the tab with the correct year when the top left date is malformed and the tab is in the next year", () => {
+        jest.useFakeTimers();
+
+        const spreadsheetMock: Spreadsheet = new Spreadsheet("mock spreadsheet");
+        const tabMock: SheetMock = new SheetMock("TUE 1/2", false);
+        const cellValuesMock: any[][] = getRandomlyGeneratedCellValues(2, 11);
+        // Set the start and end time to pass validation
+        cellValuesMock[1][0] = new Date("2025-1-2T07:00:00Z");
+        cellValuesMock[1][1] = new Date("2025-1-2T08:00:00Z");
+        const richTextValuesMock: RichTextValue[][] = getRandomlyGeneratedRichTextValues(2, 11);
+        // Set the strikethrough for the WHAT column to true
+        const whatColumnRichTextValueMock: RichTextValue = getRandomlyGeneratedRichTextValue();
+        const whatColumnTextStyleMock: TextStyle = getRandomlyGeneratedTextStyle();
+        jest.spyOn(whatColumnTextStyleMock, "isStrikethrough").mockReturnValue(false);
+        jest.spyOn(whatColumnRichTextValueMock, "getRuns").mockReturnValue([whatColumnRichTextValueMock]);
+        jest.spyOn(whatColumnRichTextValueMock, "getTextStyle").mockReturnValue(whatColumnTextStyleMock);
+        richTextValuesMock[1][5] = whatColumnRichTextValueMock;
+        const dataRangeMock: RangeMock = new RangeMock(cellValuesMock, {}, tabMock, richTextValuesMock);
+
+        jest.spyOn(SpreadsheetApp, "getActiveSpreadsheet").mockReturnValue(spreadsheetMock);
+        jest.spyOn(spreadsheetMock, "getSheets").mockReturnValue([tabMock]);
+        jest.spyOn(tabMock, "getDataRange").mockReturnValue(dataRangeMock);
+        jest.spyOn(dataRangeMock, "getValues").mockReturnValue(cellValuesMock);
+        jest.spyOn(dataRangeMock, "getRichTextValues").mockReturnValue(richTextValuesMock);
+
+        const mockCurrentDate = new Date("2025-12-20T12:30:20Z");
+        jest.setSystemTime(mockCurrentDate);
+
+        jest.mock("../src/main/row", () => ({
+            getMetadata: jest.fn(() => getRandomlyGeneratedMetadata()),
+        }));
+
+        const { getEventRowsFromSpreadsheet } = require('../src/main/scan');
+
+        const retrievedEventRows: Row[] = getEventRowsFromSpreadsheet();
+        expect(retrievedEventRows.length).toBe(1);
+        const retrievedEventRow: Row = retrievedEventRows[0];
+        expect(retrievedEventRow.date.getMonth()).toBe(0);
+        expect(retrievedEventRow.date.getDate()).toBe(2);
+        expect(retrievedEventRow.date.getFullYear()).toBe(2026);
+
+        jest.useRealTimers();
+    });
 });
 
 describe("getCellValues", () => {
