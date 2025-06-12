@@ -157,7 +157,8 @@ declare interface Member {
   gender: string,
   married: boolean,
   parent: boolean,
-  class: number
+  class: number,
+  basecampId: string
 }
 
 // Maps a members name to their Member object containing their properties
