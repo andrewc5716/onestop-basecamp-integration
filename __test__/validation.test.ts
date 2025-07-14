@@ -105,6 +105,25 @@ describe("validateHelperCellText", () => {
         expect(validateHelperCellText("HG2 Bros")).toBe("");
     });
 
+    it("should allow for filter names that are part of another filter name", () => {
+        jest.mock('../src/main/propertiesService', () => ({
+            loadMapFromScriptProperties: jest.fn((key: string) => {
+                if (key === "GROUPS_MAP") {
+                    return {
+                        "hg2": ['andrew chan', 'janice chan']
+                    }
+                } 
+                return {};
+            }),
+        }));
+        const { validateHelperCellText } = require("../src/main/validation");
+
+        // "Sisters" has "Sis" in it, which may be extracted out and what remains is "ters"
+        expect(validateHelperCellText("HG2 Sisters")).toBe("");
+        // "Minus moms" has "Moms" in it, which may be extracted out and what remains is "minus"
+        expect(validateHelperCellText("HG2 Minus Moms")).toBe("");
+    });
+
     it("should report helper identifiers with invalid filters", () => {
         jest.mock('../src/main/propertiesService', () => ({
             loadMapFromScriptProperties: jest.fn((key: string) => {
