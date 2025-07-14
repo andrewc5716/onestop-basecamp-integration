@@ -11,16 +11,16 @@ const SIS_GENDER: string = "Female";
 
 // Maps a filter's name on the Onestop to its corresponding filter function
 const FILTER_MAP: FilterMap = {
-    bros: brosFilter, 
     brothers: brosFilter,
-    sis: sisFilter,
+    bros: brosFilter, 
     sisters: sisFilter,
+    sis: sisFilter,
     married: marriedFilter,
     parents: parentsFilter,
-    moms: momsFilter,
-    dads: dadsFilter,
     "minus moms": minusMomsFilter,
     "minus dads": minusDadsFilter,
+    moms: momsFilter,
+    dads: dadsFilter,
 };
 
 /** Removes all filters from a string
