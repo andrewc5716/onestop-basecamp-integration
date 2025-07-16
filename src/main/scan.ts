@@ -75,7 +75,7 @@ function getActiveDailyTabsTodayOrInFuture(spreadsheetTabs: Sheet[]): Sheet[] {
     return spreadsheetTabs.filter((tab) => {
         const dataRange: Range = tab.getDataRange();
         const cellData: CellData[][] = getCellData(dataRange);
-        const tabDate: Date = getDateOfDailyTab(cellData);
+        const tabDate: Date = getDateOfDailyTab(tab, cellData);
 
         const currentDate: Date = new Date();
         // Set the time of the today's date to the start of the day
@@ -94,7 +94,7 @@ function getActiveDailyTabsTodayOrInFuture(spreadsheetTabs: Sheet[]): Sheet[] {
 function getRowsWithEvents(spreadsheetTab: Sheet): Row[] {
     const dataRange: Range = spreadsheetTab.getDataRange();
     const cellData: CellData[][] = getCellData(dataRange);
-    const currentDate: Date = getDateOfDailyTab(cellData);
+    const currentDate: Date = getDateOfDailyTab(spreadsheetTab, cellData);
 
     const rows: Row[] = [];
     for(let i = 0; i < cellData.length; i++) {
@@ -188,20 +188,40 @@ function getColumnData(numCols: number, cellRichTextData: RichTextValue[], cellV
     return columnData;
 }
 
+function isDateFromTabNameNextYear(date: Date): boolean {
+    const currentDate: Date = new Date();
+    return date.getMonth() < currentDate.getMonth();
+}
+
 /**
  * Retrieves the date for a particular daily tab. For a daily tab, the date is located in the top left cell. Because Google Sheets stores 
  * our Date values in local time and the Google Apps Script API attempts to readjust these Date values assuming they are in UTC, we must 
- * re-add the UTC offset in order get back to local time (PDT)
+ * re-add the UTC offset in order get back to local time (PDT). If the date in the top left cell is malformed and cannot be parsed as a 
+ * Date object, we will parse the date from the tab name instead.
  * 
+ * @param dailyTab the daily tab to retrieve the date from
  * @param cellData cell data for this particular tab
  * @returns Date object containing the date information for this daily tab
  */
-function getDateOfDailyTab(cellData: CellData[][]): Date {
+function getDateOfDailyTab(dailyTab: Sheet, cellData: CellData[][]): Date {
     const date: Date = cellData[DATE_ROW_INDEX][DATE_COL_INDEX].value;
-    const utcHoursOffset = getUTCHoursOffset(date);
-    date.setHours(date.getHours() + utcHoursOffset);
 
-    return date;
+    if(date instanceof Date) {
+        const utcHoursOffset = getUTCHoursOffset(date);
+        date.setHours(date.getHours() + utcHoursOffset);
+
+        return date;
+    } else {
+        const tabName: string = dailyTab.getName();
+        const dateFromTabName: Date = new Date(tabName);
+        const currentDate: Date = new Date();
+        // Set the year since it is not included in the tab name and JS will automatically assign one arbitrarily
+        const currentYear: number = currentDate.getFullYear();
+        const year: number = isDateFromTabNameNextYear(dateFromTabName) ? currentYear + 1 : currentYear;
+        dateFromTabName.setFullYear(year);
+
+        return dateFromTabName;
+    }
 }
 
 /**
