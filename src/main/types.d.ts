@@ -78,12 +78,19 @@ declare interface OAuth2 {
   hasAccess(): boolean;
   getAuthorizationUrl(): string;
   getAccessToken(): string;
-  handleCallback(callbackRequest: any): boolean;
+  handleCallback(callbackRequest: unknown): boolean;
   reset(): void;
 }
 
 declare namespace OAuth2 {
  export function createService(name: string): OAuth2
+}
+
+declare interface BasecampTokenResponse {
+  access_token: string;
+  refresh_token?: string;
+  expires_in?: number;
+  token_type?: string;
 }
 
 type JsonData = JsonObject | JsonArray;
