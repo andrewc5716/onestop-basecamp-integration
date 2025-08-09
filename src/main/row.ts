@@ -25,6 +25,47 @@ const BASECAMP_COL_INDEX: number = 11;
 const BASECAMP_LINK_TEXT: string = "Link";
 
 /**
+ * Builds the string representation used when computing the row hash.  In addition to the raw
+ * string representation of the row (see toString(row)), this now also includes the list of
+ * Basecamp ids that are derived from the row (leads, helpers and any other attendees).
+ * 
+ * The attendees list is first resolved to Basecamp ids and sorted to ensure determinism so that
+ * the same logical set of attendees will always result in the same hash value regardless of the
+ * original ordering in the sheet.  By incorporating the resolved ids we ensure that any change
+ * in the way names are mapped to ids (e.g. changes to aliases, people map, groups, etc.) will
+ * be detected by hasChanged().
+ * 
+ * @param row the row to generate the hashable representation for
+ * @returns a deterministic string containing the row contents and the resolved attendee ids
+ */
+function getHashableRowRepresentation(row: Row): string {
+    // The base string representation (sheet values)
+    const baseRowString: string = toString(row);
+
+    // Resolve attendees (includes leads & helpers) as well as the explicit lead / helper lists 
+    // to Basecamp ids so that ANY mapping change is reflected in the hash.
+
+    const attendeeIds: string[] = getBasecampIdsFromPersonNameList(getAttendeesFromRow(row));
+    const leadIds: string[] = getLeadsBasecampIds(row);
+    const helperIds: string[] = getHelperGroups(row).flatMap(group => group.helperIds);
+
+    // Sort to guarantee stable ordering before hashing
+    attendeeIds.sort();
+    leadIds.sort();
+    helperIds.sort();
+
+    const hashPayload = {
+        attendeeIds: attendeeIds,
+        leadIds: leadIds,
+        helperIds: helperIds,
+    };
+
+    // Combine – use a character that cannot appear in baseRowString ("|" is safe given current
+    // toString implementation) to avoid ambiguity
+    return `${baseRowString}|${JSON.stringify(hashPayload)}`;
+}
+
+/**
  * Retrieves the metadata object for a given range. If the metadata object does not exist,
  * this function will set the row id key so the metadata object is created and a reference
  * can be held
@@ -101,7 +142,8 @@ export function saveRow(row: Row, roleTodoMap: RoleTodoMap, scheduleEntryId: str
     }
 
     const rowId: string = getId(row);
-    const rowHash: string = toHexString(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, toString(row)));
+    const rowHashInput: string = getHashableRowRepresentation(row);
+    const rowHash: string = toHexString(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, rowHashInput));
     const tabInfo: TabInfo = { date: row.date };
     const rowBasecampMapping: RowBasecampMapping = {rowHash: rowHash, roleTodoMap: roleTodoMap, scheduleEntryId: scheduleEntryId, tabInfo: tabInfo};
 
@@ -145,7 +187,8 @@ export function hasChanged(row: Row): boolean {
         throw new RowNotSavedError(`Row has not yet been saved: ${toString(row)}`);
     }
 
-    const currentRowHash: string = toHexString(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, toString(row)));
+    const currentRowHashInput: string = getHashableRowRepresentation(row);
+    const currentRowHash: string = toHexString(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, currentRowHashInput));
     const storedRowHash: string | null = getSavedHash(row);
 
     // null check to catch cases where the hashes are null (although this shouldn't be the case)
