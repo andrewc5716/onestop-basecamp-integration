@@ -644,6 +644,8 @@ describe("saveRow", () => {
     });
 
     it("should save the row to the document properties when called", () => {
+        jest.resetModules();
+
         const rowMock: Row = getRandomlyGeneratedRow();
         const metadataMock: Metadata = getRandomlyGeneratedMetadata();
         const roleTodoMapMock: RoleTodoMap = getRandomlyGeneratedRoleTodoMap();
@@ -664,6 +666,29 @@ describe("saveRow", () => {
         jest.mock("../src/main/propertiesService", () => ({
             setDocumentProperty: setDocumentPropertyMock,
             loadMapFromScriptProperties: jest.fn(() => ({})),
+            getScriptProperty: jest.fn(() => null),
+        }));
+
+        jest.mock("../src/main/people", () => ({
+            getPersonId: jest.fn(() => undefined),
+            normalizePersonName: (name: string) => name.toLowerCase().trim(),
+        }));
+
+        jest.mock("../src/main/aliases", () => ({
+            ALIASES_MAP: {},
+        }));
+
+        jest.mock("../src/main/groups", () => ({
+            GROUPS_MAP: {},
+            getMembersFromGroups: () => [],
+            GROUP_NAMES: [],
+        }));
+
+        jest.mock("../src/main/filter", () => ({
+            containsFilter: () => false,
+            removeFilters: (str: string) => ({ stringWithoutFilters: str, removedFilters: [] }),
+            filterMembers: (members: string[]) => members,
+            isFilter: () => false,
         }));
 
         const { saveRow } = require("../src/main/row");
@@ -911,7 +936,7 @@ describe("getHelperGroups", () => {
 
         const peopleToBasecampIdMap: { [name: string]: string } = {
             "john doe": randomstring.generate(),
-            "jane smith": randomstring.generate(),
+            "jane smith": randomstring.generate(), 
             "alice johnson": randomstring.generate(),
             "bob brown": randomstring.generate(),
         };
@@ -923,20 +948,44 @@ describe("getHelperGroups", () => {
 
         jest.mock("../src/main/groups", () => ({
             GROUPS_MAP: { "ucsd": ["john doe", "jane smith"] },
+            getMembersFromGroups: jest.fn(),
+            GROUP_NAMES: ["ucsd"],
         }));
 
         jest.mock("../src/main/people", () => ({
             normalizePersonName: jest.fn((personName) => personName.toLowerCase().trim()),
-            getPersonId: jest.fn((personName) => peopleToBasecampIdMap.hasOwnProperty(personName) ? peopleToBasecampIdMap[personName] : randomstring.generate()),
+            getPersonId: jest.fn((personName) => peopleToBasecampIdMap[personName.toLowerCase()] || undefined),
         }));
 
-        const expectedHelperGroups: HelperGroup[] = [
-            { role: "Food", helperIds: [peopleToBasecampIdMap["bob brown"], peopleToBasecampIdMap["alice johnson"], peopleToBasecampIdMap["john doe"]] }
-        ];
+        jest.mock("../src/main/filter", () => ({
+            containsFilter: jest.fn((str) => str.includes("bros")),  // lowercase since normalizePersonName converts to lowercase
+            removeFilters: jest.fn((str) => {
+                if (str.includes("bros")) {
+                    return { stringWithoutFilters: str.replace(" bros", ""), removedFilters: ["bros"] };
+                }
+                return { stringWithoutFilters: str, removedFilters: [] };
+            }),
+            filterMembers: jest.fn((members, filters) => {
+                if (filters.includes("bros")) {
+                    // Filter to only male members
+                    return members.filter((member: string) => memberMapMock[member]?.gender === "Male");
+                }
+                return members;
+            }),
+            isFilter: jest.fn((str) => str === "bros"),
+        }));
 
         const { getHelperGroups } = require("../src/main/row");
 
         const helperGroups: HelperGroup[] = getHelperGroups(rowMock);
+
+        const expectedHelperGroups: HelperGroup[] = [
+            { role: "Food", helperIds: [
+                peopleToBasecampIdMap["bob brown"],     // individual person 
+                peopleToBasecampIdMap["alice johnson"], // individual person (not filtered - listed directly)
+                peopleToBasecampIdMap["john doe"]       // from "UCSD Bros" (UCSD group filtered to males only)
+            ] }
+        ];
 
         expect(helperGroups).toStrictEqual(expectedHelperGroups);
     });
