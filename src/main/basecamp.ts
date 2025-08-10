@@ -120,7 +120,13 @@ export function logout(): void {
     getUnvalidatedBasecampService().reset();
 }
 
-export function ensureAuthenticated(): void {
+/**
+ * Logs in to Basecamp. If the user is not authenticated, shows the authorization dialog.
+ * If the user is authenticated, refreshes the tokens automatically.
+ * 
+ * @throws BasecampUnauthError if the user is not authenticated and the authorization dialog is shown
+ */
+export function login(): void {
     try {
         getValidatedBasecampService(); // This handles refresh automatically
         Logger.log(sendBasecampGetRequest(BASECAMP_AUTH_CHECK_URL));
@@ -160,7 +166,7 @@ export function viewAuthStatus(): void {
             Logger.log('⚠️  Authenticated but no refresh token stored yet');
             Logger.log('💡 Automatic extraction will happen when refresh is needed');
         } else {
-            Logger.log('❌ Not authenticated - run ensureAuthenticated() to authenticate');
+            Logger.log('❌ Not authenticated - run login() to authenticate');
         }
         
         Logger.log('=== End Status ===');
@@ -202,15 +208,11 @@ function getValidatedBasecampService(): OAuth2 {
         return basecampService;
     }
 
-    // Try to refresh tokens
-    if (!attemptTokenRefresh(basecampService)) {
-        throw new BasecampUnauthError(BASECAMP_UNAUTH_ERROR_MSG);
-    }
+    refreshTokens(basecampService);
 
     // Get fresh service instance to pick up new tokens
     basecampService = getUnvalidatedBasecampService();
     
-    // Verify the refresh worked
     if (!basecampService.hasAccess()) {
         throw new BasecampUnauthError(BASECAMP_UNAUTH_ERROR_MSG);
     }
@@ -219,14 +221,14 @@ function getValidatedBasecampService(): OAuth2 {
 }
 
 /**
- * Attempts to refresh the OAuth token automatically using the stored refresh token.
+ * Refreshes the OAuth token automatically using the stored refresh token.
  * If no refresh token is found in our backup storage, attempts to extract it from
  * the OAuth2 library's internal storage first.
  * 
  * @param basecampService the OAuth service to refresh tokens for
- * @returns true if token refresh was successful, false otherwise
+ * @throws BasecampUnauthError if token refresh fails
  */
-function attemptTokenRefresh(basecampService: OAuth2): boolean {
+function refreshTokens(basecampService: OAuth2): void {
     try {
         const propertyStore: GoogleAppsScript.Properties.Properties = PropertiesService.getUserProperties();
         const serviceName: string = OAUTH_BASECAMP_SERVICE_NAME;
@@ -235,33 +237,30 @@ function attemptTokenRefresh(basecampService: OAuth2): boolean {
         // If no refresh token in our backup location, try to extract it from OAuth2 library
         if (!refreshToken) {
             Logger.log('No refresh token in backup storage, attempting to extract from OAuth2 library...');
-            if (extractRefreshTokenFromLibraryInternal()) {
-                refreshToken = propertyStore.getProperty(`${serviceName}.refresh_token`);
-            }
+            storeRefreshToken();
+            refreshToken = propertyStore.getProperty(`${serviceName}.refresh_token`);
         }
         
         // If still no refresh token, we can't refresh
         if (!refreshToken) {
-            Logger.log('No refresh token available - need to re-authorize to get refresh token');
-            return false;
+            throw new BasecampUnauthError('No refresh token available - need to re-authorize to get refresh token');
         }
         
         Logger.log('Refresh token found, attempting automatic refresh...');
-        return refreshTokenManually(basecampService);
+        callBasecampRefreshApi(basecampService);
     } catch (error: unknown) {
-        Logger.log(`Token refresh failed: ${error}`);
-        return false;
+        throw new BasecampUnauthError(`Token refresh failed: ${error}`);
     }
 }
 
 /**
- * Refreshes the OAuth token by calling Basecamp's token endpoint with the refresh token.
+ * Refreshes the OAuth token by calling Basecamp's token endpoint directly with the refresh token.
  * This is the reliable method that works consistently with Basecamp's API.
  * 
  * @param basecampService the OAuth service to refresh tokens for
- * @returns true if token refresh was successful, false otherwise
+ * @throws BasecampUnauthError if token refresh fails
  */
-function refreshTokenManually(basecampService: OAuth2): boolean {
+function callBasecampRefreshApi(basecampService: OAuth2): void {
     try {
         // Get refresh token from our manual storage since the library doesn't expose getRefreshToken()
         const propertyStore: GoogleAppsScript.Properties.Properties = PropertiesService.getUserProperties();
@@ -269,8 +268,7 @@ function refreshTokenManually(basecampService: OAuth2): boolean {
         const refreshToken: string | null = propertyStore.getProperty(`${serviceName}.refresh_token`);
         
         if (!refreshToken) {
-            Logger.log('No refresh token available for manual refresh - need to re-authorize');
-            return false;
+            throw new BasecampUnauthError('No refresh token available for manual refresh - need to re-authorize');
         }
 
         Logger.log('Found refresh token, refreshing via Basecamp API...');
@@ -309,14 +307,11 @@ function refreshTokenManually(basecampService: OAuth2): boolean {
             propertyStore.setProperty(`${serviceName}.refresh_token`, tokenData.refresh_token || refreshToken);
 
             Logger.log('Token refresh successful - new tokens stored in OAuth2 library format');
-            return true;
         } else {
-            Logger.log(`Token refresh failed with status: ${response.getResponseCode()}, ${response.getContentText()}`);
-            return false;
+            throw new BasecampUnauthError(`Token refresh failed with status: ${response.getResponseCode()}, ${response.getContentText()}`);
         }
     } catch (error: unknown) {
-        Logger.log(`Token refresh error: ${error}`);
-        return false;
+        throw new BasecampUnauthError(`Token refresh error: ${error}`);
     }
 }
 
@@ -354,7 +349,7 @@ export function simulateTokenExpiration(): boolean {
         propertyStore.deleteProperty(oauthDataKey);
         
         Logger.log('✅ Simulated token expiration - OAuth data cleared, refresh token preserved');
-        Logger.log('💡 Now call ensureAuthenticated() to test automatic refresh');
+        Logger.log('💡 Now call login() to test automatic refresh');
         Logger.log('💡 Note: viewAuthStatus() will show "Not authenticated" until refresh happens');
         return true;
         
@@ -365,11 +360,11 @@ export function simulateTokenExpiration(): boolean {
 }
 
 /**
- * Internal helper to extract refresh token from OAuth2 library's storage.
+ * Internal helper to store refresh token by extracting from OAuth2 library's storage.
  * 
- * @returns true if refresh token was found and stored, false otherwise
+ * @throws BasecampUnauthError if refresh token cannot be found or stored
  */
-function extractRefreshTokenFromLibraryInternal(): boolean {
+function storeRefreshToken(): void {
     const propertyStore: GoogleAppsScript.Properties.Properties = PropertiesService.getUserProperties();
     const serviceName: string = OAUTH_BASECAMP_SERVICE_NAME;
     
@@ -378,23 +373,23 @@ function extractRefreshTokenFromLibraryInternal(): boolean {
     const oauthDataString: string | null = propertyStore.getProperty(oauthDataKey);
     
     if (!oauthDataString) {
-        return false;
+        throw new BasecampUnauthError('No OAuth data found in library storage - need to re-authorize');
     }
     
     try {
         const oauthData: any = JSON.parse(oauthDataString);
         
-        if (oauthData.refresh_token) {
-            const refreshToken: string = oauthData.refresh_token;
-            // Store it under our standard key for future use
-            propertyStore.setProperty(`${serviceName}.refresh_token`, refreshToken);
-            Logger.log('Refresh token automatically extracted from OAuth2 library');
-            return true;
+        if (!oauthData.refresh_token) {
+            throw new BasecampUnauthError('No refresh token found in OAuth data - need to re-authorize');
         }
-        return false;
+        
+        const refreshToken: string = oauthData.refresh_token;
+        // Store it under our standard key for future use
+        propertyStore.setProperty(`${serviceName}.refresh_token`, refreshToken);
+        Logger.log('Refresh token automatically extracted from OAuth2 library');
         
     } catch (error: unknown) {
-        return false;
+        throw new BasecampUnauthError('Failed to parse OAuth data - need to re-authorize');
     }
 }
 

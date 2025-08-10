@@ -1,22 +1,22 @@
 # OAuth Automatic Token Refresh
 
 ## Overview
-Automatically refreshes Basecamp OAuth tokens every 2 weeks without manual intervention. No more authorization dialogs!
+After initial setup, automatically refreshes Basecamp OAuth tokens every 2 weeks without manual dialog approvals.
 
 ## How It Works
-When tokens expire, the system:
+When tokens expire, the system automatically:
 1. **Checks** if token is valid using `hasAccess()`
-2. **Refreshes** automatically via direct Basecamp API call
-3. **Falls back** to manual auth only if refresh fails
+2. **Refreshes** via direct Basecamp API call (throws error if fails)
+3. **Falls back** to manual auth dialog only if refresh completely fails
 
-*Note: Uses direct API calls since the OAuth2 library's `refresh()` method doesn't work with Basecamp.*
+*Note: Uses direct API calls since the OAuth2 library's `refresh()` method doesn't work with Basecamp. The system throws `BasecampUnauthError` immediately when auth issues occur, ensuring quick failure detection.*
 
 ## First-Time Setup
 For automatic refresh to work, you need to authorize once to get refresh tokens:
 
 1. **Run initial authorization:**
    ```javascript
-   ensureAuthenticated()
+   login()
    ```
 
 2. **If not authenticated**, it will show an authorization link popup in the Onestop Google Sheet:
@@ -46,10 +46,10 @@ viewAuthStatus()
 
 ## Available Functions
 - `viewAuthStatus()` - Check current auth status (read-only)
-- `ensureAuthenticated()` - Ensure auth works, fix if needed (takes action)
-- **Automatic refresh token extraction** - Happens transparently when needed
+- `login()` - Ensure auth works, automatically refresh or show auth dialog (throws `BasecampUnauthError` only if completely unable to authenticate)
+- **Automatic refresh token storage** - Extracts and stores refresh tokens transparently when needed
 - `simulateTokenExpiration()` - Simulate token expiration for testing automatic refresh
-- `logout()` - Clear tokens
+- `logout()` - Clear all tokens
 
 ## Benefits
 - ✅ **Zero manual intervention** - no more 2-week interruptions
@@ -63,6 +63,11 @@ viewAuthStatus()
 **Token Storage:**
 - `oauth2.Basecamp` - OAuth2 library storage (access + refresh tokens)
 - `Basecamp.refresh_token` - Extracted refresh token for our system
+
+**Error Handling:**
+- Functions throw `BasecampUnauthError` immediately when authentication fails
+- No boolean returns to check - either succeeds or throws
+- Simplifies error handling and ensures fast failure detection
 
 ## Testing Automatic Refresh
 To test that automatic refresh works without waiting 2 weeks:
@@ -79,7 +84,7 @@ To test that automatic refresh works without waiting 2 weeks:
 
 3. **Test automatic refresh:**
    ```javascript
-   ensureAuthenticated()  // Should automatically refresh and succeed
+   login()  // Should automatically refresh and succeed (throws error only if auth completely fails)
    ```
 
 4. **Verify it worked:**
